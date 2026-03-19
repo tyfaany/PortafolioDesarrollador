@@ -1,6 +1,6 @@
 # React + Vite
 # portafolioDigial
-proyecto taller de ingenieria de software 2-2026
+proyecto taller de ingenieria de software 1-2026
 
 Este proyecto esta construido con [react.jsx] y [Laravel 10](https://laravel.com)
 ## Requerimientos
