@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('niveles', function (Blueprint $table) {
-    $table->id();
-    $table->string('nivel', 50); // Ejemplo: "Junior", "Sénior"
-    $table->timestamps();
-});
+        Schema::create('years', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedSmallInteger('year');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('niveles');
+        Schema::dropIfExists('years');
     }
 };
