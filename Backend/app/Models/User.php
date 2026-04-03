@@ -11,10 +11,7 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * Los atributos que se pueden llenar de forma masiva.
-     * Agregamos los campos de tu perfil de grado aquí.
-     */
+   
     protected $fillable = [
         'name',
         'email',
@@ -26,9 +23,7 @@ class User extends Authenticatable
         'profile_image',
     ];
 
-    /**
-     * Atributos ocultos (por seguridad).
-     */
+   
     protected $hidden = [
         'password',
         'remember_token',
@@ -78,6 +73,6 @@ class User extends Authenticatable
      */
     public function skills()
     {
-        return $this->belongsToMany(TechnicalSkill::class, 'developer_skills');
+        return $this->belongsToMany(TechnicalSkill::class, 'user_skills');
     }
 }
