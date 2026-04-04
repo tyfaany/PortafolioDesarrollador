@@ -26,8 +26,12 @@ api.interceptors.response.use(
   (error) => {
     // Limpiar sesion y redirigir si el token expiro o es invalido
     if (error.response?.status === 401) {
+      const url = error.config?.url || '';
+      const esRutaAuth = url.includes('/login') || url.includes('/register');
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      if (!esRutaAuth && window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

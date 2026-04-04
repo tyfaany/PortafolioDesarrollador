@@ -45,13 +45,15 @@ const Login = () => {
       [name]: type === 'checkbox' ? checked : value,
     }));
     setErrores((current) => ({ ...current, [name]: '' }));
+    if (errorServidor && (name === 'email' || name === 'password')) {
+      setErrorServidor('');
+    }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setCargando(true);
     setErrores({});
-    setErrorServidor('');
 
     try {
       await esquemaLogin.validate(formData, { abortEarly: false });
@@ -82,12 +84,6 @@ const Login = () => {
       <div className="auth-header">
         <h2>Iniciar Sesión</h2>
       </div>
-
-      {errorServidor && (
-        <div className="error-alert" role="alert">
-          {errorServidor}
-        </div>
-      )}
 
       <form className="auth-form" onSubmit={handleSubmit}>
         <Field
@@ -134,6 +130,12 @@ const Login = () => {
             Olvidé mi contraseña
           </Link>
         </div>
+
+        {errorServidor && (
+          <div className="error-alert error-alert--inline" role="alert">
+            {errorServidor}
+          </div>
+        )}
 
         <button
           className="softsave-button"

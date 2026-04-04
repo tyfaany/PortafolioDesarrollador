@@ -345,6 +345,10 @@ input {
   font-weight: 700;
 }
 
+.error-alert--inline {
+  margin-bottom: 0;
+}
+
 .success-alert {
   margin-bottom: 20px;
   border-radius: 12px;
