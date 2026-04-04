@@ -40,6 +40,20 @@ export const AuthProvider = ({ children }) => {
     return user;
   };
 
+  // Registrar nuevo usuario y guardar sesion automaticamente
+  const registrar = async (nombre, email, password, passwordConfirmacion) => {
+    const respuesta = await api.post('/register', {
+      name: nombre,
+      email,
+      password,
+      password_confirmation: passwordConfirmacion,
+    });
+    const { token, user: usuario } = respuesta.data;
+    localStorage.setItem('token', token);
+    setUser(usuario);
+    return usuario;
+  };
+
   // Logout
   const logout = async () => {
     try {
@@ -57,6 +71,7 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         login,
+        registrar,
         logout,
         loading,
         isAuthenticated: !!user,
