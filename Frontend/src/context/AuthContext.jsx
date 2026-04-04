@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import api from "../axios/api";
+import { createContext, useContext, useEffect, useState } from 'react';
+import api from '../axios/api';
 
 const AuthContext = createContext();
 
@@ -9,15 +9,15 @@ export const AuthProvider = ({ children }) => {
 
   //  Verificar si hay token al iniciar la app
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
 
     if (token) {
-      api.get("/me")
+      api.get('/me')
         .then((response) => {
           setUser(response.data);
         })
         .catch(() => {
-          localStorage.removeItem("token");
+          localStorage.removeItem('token');
           setUser(null);
         })
         .finally(() => {
@@ -30,11 +30,11 @@ export const AuthProvider = ({ children }) => {
 
   // Login
   const login = async (email, password) => {
-    const response = await api.post("/login", { email, password });
+    const response = await api.post('/login', { email, password });
 
     const { token, user } = response.data;
 
-    localStorage.setItem("token", token);
+    localStorage.setItem('token', token);
     setUser(user);
 
     return user;
@@ -43,12 +43,12 @@ export const AuthProvider = ({ children }) => {
   // Logout
   const logout = async () => {
     try {
-      await api.post("/logout");
+      await api.post('/logout');
     } catch (error) {
-      console.log("Error cerrando sesión");
+      console.log('Error cerrando sesion');
     }
 
-    localStorage.removeItem("token");
+    localStorage.removeItem('token');
     setUser(null);
   };
 
