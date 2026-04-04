@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import * as Yup from 'yup';
+import Icon from '@mdi/react';
+import { mdiAccountOutline, mdiEmailOutline, mdiLockOutline } from '@mdi/js';
 import Field from '../components/Field';
 
 // Esquema de validacion para el formulario de registro
@@ -108,6 +110,7 @@ const Registro = () => {
           onChange={handleChange}
           placeholder="Ingresa tu nombre"
           autoComplete="name"
+          icon={<Icon path={mdiAccountOutline} size={0.9} />}
         />
         {errores.nombre && (
           <small className="error-text">{errores.nombre}</small>
@@ -120,6 +123,7 @@ const Registro = () => {
           onChange={handleChange}
           placeholder="Ingresa tu correo"
           autoComplete="email"
+          icon={<Icon path={mdiEmailOutline} size={0.9} />}
         />
         {errores.email && (
           <small className="error-text">{errores.email}</small>
@@ -132,6 +136,7 @@ const Registro = () => {
           onChange={handleChange}
           placeholder="Mínimo 8 caracteres"
           autoComplete="new-password"
+          icon={<Icon path={mdiLockOutline} size={0.9} />}
         />
         {errores.password && (
           <small className="error-text">{errores.password}</small>
@@ -144,6 +149,7 @@ const Registro = () => {
           onChange={handleChange}
           placeholder="Repite tu contraseña"
           autoComplete="new-password"
+          icon={<Icon path={mdiLockOutline} size={0.9} />}
         />
         {errores.passwordConfirmacion && (
           <small className="error-text">{errores.passwordConfirmacion}</small>

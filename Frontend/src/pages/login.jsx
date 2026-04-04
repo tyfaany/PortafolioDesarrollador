@@ -2,6 +2,8 @@ import { useState } from 'react';
 import * as Yup from 'yup';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Icon from '@mdi/react';
+import { mdiEmailOutline, mdiLockOutline } from '@mdi/js';
 import Field from '../components/Field';
 
 // Esquema de validacion para inicio de sesion
@@ -91,6 +93,7 @@ const Login = () => {
           onChange={handleChange}
           placeholder="Correo Electrónico"
           autoComplete="email"
+          icon={<Icon path={mdiEmailOutline} size={0.9} />}
         />
         {errores.email && (
           <small className="error-text">{errores.email}</small>
@@ -103,6 +106,7 @@ const Login = () => {
           onChange={handleChange}
           placeholder="Contraseña"
           autoComplete="current-password"
+          icon={<Icon path={mdiLockOutline} size={0.9} />}
         />
         {errores.password && (
           <small className="error-text">{errores.password}</small>

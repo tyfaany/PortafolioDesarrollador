@@ -250,6 +250,45 @@ input {
   font-weight: 600;
 }
 
+.auth-field__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-field__control--icon-start .softsave-input {
+  padding-left: 44px;
+}
+
+.auth-field__control--icon-end .softsave-input {
+  padding-right: 44px;
+}
+
+.auth-field__icon {
+  position: absolute;
+  border: none;
+  background: transparent;
+  color: var(--color-texto-suave);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+.auth-field__icon--start {
+  left: 14px;
+}
+
+.auth-field__icon--end {
+  right: 14px;
+}
+
+.auth-field__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
 .softsave-input {
   width: 100%;
   padding: 13px 14px;

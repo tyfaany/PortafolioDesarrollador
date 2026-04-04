@@ -2,6 +2,8 @@ import { useState } from 'react';
 import * as Yup from 'yup';
 import { Link } from 'react-router-dom';
 import api from '../axios/api';
+import Icon from '@mdi/react';
+import { mdiEmailOutline } from '@mdi/js';
 import Field from '../components/Field';
 
 // Esquema de validacion para recuperacion de contraseña
@@ -81,6 +83,7 @@ const ForgotPassword = () => {
             onChange={handleChange}
             placeholder="Ingresa tu correo"
             autoComplete="email"
+            icon={<Icon path={mdiEmailOutline} size={0.9} />}
           />
           {errores.email && (
             <small className="error-text">{errores.email}</small>

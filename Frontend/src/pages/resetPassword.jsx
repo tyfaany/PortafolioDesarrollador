@@ -2,6 +2,8 @@ import { useState } from 'react';
 import * as Yup from 'yup';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../axios/api';
+import Icon from '@mdi/react';
+import { mdiLockOutline } from '@mdi/js';
 import Field from '../components/Field';
 
 // Esquema de validacion para restablecer contraseña
@@ -98,6 +100,7 @@ const ResetPassword = () => {
           onChange={handleChange}
           placeholder="Nueva contraseña"
           autoComplete="new-password"
+          icon={<Icon path={mdiLockOutline} size={0.9} />}
         />
         {errores.password && (
           <small className="error-text">{errores.password}</small>
@@ -110,6 +113,7 @@ const ResetPassword = () => {
           onChange={handleChange}
           placeholder="Confirma tu contraseña"
           autoComplete="new-password"
+          icon={<Icon path={mdiLockOutline} size={0.9} />}
         />
         {errores.passwordConfirmacion && (
           <small className="error-text">{errores.passwordConfirmacion}</small>
