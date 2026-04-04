@@ -2,6 +2,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Login from './pages/login';
 import Registro from './pages/registro';
 import Portafolio from './pages/portafolio';
+import ForgotPassword from './pages/forgotPassword';
+import ResetPassword from './pages/resetPassword';
 import PrivateRoute from './components/PrivateRoute';
 
 // Definicion de rutas de la aplicacion
@@ -13,6 +15,9 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        {/* Ruta debe coincidir con la URL que genera AuthServiceProvider en Laravel */}
+        <Route path="/password-reset/:token" element={<ResetPassword />} />
         {/* Ruta protegida - requiere sesion activa */}
         <Route
           path="/portafolio"
