@@ -74,7 +74,7 @@ const Registro = () => {
           formData.password,
           formData.passwordConfirmacion
         );
-        navigate('/portafolio');
+        navigate('/perfil');
       } catch (error) {
         if (error.response?.status === 422) {
           const erroresBackend = error.response.data.errors;

@@ -15,7 +15,6 @@ function App() {
         {/* Ruta raiz redirige al login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/perfil" element={<Perfil />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         {/* Ruta debe coincidir con la URL que genera AuthServiceProvider en Laravel */}
@@ -28,6 +27,14 @@ function App() {
           element={
             <PrivateRoute>
               <Portafolio />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/perfil"
+          element={
+            <PrivateRoute>
+              <Perfil />
             </PrivateRoute>
           }
         />
