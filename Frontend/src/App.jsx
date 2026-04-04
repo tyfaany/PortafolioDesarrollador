@@ -18,6 +18,8 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         {/* Ruta debe coincidir con la URL que genera AuthServiceProvider en Laravel */}
         <Route path="/password-reset/:token" element={<ResetPassword />} />
+        {/* Redirigir cualquier URL no reconocida al login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
         {/* Ruta protegida - requiere sesion activa */}
         <Route
           path="/portafolio"
