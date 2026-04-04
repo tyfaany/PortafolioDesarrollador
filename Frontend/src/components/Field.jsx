@@ -12,13 +12,29 @@ function Field({
   iconPosition = 'start',
   onIconClick = undefined,
   iconLabel = undefined,
+  startIcon = null,
+  endIcon = null,
+  onStartIconClick = undefined,
+  onEndIconClick = undefined,
+  startIconLabel = undefined,
+  endIconLabel = undefined,
 }) {
-  const hasIcon = Boolean(icon);
-  const iconClass = iconPosition === 'end' ? 'auth-field__icon--end' : 'auth-field__icon--start';
-  const buttonClass = onIconClick ? 'auth-field__icon--button' : '';
+  const resolvedStartIcon = startIcon ?? (iconPosition === 'start' ? icon : null);
+  const resolvedEndIcon = endIcon ?? (iconPosition === 'end' ? icon : null);
+  const resolvedStartClick = onStartIconClick ?? (iconPosition === 'start' ? onIconClick : undefined);
+  const resolvedEndClick = onEndIconClick ?? (iconPosition === 'end' ? onIconClick : undefined);
+  const resolvedStartLabel = startIconLabel ?? (iconPosition === 'start' ? iconLabel : undefined);
+  const resolvedEndLabel = endIconLabel ?? (iconPosition === 'end' ? iconLabel : undefined);
+  const hasStartIcon = Boolean(resolvedStartIcon);
+  const hasEndIcon = Boolean(resolvedEndIcon);
+  const startIconClass = 'auth-field__icon--start';
+  const endIconClass = 'auth-field__icon--end';
+  const startButtonClass = resolvedStartClick ? 'auth-field__icon--button' : '';
+  const endButtonClass = resolvedEndClick ? 'auth-field__icon--button' : '';
   const wrapperClass = [
     'auth-field__control',
-    hasIcon ? `auth-field__control--icon-${iconPosition}` : '',
+    hasStartIcon ? 'auth-field__control--icon-start' : '',
+    hasEndIcon ? 'auth-field__control--icon-end' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -27,16 +43,24 @@ function Field({
     <label className="auth-field">
       <span>{label}</span>
       <div className={wrapperClass}>
-        {hasIcon && iconPosition === 'start' && (
-          <button
-            className={`auth-field__icon ${iconClass} ${buttonClass}`}
-            type="button"
-            onClick={onIconClick}
-            aria-label={iconLabel}
-            aria-hidden={onIconClick ? 'false' : 'true'}
-          >
-            {icon}
-          </button>
+        {hasStartIcon && (
+          resolvedStartClick ? (
+            <button
+              className={`auth-field__icon ${startIconClass} ${startButtonClass}`}
+              type="button"
+              onClick={resolvedStartClick}
+              aria-label={resolvedStartLabel}
+            >
+              {resolvedStartIcon}
+            </button>
+          ) : (
+            <span
+              className={`auth-field__icon ${startIconClass}`}
+              aria-hidden="true"
+            >
+              {resolvedStartIcon}
+            </span>
+          )
         )}
         <input
           className="softsave-input"
@@ -47,16 +71,24 @@ function Field({
           placeholder={placeholder}
           autoComplete={autoComplete}
         />
-        {hasIcon && iconPosition === 'end' && (
-          <button
-            className={`auth-field__icon ${iconClass} ${buttonClass}`}
-            type="button"
-            onClick={onIconClick}
-            aria-label={iconLabel}
-            aria-hidden={onIconClick ? 'false' : 'true'}
-          >
-            {icon}
-          </button>
+        {hasEndIcon && (
+          resolvedEndClick ? (
+            <button
+              className={`auth-field__icon ${endIconClass} ${endButtonClass}`}
+              type="button"
+              onClick={resolvedEndClick}
+              aria-label={resolvedEndLabel}
+            >
+              {resolvedEndIcon}
+            </button>
+          ) : (
+            <span
+              className={`auth-field__icon ${endIconClass}`}
+              aria-hidden="true"
+            >
+              {resolvedEndIcon}
+            </span>
+          )
         )}
       </div>
     </label>
@@ -75,6 +107,12 @@ Field.propTypes = {
   iconPosition: PropTypes.oneOf(['start', 'end']),
   onIconClick: PropTypes.func,
   iconLabel: PropTypes.string,
+  startIcon: PropTypes.node,
+  endIcon: PropTypes.node,
+  onStartIconClick: PropTypes.func,
+  onEndIconClick: PropTypes.func,
+  startIconLabel: PropTypes.string,
+  endIconLabel: PropTypes.string,
 };
 
 export default Field;

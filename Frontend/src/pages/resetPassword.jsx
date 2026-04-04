@@ -3,7 +3,7 @@ import * as Yup from 'yup';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../axios/api';
 import Icon from '@mdi/react';
-import { mdiEyeOffOutline, mdiEyeOutline } from '@mdi/js';
+import { mdiEyeOffOutline, mdiEyeOutline, mdiLockOutline } from '@mdi/js';
 import Field from '../components/Field';
 
 // Esquema de validacion para restablecer contraseña
@@ -102,10 +102,10 @@ const ResetPassword = () => {
           onChange={handleChange}
           placeholder="Nueva contraseña"
           autoComplete="new-password"
-          icon={<Icon path={mostrarPassword ? mdiEyeOffOutline : mdiEyeOutline} size={0.9} />}
-          iconPosition="end"
-          onIconClick={() => setMostrarPassword((current) => !current)}
-          iconLabel={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          startIcon={<Icon path={mdiLockOutline} size={0.9} />}
+          endIcon={<Icon path={mostrarPassword ? mdiEyeOffOutline : mdiEyeOutline} size={0.9} />}
+          onEndIconClick={() => setMostrarPassword((current) => !current)}
+          endIconLabel={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
         />
         {errores.password && (
           <small className="error-text">{errores.password}</small>
@@ -118,10 +118,10 @@ const ResetPassword = () => {
           onChange={handleChange}
           placeholder="Confirma tu contraseña"
           autoComplete="new-password"
-          icon={<Icon path={mostrarConfirmacion ? mdiEyeOffOutline : mdiEyeOutline} size={0.9} />}
-          iconPosition="end"
-          onIconClick={() => setMostrarConfirmacion((current) => !current)}
-          iconLabel={mostrarConfirmacion ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          startIcon={<Icon path={mdiLockOutline} size={0.9} />}
+          endIcon={<Icon path={mostrarConfirmacion ? mdiEyeOffOutline : mdiEyeOutline} size={0.9} />}
+          onEndIconClick={() => setMostrarConfirmacion((current) => !current)}
+          endIconLabel={mostrarConfirmacion ? 'Ocultar contraseña' : 'Mostrar contraseña'}
         />
         {errores.passwordConfirmacion && (
           <small className="error-text">{errores.passwordConfirmacion}</small>

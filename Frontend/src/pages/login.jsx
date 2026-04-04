@@ -3,7 +3,7 @@ import * as Yup from 'yup';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import Icon from '@mdi/react';
-import { mdiEmailOutline, mdiEyeOffOutline, mdiEyeOutline } from '@mdi/js';
+import { mdiEmailOutline, mdiEyeOffOutline, mdiEyeOutline, mdiLockOutline } from '@mdi/js';
 import Field from '../components/Field';
 
 // Esquema de validacion para inicio de sesion
@@ -107,10 +107,10 @@ const Login = () => {
           onChange={handleChange}
           placeholder="Contraseña"
           autoComplete="current-password"
-          icon={<Icon path={mostrarPassword ? mdiEyeOffOutline : mdiEyeOutline} size={0.9} />}
-          iconPosition="end"
-          onIconClick={() => setMostrarPassword((current) => !current)}
-          iconLabel={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          startIcon={<Icon path={mdiLockOutline} size={0.9} />}
+          endIcon={<Icon path={mostrarPassword ? mdiEyeOffOutline : mdiEyeOutline} size={0.9} />}
+          onEndIconClick={() => setMostrarPassword((current) => !current)}
+          endIconLabel={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
         />
         {errores.password && (
           <small className="error-text">{errores.password}</small>
