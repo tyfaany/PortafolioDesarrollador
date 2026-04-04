@@ -13,6 +13,7 @@ function Field({
 }) {
   const hasIcon = Boolean(icon);
   const iconClass = iconPosition === 'end' ? 'auth-field__icon--end' : 'auth-field__icon--start';
+  const buttonClass = onIconClick ? 'auth-field__icon--button' : '';
   const wrapperClass = [
     'auth-field__control',
     hasIcon ? `auth-field__control--icon-${iconPosition}` : '',
@@ -26,7 +27,7 @@ function Field({
       <div className={wrapperClass}>
         {hasIcon && iconPosition === 'start' && (
           <button
-            className={`auth-field__icon ${iconClass}`}
+            className={`auth-field__icon ${iconClass} ${buttonClass}`}
             type="button"
             onClick={onIconClick}
             aria-label={iconLabel}
@@ -46,7 +47,7 @@ function Field({
         />
         {hasIcon && iconPosition === 'end' && (
           <button
-            className={`auth-field__icon ${iconClass}`}
+            className={`auth-field__icon ${iconClass} ${buttonClass}`}
             type="button"
             onClick={onIconClick}
             aria-label={iconLabel}

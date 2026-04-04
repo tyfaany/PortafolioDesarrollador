@@ -3,7 +3,7 @@ import * as Yup from 'yup';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Icon from '@mdi/react';
-import { mdiEmailOutline, mdiLockOutline } from '@mdi/js';
+import { mdiEmailOutline, mdiEyeOffOutline, mdiEyeOutline, mdiLockOutline } from '@mdi/js';
 import Field from '../components/Field';
 
 // Esquema de validacion para inicio de sesion
@@ -28,6 +28,7 @@ const Login = () => {
   const [errores, setErrores] = useState({});
   const [errorServidor, setErrorServidor] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [mostrarPassword, setMostrarPassword] = useState(false);
 
   if (isAuthenticated) {
     return <Navigate to="/portafolio" replace />;
@@ -100,13 +101,16 @@ const Login = () => {
         )}
         <Field
           label="Contraseña"
-          type="password"
+          type={mostrarPassword ? 'text' : 'password'}
           name="password"
           value={formData.password}
           onChange={handleChange}
           placeholder="Contraseña"
           autoComplete="current-password"
-          icon={<Icon path={mdiLockOutline} size={0.9} />}
+          icon={<Icon path={mostrarPassword ? mdiEyeOffOutline : mdiEyeOutline} size={0.9} />}
+          iconPosition="end"
+          onIconClick={() => setMostrarPassword((current) => !current)}
+          iconLabel={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
         />
         {errores.password && (
           <small className="error-text">{errores.password}</small>

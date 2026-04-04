@@ -3,7 +3,13 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import * as Yup from 'yup';
 import Icon from '@mdi/react';
-import { mdiAccountOutline, mdiEmailOutline, mdiLockOutline } from '@mdi/js';
+import {
+  mdiAccountOutline,
+  mdiEmailOutline,
+  mdiEyeOffOutline,
+  mdiEyeOutline,
+  mdiLockOutline,
+} from '@mdi/js';
 import Field from '../components/Field';
 
 // Esquema de validacion para el formulario de registro
@@ -34,6 +40,8 @@ const Registro = () => {
   const [errores, setErrores] = useState({});
   const [cargando, setCargando] = useState(false);
   const [errorServidor, setErrorServidor] = useState('');
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -130,26 +138,32 @@ const Registro = () => {
         )}
         <Field
           label="Contraseña"
-          type="password"
+          type={mostrarPassword ? 'text' : 'password'}
           name="password"
           value={formData.password}
           onChange={handleChange}
           placeholder="Mínimo 8 caracteres"
           autoComplete="new-password"
-          icon={<Icon path={mdiLockOutline} size={0.9} />}
+          icon={<Icon path={mostrarPassword ? mdiEyeOffOutline : mdiEyeOutline} size={0.9} />}
+          iconPosition="end"
+          onIconClick={() => setMostrarPassword((current) => !current)}
+          iconLabel={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
         />
         {errores.password && (
           <small className="error-text">{errores.password}</small>
         )}
         <Field
           label="Confirmar Contraseña"
-          type="password"
+          type={mostrarConfirmacion ? 'text' : 'password'}
           name="passwordConfirmacion"
           value={formData.passwordConfirmacion}
           onChange={handleChange}
           placeholder="Repite tu contraseña"
           autoComplete="new-password"
-          icon={<Icon path={mdiLockOutline} size={0.9} />}
+          icon={<Icon path={mostrarConfirmacion ? mdiEyeOffOutline : mdiEyeOutline} size={0.9} />}
+          iconPosition="end"
+          onIconClick={() => setMostrarConfirmacion((current) => !current)}
+          iconLabel={mostrarConfirmacion ? 'Ocultar contraseña' : 'Mostrar contraseña'}
         />
         {errores.passwordConfirmacion && (
           <small className="error-text">{errores.passwordConfirmacion}</small>

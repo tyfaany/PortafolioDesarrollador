@@ -276,6 +276,11 @@ input {
   cursor: default;
 }
 
+.auth-field__icon--button {
+  cursor: pointer;
+  color: var(--color-texto);
+}
+
 .auth-field__icon--start {
   left: 14px;
 }
