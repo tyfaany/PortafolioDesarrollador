@@ -21,6 +21,7 @@
   --color-texto-rgb: 44, 62, 80;
   --color-primario-rgb: 230, 126, 34;
   --color-error-rgb: 231, 76, 60;
+  --color-exito-rgb: 39, 174, 96;
 }
 
 * {
@@ -276,6 +277,16 @@ input {
   background: rgba(var(--color-error-rgb), 0.12);
   border: 1px solid rgba(var(--color-error-rgb), 0.24);
   color: var(--color-error);
+  font-weight: 700;
+}
+
+.success-alert {
+  margin-bottom: 20px;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: rgba(var(--color-exito-rgb), 0.12);
+  border: 1px solid rgba(var(--color-exito-rgb), 0.24);
+  color: var(--color-exito);
   font-weight: 700;
 }
 
