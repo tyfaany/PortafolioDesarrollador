@@ -1,31 +1,24 @@
 import React from 'react';
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from '../context/AuthContext';
 
 const Portfolio = () => {
   const { user, logout } = useAuth();
 
   return (
-    <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'sans-serif' }}>
-      <header style={{ marginBottom: '50px' }}>
+    <div className="softsave-portafolio-shell">
+      <header className="softsave-portafolio-header">
         <h1>Mi Portafolio</h1>
         <p>Bienvenido, <strong>{user?.name || 'Usuario'}</strong></p>
-        <button 
+        <button
           onClick={logout}
-          style={{
-            backgroundColor: '#ff4d4d',
-            color: 'white',
-            border: 'none',
-            padding: '10px 20px',
-            borderRadius: '5px',
-            cursor: 'pointer'
-          }}
+          className="softsave-portafolio-logout"
         >
           Cerrar Sesión
         </button>
       </header>
 
-      <section style={{ display: 'grid', gap: '20px', maxWidth: '600px', margin: '0 auto' }}>
-        <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
+      <section className="softsave-portafolio-grid">
+        <div className="softsave-portafolio-card">
           <h3>Proyecto 1</h3>
           <p>Esta información es privada y solo tú puedes verla.</p>
         </div>

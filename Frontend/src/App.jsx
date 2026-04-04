@@ -10,12 +10,12 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Ruta raiz redirige al login */}
-        <Route path='/' element={<Navigate to='/login' replace />} />
-        <Route path='/login' element={<Login />} />
-        <Route path='/registro' element={<Registro />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
         {/* Ruta protegida - requiere sesion activa */}
         <Route
-          path='/portafolio'
+          path="/portafolio"
           element={
             <PrivateRoute>
               <Portafolio />

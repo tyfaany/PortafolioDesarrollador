@@ -1,60 +1,77 @@
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import Field from '../components/Field';
 
 // Formulario de registro de nuevo usuario
 const Registro = () => {
-  const [nombre, setNombre] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirmacion, setPasswordConfirmacion] = useState('');
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    navigate('/login');
+  };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center min-vh-100">
-      <div className="card p-4" style={{ width: '100%', maxWidth: '440px' }}>
-        <h2 className="text-center mb-4">Crear cuenta</h2>
-        <div className="mb-3">
-          <label className="form-label">Nombre completo</label>
-          <input
-            type="text"
-            className="form-control"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Correo electrónico</label>
-          <input
-            type="email"
-            className="form-control"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Contraseña</label>
-          <input
-            type="password"
-            className="form-control"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Confirmar contraseña</label>
-          <input
-            type="password"
-            className="form-control"
-            value={passwordConfirmacion}
-            onChange={(e) => setPasswordConfirmacion(e.target.value)}
-          />
-        </div>
-        <button type="button" className="btn btn-primary w-100">
-          Registrarse
-        </button>
-        <p className="text-center mt-3">
-          ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
-        </p>
+    <section className="auth-card">
+      <div className="auth-header">
+        <h2>Crea tu Cuenta</h2>
+        <p>Únete a la plataforma para gestionar tu portafolio</p>
       </div>
-    </div>
+
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <Field
+          label="Nombre Completo"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          placeholder="Ingresa tu nombre"
+        />
+        <Field
+          label="Correo Electrónico"
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="Ingresa tu correo"
+        />
+        <Field
+          label="Contraseña"
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Mínimo 8 caracteres"
+        />
+        <Field
+          label="Confirmar Contraseña"
+          type="password"
+          name="confirmPassword"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          placeholder="Repite tu contraseña"
+        />
+
+        <button className="softsave-button" type="submit">
+          Registrarme
+        </button>
+      </form>
+
+      <p className="auth-footer">
+        ¿Ya tienes cuenta? <Link to="/login">Inicia Sesión</Link>
+      </p>
+      <p className="auth-terms">Al registrarte, aceptas nuestros Términos y Condiciones</p>
+    </section>
   );
 };
 
