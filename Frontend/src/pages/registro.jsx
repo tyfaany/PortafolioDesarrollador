@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import useAuth from '../hooks/useAuth';
 import * as Yup from 'yup';
 import Icon from '@mdi/react';
 import {
@@ -8,7 +8,6 @@ import {
   mdiEmailOutline,
   mdiEyeOffOutline,
   mdiEyeOutline,
-  mdiLockOutline,
 } from '@mdi/js';
 import Field from '../components/Field';
 

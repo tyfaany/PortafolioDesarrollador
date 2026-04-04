@@ -3,7 +3,7 @@ import * as Yup from 'yup';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../axios/api';
 import Icon from '@mdi/react';
-import { mdiEyeOffOutline, mdiEyeOutline, mdiLockOutline } from '@mdi/js';
+import { mdiEyeOffOutline, mdiEyeOutline } from '@mdi/js';
 import Field from '../components/Field';
 
 // Esquema de validacion para restablecer contraseña

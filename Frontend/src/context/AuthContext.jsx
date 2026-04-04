@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import api from '../axios/api';
 
 const AuthContext = createContext();
@@ -7,7 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  //  Verificar si hay token al iniciar la app
+  // Verificar si hay token al iniciar la app
   useEffect(() => {
     const token = localStorage.getItem('token');
 
@@ -105,5 +106,8 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Hook personalizado
-export const useAuth = () => useContext(AuthContext);
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
+export { AuthContext };

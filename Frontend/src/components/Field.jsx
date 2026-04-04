@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types';
+
 function Field({
   label,
   type = 'text',
@@ -60,5 +62,29 @@ function Field({
     </label>
   );
 }
+
+Field.propTypes = {
+  label: PropTypes.string.isRequired,
+  type: PropTypes.string,
+  name: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  onChange: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
+  autoComplete: PropTypes.string,
+  icon: PropTypes.node,
+  iconPosition: PropTypes.oneOf(['start', 'end']),
+  onIconClick: PropTypes.func,
+  iconLabel: PropTypes.string,
+};
+
+Field.defaultProps = {
+  type: 'text',
+  placeholder: '',
+  autoComplete: undefined,
+  icon: null,
+  iconPosition: 'start',
+  onIconClick: undefined,
+  iconLabel: undefined,
+};
 
 export default Field;

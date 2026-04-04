@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import * as Yup from 'yup';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import useAuth from '../hooks/useAuth';
 import Icon from '@mdi/react';
-import { mdiEmailOutline, mdiEyeOffOutline, mdiEyeOutline, mdiLockOutline } from '@mdi/js';
+import { mdiEmailOutline, mdiEyeOffOutline, mdiEyeOutline } from '@mdi/js';
 import Field from '../components/Field';
 
 // Esquema de validacion para inicio de sesion

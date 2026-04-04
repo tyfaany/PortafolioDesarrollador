@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import PropTypes from 'prop-types';
+import useAuth from '../hooks/useAuth';
 
 function PrivateRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -17,5 +18,9 @@ function PrivateRoute({ children }) {
   // Si hay usuario → muestra la vista protegida
   return children;
 }
+
+PrivateRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 export default PrivateRoute;
