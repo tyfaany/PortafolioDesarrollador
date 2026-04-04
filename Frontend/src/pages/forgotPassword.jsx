@@ -69,7 +69,7 @@ const ForgotPassword = () => {
 
       {mensajeExito ? (
         <div className="success-alert" role="status">
-          {mensajeExito}
+          {mensajeExito}. Revisa tu buzón
         </div>
       ) : (
         <form className="auth-form" onSubmit={handleSubmit}>
@@ -80,12 +80,18 @@ const ForgotPassword = () => {
             value={formData.email}
             onChange={handleChange}
             placeholder="Ingresa tu correo"
+            autoComplete="email"
           />
           {errores.email && (
             <small className="error-text">{errores.email}</small>
           )}
-          <button className="softsave-button" type="submit" disabled={cargando}>
-            {cargando ? 'Enviando...' : 'Enviar enlace'}
+          <button
+            className="softsave-button"
+            type="submit"
+            disabled={cargando}
+            data-loading={cargando ? 'true' : 'false'}
+          >
+            {cargando ? 'Enviando' : 'Enviar enlace'}
           </button>
         </form>
       )}

@@ -1,4 +1,12 @@
-function Field({ label, type = 'text', name, value, onChange, placeholder }) {
+function Field({
+  label,
+  type = 'text',
+  name,
+  value,
+  onChange,
+  placeholder,
+  autoComplete,
+}) {
   return (
     <label className="auth-field">
       <span>{label}</span>
@@ -9,7 +17,7 @@ function Field({ label, type = 'text', name, value, onChange, placeholder }) {
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        autoComplete="off"
+        autoComplete={autoComplete}
       />
     </label>
   );

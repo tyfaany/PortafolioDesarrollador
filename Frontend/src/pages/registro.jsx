@@ -107,6 +107,7 @@ const Registro = () => {
           value={formData.nombre}
           onChange={handleChange}
           placeholder="Ingresa tu nombre"
+          autoComplete="name"
         />
         {errores.nombre && (
           <small className="error-text">{errores.nombre}</small>
@@ -118,6 +119,7 @@ const Registro = () => {
           value={formData.email}
           onChange={handleChange}
           placeholder="Ingresa tu correo"
+          autoComplete="email"
         />
         {errores.email && (
           <small className="error-text">{errores.email}</small>
@@ -129,6 +131,7 @@ const Registro = () => {
           value={formData.password}
           onChange={handleChange}
           placeholder="Mínimo 8 caracteres"
+          autoComplete="new-password"
         />
         {errores.password && (
           <small className="error-text">{errores.password}</small>
@@ -140,13 +143,19 @@ const Registro = () => {
           value={formData.passwordConfirmacion}
           onChange={handleChange}
           placeholder="Repite tu contraseña"
+          autoComplete="new-password"
         />
         {errores.passwordConfirmacion && (
           <small className="error-text">{errores.passwordConfirmacion}</small>
         )}
 
-        <button className="softsave-button" type="submit" disabled={cargando}>
-          {cargando ? 'Registrando...' : 'Registrarme'}
+        <button
+          className="softsave-button"
+          type="submit"
+          disabled={cargando}
+          data-loading={cargando ? 'true' : 'false'}
+        >
+          {cargando ? 'Registrando' : 'Registrarme'}
         </button>
       </form>
 

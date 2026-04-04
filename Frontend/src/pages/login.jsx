@@ -90,6 +90,7 @@ const Login = () => {
           value={formData.email}
           onChange={handleChange}
           placeholder="Correo Electrónico"
+          autoComplete="email"
         />
         {errores.email && (
           <small className="error-text">{errores.email}</small>
@@ -101,6 +102,7 @@ const Login = () => {
           value={formData.password}
           onChange={handleChange}
           placeholder="Contraseña"
+          autoComplete="current-password"
         />
         {errores.password && (
           <small className="error-text">{errores.password}</small>
@@ -121,8 +123,13 @@ const Login = () => {
           </Link>
         </div>
 
-        <button className="softsave-button" type="submit" disabled={cargando}>
-          {cargando ? 'Ingresando...' : 'Ingresar'}
+        <button
+          className="softsave-button"
+          type="submit"
+          disabled={cargando}
+          data-loading={cargando ? 'true' : 'false'}
+        >
+          {cargando ? 'Ingresando' : 'Ingresar'}
         </button>
       </form>
 
