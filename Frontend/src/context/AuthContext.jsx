@@ -28,6 +28,29 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  useEffect(() => {
+    const manejarStorage = (event) => {
+      if (event.key === 'token') {
+        const tokenActual = event.newValue;
+        if (!tokenActual) {
+          setUser(null);
+        } else {
+          api.get('/me')
+            .then((response) => {
+              setUser(response.data);
+            })
+            .catch(() => {
+              localStorage.removeItem('token');
+              setUser(null);
+            });
+        }
+      }
+    };
+
+    window.addEventListener('storage', manejarStorage);
+    return () => window.removeEventListener('storage', manejarStorage);
+  }, []);
+
   // Login con opcion de recordar sesion
   const login = async (email, password, recordarme = false) => {
     const response = await api.post('/login', { email, password, remember: recordarme });
