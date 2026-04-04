@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import api from '../axios/api';
 import useAuth from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 // Perfil de usuario con datos desde /me
 const Perfil = () => {
   const { logout } = useAuth();
+  const navigate = useNavigate();
   const [usuario, setUsuario] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [errorServidor, setErrorServidor] = useState('');
@@ -44,9 +46,18 @@ const Perfil = () => {
         <p><strong>Correo:</strong> {usuario?.email || 'No disponible'}</p>
         <p><strong>Biografía:</strong> {usuario?.bio || 'Sin biografía aún'}</p>
       </div>
-      <button className="softsave-button" type="button" onClick={logout}>
-        Cerrar sesión
-      </button>
+      <div className="auth-form">
+        <button className="softsave-button" type="button" onClick={logout}>
+          Cerrar sesión
+        </button>
+        <button
+          className="softsave-button"
+          type="button"
+          onClick={() => navigate('/portafolio')}
+        >
+          Ir a mi portafolio
+        </button>
+      </div>
     </section>
   );
 };

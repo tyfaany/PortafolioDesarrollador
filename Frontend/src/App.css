@@ -415,15 +415,6 @@ input {
   margin-bottom: 50px;
 }
 
-.softsave-portafolio-logout {
-  background-color: var(--color-error);
-  color: var(--color-blanco);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
 .softsave-portafolio-grid {
   display: grid;
   gap: 20px;
