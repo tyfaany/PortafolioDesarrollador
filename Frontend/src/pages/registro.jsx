@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import * as Yup from 'yup';
 import Field from '../components/Field';
 
@@ -20,6 +21,8 @@ const esquemaRegistro = Yup.object({
 
 // Formulario de registro de nuevo usuario
 const Registro = () => {
+  const { registrar, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
@@ -28,6 +31,7 @@ const Registro = () => {
   });
   const [errores, setErrores] = useState({});
   const [cargando, setCargando] = useState(false);
+  const [errorServidor, setErrorServidor] = useState('');
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -35,24 +39,52 @@ const Registro = () => {
     setErrores((current) => ({ ...current, [name]: '' }));
   };
 
-  const handleSubmit = (event) => {
+  if (isAuthenticated) {
+    return <Navigate to="/portafolio" replace />;
+  }
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setCargando(true);
     setErrores({});
 
-    esquemaRegistro.validate(formData, { abortEarly: false })
-      .catch((error) => {
-        if (error.inner) {
-          const mapaErrores = {};
-          error.inner.forEach((item) => {
-            mapaErrores[item.path] = item.message;
+    try {
+      await esquemaRegistro.validate(formData, { abortEarly: false });
+      setErrores({});
+      setCargando(true);
+
+      try {
+        await registrar(
+          formData.nombre,
+          formData.email,
+          formData.password,
+          formData.passwordConfirmacion
+        );
+        navigate('/portafolio');
+      } catch (error) {
+        if (error.response?.status === 422) {
+          const erroresBackend = error.response.data.errors;
+          setErrores({
+            nombre: erroresBackend.name?.[0] || '',
+            email: erroresBackend.email?.[0] || '',
+            password: erroresBackend.password?.[0] || '',
           });
-          setErrores(mapaErrores);
+        } else {
+          setErrorServidor('Ocurrió un error. Intenta de nuevo.');
         }
-      })
-      .finally(() => {
+      } finally {
         setCargando(false);
-      });
+      }
+    } catch (error) {
+      if (error.inner) {
+        const mapaErrores = {};
+        error.inner.forEach((item) => {
+          mapaErrores[item.path] = item.message;
+        });
+        setErrores(mapaErrores);
+      }
+      setCargando(false);
+    }
   };
 
   return (
@@ -61,6 +93,12 @@ const Registro = () => {
         <h2>Crea tu Cuenta</h2>
         <p>Únete a la plataforma para gestionar tu portafolio</p>
       </div>
+
+      {errorServidor && (
+        <div className="error-alert" role="alert">
+          {errorServidor}
+        </div>
+      )}
 
       <form className="auth-form" onSubmit={handleSubmit}>
         <Field
