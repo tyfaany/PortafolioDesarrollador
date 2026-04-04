@@ -6,12 +6,12 @@ function Field({
   name,
   value,
   onChange,
-  placeholder,
-  autoComplete,
-  icon,
+  placeholder = '',
+  autoComplete = undefined,
+  icon = null,
   iconPosition = 'start',
-  onIconClick,
-  iconLabel,
+  onIconClick = undefined,
+  iconLabel = undefined,
 }) {
   const hasIcon = Boolean(icon);
   const iconClass = iconPosition === 'end' ? 'auth-field__icon--end' : 'auth-field__icon--start';
@@ -75,16 +75,6 @@ Field.propTypes = {
   iconPosition: PropTypes.oneOf(['start', 'end']),
   onIconClick: PropTypes.func,
   iconLabel: PropTypes.string,
-};
-
-Field.defaultProps = {
-  type: 'text',
-  placeholder: '',
-  autoComplete: undefined,
-  icon: null,
-  iconPosition: 'start',
-  onIconClick: undefined,
-  iconLabel: undefined,
 };
 
 export default Field;
