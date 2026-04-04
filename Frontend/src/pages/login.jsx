@@ -17,7 +17,7 @@ const esquemaLogin = Yup.object({
 
 // Formulario de inicio de sesion
 const Login = () => {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -29,6 +29,10 @@ const Login = () => {
   const [errorServidor, setErrorServidor] = useState('');
   const [cargando, setCargando] = useState(false);
   const [mostrarPassword, setMostrarPassword] = useState(false);
+
+  if (loading) {
+    return <p>Cargando...</p>;
+  }
 
   if (isAuthenticated) {
     return <Navigate to="/portafolio" replace />;

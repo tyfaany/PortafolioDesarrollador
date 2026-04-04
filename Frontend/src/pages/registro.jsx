@@ -29,7 +29,7 @@ const esquemaRegistro = Yup.object({
 
 // Formulario de registro de nuevo usuario
 const Registro = () => {
-  const { registrar, isAuthenticated } = useAuth();
+  const { registrar, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     nombre: '',
@@ -48,6 +48,10 @@ const Registro = () => {
     setFormData((current) => ({ ...current, [name]: value }));
     setErrores((current) => ({ ...current, [name]: '' }));
   };
+
+  if (loading) {
+    return <p>Cargando...</p>;
+  }
 
   if (isAuthenticated) {
     return <Navigate to="/portafolio" replace />;
