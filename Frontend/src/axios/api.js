@@ -20,13 +20,14 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Interceptor de responses: se puede manejar errores globales
+// Interceptor de responses: manejo de errores globales
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Ejemplo: si la respuesta es 401, podrías redirigir al login
+    // Limpiar sesion y redirigir si el token expiro o es invalido
     if (error.response?.status === 401) {
-      console.log('Token expirado o no autorizado');
+      localStorage.removeItem('token');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
