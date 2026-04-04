@@ -28,9 +28,9 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Login
-  const login = async (email, password) => {
-    const response = await api.post('/login', { email, password });
+  // Login con opcion de recordar sesion
+  const login = async (email, password, recordarme = false) => {
+    const response = await api.post('/login', { email, password, remember: recordarme });
 
     const { token, user } = response.data;
 
@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await api.post('/logout');
     } catch (error) {
-      console.log('Error cerrando sesion');
+      // El backend puede fallar al cerrar sesion, pero se limpia el token igual
     }
 
     localStorage.removeItem('token');
