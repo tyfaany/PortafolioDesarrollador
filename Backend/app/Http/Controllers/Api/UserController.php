@@ -25,31 +25,23 @@ class UserController extends Controller
     /**
      * Actualizar datos del usuario autenticado
      */
-    public function update(Request $request)
-    {
-        $user = $request->user();
+   public function updateInfo(Request $request)
+{
+    $user = $request->user();
 
-        $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'profession' => 'nullable|string|max:255',
-            'biography' => 'nullable|string',
-            'github_username' => 'nullable|string|max:255',
-            'linkedin_url' => 'nullable|url|max:255',
-            'profile_image' => 'nullable|string'
-        ]);
+    $validated = $request->validate([
+        'name'            => 'filled|string|max:255',
+        'profession'      => 'nullable|string|max:100',
+        'biography'       => 'nullable|string',
+        'github_username' => 'nullable|string|max:100',
+        'linkedin_url'    => 'nullable|string|max:200',
+    ]);
 
-        $user->update($request->only([
-            'name',
-            'profession',
-            'biography',
-            'github_username',
-            'linkedin_url',
-            'profile_image'
-        ]));
+    $user->update($validated);
 
-        return response()->json([
-            'message' => 'Perfil actualizado correctamente',
-            'user' => $user
-        ]);
-    }
+    return response()->json([
+        'message' => 'Información actualizada',
+        'user' => $user
+    ]);
+}
 }
