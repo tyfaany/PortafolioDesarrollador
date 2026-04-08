@@ -7,7 +7,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth; 
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password; // <-- Añadido para recuperar contraseña
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -16,12 +18,22 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
+        // 1. Sanitizamos los datos ANTES de validar
+        if ($request->has('name')) {
+            $request->merge([
+                'name' => Str::squish($request->name),
+                'email' => Str::lower(Str::squish($request->email)), // Limpiamos y pasamos a minúsculas
+            ]);
+        }
+
+        // 2. Validamos
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'password' => 'required|min:8|confirmed', // <-- Cambiado a 8 caracteres
+            'password' => 'required|min:8|confirmed',
         ]);
 
+        // 3. Creamos el usuario
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -42,6 +54,19 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        // Limpiamos el email antes de hacer nada
+        if ($request->has('email')) {
+            $request->merge([
+                'email' => Str::lower(Str::squish($request->email))
+            ]);
+        }
+
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+            'remember' => 'boolean'
+        ]);    
+
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -141,5 +166,36 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'El token es inválido o el correo no coincide'
         ], 400);
+    }
+
+    /**
+     * Subir o actualizar foto de perfil
+     */
+    public function uploadPhoto(Request $request)
+    {
+        // 1. Validamos que el archivo sea una imagen válida y pese máximo 2MB
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+        ]);
+
+        $user = $request->user();
+
+        // 2. Si el usuario ya tenía una foto, la borramos para no llenar el servidor de archivos viejos
+        if ($user->profile_photo) {
+            Storage::disk('public')->delete($user->profile_photo);
+        }
+
+        // 3. Guardamos la nueva foto en la carpeta 'profile_photos'
+        $path = $request->file('photo')->store('profile_photos', 'public');
+
+        // 4. Actualizamos la ruta en la base de datos
+        $user->profile_photo = $path;
+        $user->save();
+
+        // 5. Devolvemos una respuesta exitosa con la URL completa de la imagen para que React la muestre
+        return response()->json([
+            'message' => 'Foto de perfil actualizada correctamente',
+            'photo_url' => asset('storage/' . $path)
+        ], 200);
     }
 }
