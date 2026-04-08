@@ -7,16 +7,21 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    /**
-     * Obtener datos del usuario autenticado
-     */
-    public function me(Request $request)
-    {
-        return response()->json([
-            'user' => $request->user()
-        ]);
+    public function show(Request $request)
+{
+    $user = $request->user();
+
+    // Agregamos manualmente la URL completa de la foto si existe
+    if ($user->profile_photo) {
+       $user->profile_photo_url = $request->getSchemeAndHttpHost() . '/storage/' . $user->profile_photo;
+    } else {
+        $user->profile_photo_url = null; // O una imagen por defecto
     }
 
+    return response()->json([
+        'user' => $user
+    ]);
+}
     /**
      * Actualizar datos del usuario autenticado
      */
