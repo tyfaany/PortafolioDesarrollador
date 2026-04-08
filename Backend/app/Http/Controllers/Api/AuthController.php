@@ -171,6 +171,31 @@ class AuthController extends Controller
     /**
      * Subir o actualizar foto de perfil
      */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'password' => 'required|min:8|confirmed|different:current_password',
+        ], [
+            'password.different' => 'La nueva contraseña debe ser diferente a la actual.'
+        ]);
+
+        $user = $request->user();
+
+    
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'La contraseña actual es incorrecta'
+            ], 422);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return response()->json([
+            'message' => 'actualizacion exitosa'
+        ], 200);
+    }
     public function uploadPhoto(Request $request)
     {
         // 1. Validamos que el archivo sea una imagen válida y pese máximo 2MB
