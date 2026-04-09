@@ -14,16 +14,22 @@ function App() {
       <Routes>
         {/* Ruta raiz redirige al login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
-        
+         {/*  */}
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/password-reset/:token" element={<ResetPassword />} />
 
-        {/* 1. RUTA DE PERFIL LIBERADA: Se quita PrivateRoute para verla directo */}
-        <Route path="/perfil" element={<ProfileSettings />} />
-
         {/* Ruta protegida - requiere sesion activa */}
+        <Route
+          path="/perfil"
+          element={
+            <PrivateRoute>
+              <ProfileSettings />
+            </PrivateRoute>
+          }
+        />
+
         <Route
           path="/portafolio"
           element={
@@ -32,9 +38,8 @@ function App() {
             </PrivateRoute>
           }
         />
-
-        {/* 2. COMENTAMOS ESTO TEMPORALMENTE: Evita que cualquier error te mande al login */}
-        {/* <Route path="*" element={<Navigate to="/login" replace />} /> */}
+        {/* Redirigir cualquier URL no reconocida al login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
