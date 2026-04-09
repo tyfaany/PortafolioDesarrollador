@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Login from './pages/login';
-import Perfil from './pages/perfil';
+import ProfileSettings from './pages/ProfileSettings'; //
 import Registro from './pages/registro';
 import Portafolio from './pages/portafolio';
 import ForgotPassword from './pages/forgotPassword';
@@ -14,13 +14,15 @@ function App() {
       <Routes>
         {/* Ruta raiz redirige al login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
+        
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        {/* Ruta debe coincidir con la URL que genera AuthServiceProvider en Laravel */}
         <Route path="/password-reset/:token" element={<ResetPassword />} />
-        {/* Redirigir cualquier URL no reconocida al login */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+
+        {/* 1. RUTA DE PERFIL LIBERADA: Se quita PrivateRoute para verla directo */}
+        <Route path="/perfil" element={<ProfileSettings />} />
+
         {/* Ruta protegida - requiere sesion activa */}
         <Route
           path="/portafolio"
@@ -30,14 +32,9 @@ function App() {
             </PrivateRoute>
           }
         />
-        <Route
-          path="/perfil"
-          element={
-            <PrivateRoute>
-              <Perfil />
-            </PrivateRoute>
-          }
-        />
+
+        {/* 2. COMENTAMOS ESTO TEMPORALMENTE: Evita que cualquier error te mande al login */}
+        {/* <Route path="*" element={<Navigate to="/login" replace />} /> */}
       </Routes>
     </BrowserRouter>
   );
