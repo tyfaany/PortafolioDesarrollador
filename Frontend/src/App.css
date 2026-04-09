@@ -28,9 +28,14 @@
   box-sizing: border-box;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   min-width: 320px;
+  overflow-y: auto;
   font-family: 'Roboto', sans-serif;
   background:
     radial-gradient(circle at top right, rgba(var(--color-primario-rgb), 0.14), transparent 24%),
@@ -56,6 +61,11 @@ input {
   background-color: var(--color-fondo);
   width: 100%;
   padding: 24px;
+}
+
+.softsave-app-shell {
+  width: 100%;
+  padding-top: 96px;
 }
 
 .landing-shell {
@@ -383,6 +393,10 @@ input {
 @media (max-width: 768px) {
   #root {
     padding: 16px;
+  }
+
+  .softsave-app-shell {
+    padding-top: 104px;
   }
 
   .landing-shell {

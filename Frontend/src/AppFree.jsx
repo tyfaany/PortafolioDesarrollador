@@ -5,6 +5,7 @@ import Registro from './pages/registro';
 import Portafolio from './pages/portafolio';
 import ForgotPassword from './pages/forgotPassword';
 import ResetPassword from './pages/resetPassword';
+import MainNavbar from './components/MainNavbar';
 
 function FreeHome() {
   return (
@@ -39,11 +40,24 @@ function AppFree() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/password-reset/:token" element={<ResetPassword />} />
-        <Route path="/portafolio" element={<Portafolio />} />
-        <Route path="/perfil" element={<ProfileSettings />} />
-        <Route path="/perfil/contacto" element={<ProfileSettings />} />
-        <Route path="/perfil/academica" element={<ProfileSettings />} />
-        <Route path="/perfil/github" element={<ProfileSettings />} />
+        <Route
+          path="/portafolio"
+          element={
+            <div className="softsave-app-shell">
+              <MainNavbar />
+              <Portafolio />
+            </div>
+          }
+        />
+        <Route
+          path="/perfil/*"
+          element={
+            <div className="softsave-app-shell">
+              <MainNavbar />
+              <ProfileSettings />
+            </div>
+          }
+        />
         <Route path="*" element={<FreeHome />} />
       </Routes>
     </BrowserRouter>

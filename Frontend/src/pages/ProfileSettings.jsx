@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Icon from '@mdi/react';
 import {
@@ -9,7 +9,6 @@ import {
   mdiContentSaveOutline,
   mdiDeleteOutline,
   mdiGithub,
-  mdiHome,
   mdiImageOutline,
   mdiLinkVariant,
   mdiPlus,
@@ -24,6 +23,7 @@ const SECCIONES_PERFIL = [
   { id: 'academica', label: 'Trayectoria académica', route: '/perfil/academica' },
   { id: 'github', label: 'Ecosistema de GitHub', route: '/perfil/github' },
 ];
+
 
 function obtenerIniciales(nombreCompleto) {
   return nombreCompleto
@@ -99,6 +99,7 @@ function obtenerSeccionActiva(pathname) {
   return seccionActiva?.id || 'contacto';
 }
 
+
 function ProfileSettings() {
   const { user } = useAuth();
   const { pathname } = useLocation();
@@ -115,6 +116,10 @@ function ProfileSettings() {
   const [mensajeSkillError, setMensajeSkillError] = useState('');
   const [habilidades, setHabilidades] = useState(() => normalizarHabilidades(user?.skills));
   const [enlacesSociales, setEnlacesSociales] = useState(() => normalizarEnlacesSociales(user?.socials));
+  const [zoomImagen, setZoomImagen] = useState(1);
+  const [desplazamientoImagen, setDesplazamientoImagen] = useState({ x: 0, y: 0 });
+  const arrastreImagenRef = useRef({ activo: false, inicioX: 0, inicioY: 0, baseX: 0, baseY: 0 });
+  const modalAvatarRef = useRef(null);
   const [perfilCabecera, setPerfilCabecera] = useState({
     nombreCompleto: user?.name || '',
     profesion: user?.profession || '',
@@ -131,6 +136,19 @@ function ProfileSettings() {
     [perfilCabecera.nombreCompleto],
   );
   const seccionActiva = obtenerSeccionActiva(pathname);
+
+  useEffect(() => {
+    if (!estaModalAbierto) {
+      return undefined;
+    }
+
+    const overflowPrevio = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = overflowPrevio;
+    };
+  }, [estaModalAbierto]);
 
   const manejarCambioFormulario = (evento) => {
     const { name, value } = evento.target;
@@ -211,6 +229,8 @@ function ProfileSettings() {
     lectorArchivo.onload = () => {
       setImagenTemporal(String(lectorArchivo.result || ''));
       setMensajeImagenError('');
+      setZoomImagen(1);
+      setDesplazamientoImagen({ x: 0, y: 0 });
     };
     lectorArchivo.readAsDataURL(archivoSeleccionado);
   };
@@ -301,41 +321,39 @@ function ProfileSettings() {
   };
 
   const vistaPreviaModal = imagenTemporal || imagenPerfil;
+  const limitarDesplazamiento = (x, y, zoom, contenedor) => {
+    if (!contenedor) {
+      return { x, y };
+    }
+
+    const tamanio = Math.min(contenedor.clientWidth, contenedor.clientHeight);
+    const margen = Math.max(0, (tamanio * (zoom - 1)) / 2);
+
+    return {
+      x: Math.min(margen, Math.max(-margen, x)),
+      y: Math.min(margen, Math.max(-margen, y)),
+    };
+  };
+  const estiloRecorteImagen = {
+    transform: `translate(${desplazamientoImagen.x}px, ${desplazamientoImagen.y}px) scale(${zoomImagen})`,
+  };
 
   return (
     <div className="softsave-profile">
       <div className="softsave-profile__container">
-        <header className="softsave-profile__topbar">
-          <div className="softsave-profile__brand">
-            <div className="softsave-profile__logo">{'{S}'}</div>
-            <div className="softsave-profile__brand-text">
-              <span className="softsave-profile__brand-title">DevStack</span>
-              <span className="softsave-profile__brand-subtitle">Perfil profesional</span>
-            </div>
-          </div>
-
-          <nav className="softsave-profile__nav" aria-label="Navegacion principal del perfil">
-            <div className="softsave-profile__nav-item">
-              <Icon path={mdiHome} size={1} />
-              <span>Inicio</span>
-            </div>
-            <div className="softsave-profile__nav-item">
-              <Icon path={mdiCodeTags} size={1} />
-              <span>Mi portafolio</span>
-            </div>
-            <div className="softsave-profile__nav-item is-active" aria-current="page">
-              <Icon path={mdiAccount} size={1} />
-              <span>Mi perfil</span>
-            </div>
-          </nav>
-        </header>
 
         <section className="softsave-profile__card">
           <div className="softsave-profile__banner">
             <div className="softsave-profile__avatar-wrap">
               <div className="softsave-profile__avatar">
                 {imagenPerfil ? (
-                  <img src={imagenPerfil} alt="Foto de perfil" className="softsave-profile__avatar-img" />
+                  <img
+                    src={imagenPerfil}
+                    alt="Foto de perfil"
+                    className="softsave-profile__avatar-img"
+                    style={estiloRecorteImagen}
+                    draggable={false}
+                  />
                 ) : inicialesPerfil ? (
                   <span className="softsave-profile__avatar-initials">{inicialesPerfil}</span>
                 ) : (
@@ -347,7 +365,7 @@ function ProfileSettings() {
                 type="button"
                 onClick={abrirModalImagen}
                 className="softsave-profile__avatar-button"
-                aria-label="Anadir o actualizar fotografia de perfil"
+                aria-label="Añadir o actualizar fotografia de perfil"
               >
                 <Icon path={mdiPlus} size={0.7} />
               </button>
@@ -458,9 +476,6 @@ function ProfileSettings() {
                     className="softsave-input softsave-profile__textarea"
                     placeholder="Cuentanos sobre tu trayectoria, tecnologias favoritas y que te apasiona construir."
                   />
-                  <span className="softsave-profile__help">
-                    Esta vista implementa exclusivamente la HU-07 y la HU-13.
-                  </span>
                 </label>
 
                 <div className="softsave-profile__actions">
@@ -603,8 +618,8 @@ function ProfileSettings() {
         <div className="softsave-profile__modal-overlay" role="dialog" aria-modal="true">
           <div className="softsave-profile__modal">
             <div className="softsave-profile__modal-header">
-              <div>
-                <h3 className="softsave-profile__modal-title">Anadir o Actualizar Fotografia de Perfil</h3>
+              <div className="softsave-profile__modal-content">
+                <h3 className="softsave-profile__modal-title">Añadir o Actualizar Fotografia de Perfil</h3>
                 <p className="softsave-profile__modal-text">
                   Selecciona una imagen de hasta 10MB. La previsualizacion se actualiza de inmediato.
                 </p>
@@ -620,13 +635,88 @@ function ProfileSettings() {
               </button>
             </div>
 
-            <div className="softsave-profile__modal-avatar">
+            <div
+              ref={modalAvatarRef}
+              className="softsave-profile__modal-avatar"
+              onPointerDown={(evento) => {
+                if (!vistaPreviaModal) {
+                  return;
+                }
+
+                if (evento.button !== 0) {
+                  return;
+                }
+
+                evento.preventDefault();
+                arrastreImagenRef.current = {
+                  activo: true,
+                  inicioX: evento.clientX,
+                  inicioY: evento.clientY,
+                  baseX: desplazamientoImagen.x,
+                  baseY: desplazamientoImagen.y,
+                };
+              }}
+              onPointerMove={(evento) => {
+                const estadoArrastre = arrastreImagenRef.current;
+
+                if (!estadoArrastre.activo) {
+                  return;
+                }
+
+                const deltaX = evento.clientX - estadoArrastre.inicioX;
+                const deltaY = evento.clientY - estadoArrastre.inicioY;
+                const nuevo = limitarDesplazamiento(
+                  estadoArrastre.baseX + deltaX,
+                  estadoArrastre.baseY + deltaY,
+                  zoomImagen,
+                  modalAvatarRef.current,
+                );
+
+                setDesplazamientoImagen(nuevo);
+              }}
+              onPointerLeave={() => {
+                arrastreImagenRef.current.activo = false;
+              }}
+              onPointerUp={() => {
+                arrastreImagenRef.current.activo = false;
+              }}
+              onPointerCancel={() => {
+                arrastreImagenRef.current.activo = false;
+              }}
+              onWheel={(evento) => {
+                if (!vistaPreviaModal) {
+                  return;
+                }
+
+                evento.preventDefault();
+                evento.stopPropagation();
+                const delta = -evento.deltaY * 0.0015;
+                const nuevoZoom = Math.min(2.5, Math.max(1, zoomImagen + delta));
+                const nuevo = limitarDesplazamiento(
+                  desplazamientoImagen.x,
+                  desplazamientoImagen.y,
+                  nuevoZoom,
+                  modalAvatarRef.current,
+                );
+
+                setZoomImagen(nuevoZoom);
+                setDesplazamientoImagen(nuevo);
+              }}
+            >
               {vistaPreviaModal ? (
-                <img src={vistaPreviaModal} alt="Vista previa" className="softsave-profile__avatar-img" />
+                <img
+                  src={vistaPreviaModal}
+                  alt="Vista previa"
+                  className="softsave-profile__avatar-img softsave-profile__avatar-img--editable"
+                  style={estiloRecorteImagen}
+                  draggable={false}
+                  onDragStart={(evento) => evento.preventDefault()}
+                />
               ) : (
                 <Icon path={mdiImageOutline} size={2.2} className="softsave-profile__panel-icon" />
               )}
             </div>
+
 
             <input
               ref={inputImagenRef}
