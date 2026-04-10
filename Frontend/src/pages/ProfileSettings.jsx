@@ -16,6 +16,7 @@ import {
   mdiWeb,
 } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
+import { actualizarPerfil } from '../services/authService';
 import '../styles/ProfileSettings.css';
 
 const SECCIONES_PERFIL = [
@@ -101,12 +102,14 @@ function obtenerSeccionActiva(pathname) {
 
 
 function ProfileSettings() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { pathname } = useLocation();
   const inputImagenRef = useRef(null);
   const [estaModalAbierto, setEstaModalAbierto] = useState(false);
   const [mensajeImagenError, setMensajeImagenError] = useState('');
   const [erroresFormulario, setErroresFormulario] = useState({});
+  const [mensajeGuardadoError, setMensajeGuardadoError] = useState('');
+  const [guardandoPerfil, setGuardandoPerfil] = useState(false);
   const [imagenTemporal, setImagenTemporal] = useState('');
   const [imagenPerfil, setImagenPerfil] = useState('');
   const [estaFormularioSkillAbierto, setEstaFormularioSkillAbierto] = useState(false);
@@ -177,18 +180,35 @@ function ProfileSettings() {
     return Object.keys(nuevosErrores).length === 0;
   };
 
-  const manejarGuardarCambios = (evento) => {
+  const manejarGuardarCambios = async (evento) => {
     evento.preventDefault();
 
     if (!validarFormulario()) {
       return;
     }
 
-    setPerfilCabecera({
-      nombreCompleto: formularioPerfil.nombreCompleto.trim(),
-      profesion: formularioPerfil.profesion.trim(),
-      biografia: formularioPerfil.biografia.trim(),
-    });
+    const payloadPerfil = {
+      name: formularioPerfil.nombreCompleto.trim(),
+      profession: formularioPerfil.profesion.trim(),
+      biography: formularioPerfil.biografia.trim(),
+    };
+
+    setGuardandoPerfil(true);
+    setMensajeGuardadoError('');
+
+    try {
+      await actualizarPerfil(payloadPerfil);
+      await refreshUser();
+      setPerfilCabecera({
+        nombreCompleto: payloadPerfil.name,
+        profesion: payloadPerfil.profession,
+        biografia: payloadPerfil.biography,
+      });
+    } catch (error) {
+      setMensajeGuardadoError('No se pudo guardar los cambios. Intenta de nuevo.');
+    } finally {
+      setGuardandoPerfil(false);
+    }
   };
 
   const abrirModalImagen = () => {
@@ -466,9 +486,13 @@ function ProfileSettings() {
                 </label>
 
                 <div className="softsave-profile__actions">
-                  <button type="submit" className="softsave-button softsave-profile__primary-button">
+                  <button
+                    type="submit"
+                    className="softsave-button softsave-profile__primary-button"
+                    disabled={guardandoPerfil}
+                  >
                     <Icon path={mdiContentSaveOutline} size={0.8} />
-                    Guardar cambios
+                    {guardandoPerfil ? 'Guardando...' : 'Guardar cambios'}
                   </button>
                   <button
                     type="button"
@@ -479,6 +503,11 @@ function ProfileSettings() {
                   </button>
                 </div>
 
+                {mensajeGuardadoError ? (
+                  <span className="error-text softsave-profile__error-text" role="alert">
+                    {mensajeGuardadoError}
+                  </span>
+                ) : null}
               </form>
             </section>
 

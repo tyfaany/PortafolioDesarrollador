@@ -24,9 +24,9 @@ function App() {
       {/* Rutas protegidas */}
       <Route
         element={(
-          // <ProtectedRoute>
+          <ProtectedRoute>
             <MainLayout />
-          // </ProtectedRoute>
+          </ProtectedRoute>
         )}
       >
         <Route path="/portafolio" element={<Portafolio />} />
