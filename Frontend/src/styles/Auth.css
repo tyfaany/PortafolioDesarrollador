@@ -142,6 +142,7 @@
 .auth-split__visual {
   position: relative;
   padding: 62px 64px 56px;
+  overflow: hidden;
   background:
     radial-gradient(circle at 12% 6%, rgba(var(--color-arena-rgb), 0.22), transparent 55%),
     radial-gradient(circle at 88% 92%, rgba(var(--color-salvia-rgb), 0.18), transparent 50%),
@@ -521,7 +522,57 @@
   }
 
   .auth-split__visual {
-    padding: 40px 32px;
+    padding: 32px 24px;
+  }
+
+  .auth-split__visual-inner {
+    max-width: none;
+    margin-top: 12px;
+  }
+
+  .auth-split__title {
+    font-size: clamp(2.2rem, 7vw, 2.7rem);
+  }
+
+  .auth-split__text {
+    font-size: 0.95rem;
+  }
+
+  .auth-split__list {
+    gap: 14px;
+    margin: 20px 0 18px;
+  }
+
+  .auth-split__list-item h3 {
+    font-size: 0.98rem;
+  }
+
+  .auth-split__list-item p {
+    font-size: 0.9rem;
+  }
+
+  .auth-split__badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .auth-timeline {
+    gap: 14px;
+    margin: 22px 0 14px;
+  }
+
+  .auth-timeline__item {
+    grid-template-columns: 28px 1fr;
+  }
+
+  .auth-timeline__dot {
+    width: 9px;
+    height: 9px;
+  }
+
+  .auth-timeline__stem {
+    height: 24px;
   }
 
   .auth-split__form {

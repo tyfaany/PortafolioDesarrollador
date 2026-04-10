@@ -41,7 +41,7 @@
 }
 
 .softsave-navbar__logo-brace {
-  color: #2f3e4f;
+  color: var(--color-texto);
   font-weight: 700;
 }
 
@@ -99,9 +99,28 @@
   .softsave-navbar__container {
     justify-content: center;
     text-align: center;
+    padding: 12px 14px;
+    gap: 12px;
+  }
+
+  .softsave-navbar__brand {
+    gap: 2px;
+  }
+
+  .softsave-navbar__logo {
+    font-size: 1.6rem;
+  }
+
+  .softsave-navbar__brand-title {
+    font-size: 1rem;
   }
 
   .softsave-navbar__nav {
     justify-content: center;
+    gap: 14px;
+  }
+
+  .softsave-navbar__nav-item {
+    font-size: 0.72rem;
   }
 }

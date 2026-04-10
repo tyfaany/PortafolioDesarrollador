@@ -148,15 +148,20 @@ const Login = () => {
             <p>Ingresa tus credenciales para continuar</p>
           </div>
 
-          <form className="auth-form" onSubmit={handleSubmit}>
+          <form className="auth-form" onSubmit={handleSubmit} autoComplete="on">
             <Field
               label="Correo Electrónico"
               type="email"
+              id="login-email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="Correo Electrónico"
-              autoComplete="email"
+              autoComplete="username"
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
               icon={<Icon path={mdiEmailOutline} size={0.9} />}
             />
             {errores.email && (
@@ -165,11 +170,14 @@ const Login = () => {
             <Field
               label="Contraseña"
               type={mostrarPassword ? "text" : "password"}
+              id="login-password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               placeholder="Contraseña"
               autoComplete="current-password"
+              autoCapitalize="none"
+              autoCorrect="off"
               startIcon={<Icon path={mdiLockOutline} size={0.9} />}
               endIcon={
                 <Icon

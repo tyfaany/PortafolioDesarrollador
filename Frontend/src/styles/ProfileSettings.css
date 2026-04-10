@@ -514,6 +514,20 @@
     padding: 24px 16px 36px;
   }
 
+  .softsave-profile__avatar-wrap {
+    left: 20px;
+    bottom: -50px;
+  }
+
+  .softsave-profile__avatar {
+    width: 96px;
+    height: 96px;
+  }
+
+  .softsave-profile__avatar-initials {
+    font-size: 2.6rem;
+  }
+
   .softsave-profile__header {
     padding: 56px 20px 20px;
   }

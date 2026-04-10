@@ -92,7 +92,10 @@ const Registro = () => {
 
   return (
     <section className="auth-split">
-      <aside className="auth-split__visual auth-split__visual--soft-shapes" aria-hidden="true">
+      <aside
+        className="auth-split__visual auth-split__visual--soft-shapes"
+        aria-hidden="true"
+      >
         <div className="auth-split__decor">
           <span className="auth-split__square auth-split__square--left" />
           <span className="auth-split__square auth-split__square--right" />
@@ -191,9 +194,10 @@ const Registro = () => {
             </div>
           )}
 
-          <form className="auth-form" onSubmit={handleSubmit}>
+          <form className="auth-form" onSubmit={handleSubmit} autoComplete="on">
             <Field
               label="Nombre Completo"
+              id="register-name"
               name="nombre"
               value={formData.nombre}
               onChange={handleChange}
@@ -207,11 +211,16 @@ const Registro = () => {
             <Field
               label="Correo Electrónico"
               type="email"
+              id="register-email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="Ingresa tu correo"
               autoComplete="email"
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
               icon={<Icon path={mdiEmailOutline} size={0.9} />}
             />
             {errores.email && (
@@ -220,11 +229,14 @@ const Registro = () => {
             <Field
               label="Contraseña"
               type={mostrarPassword ? "text" : "password"}
+              id="register-password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               placeholder="Mínimo 8 caracteres"
               autoComplete="new-password"
+              autoCapitalize="none"
+              autoCorrect="off"
               startIcon={<Icon path={mdiLockOutline} size={0.9} />}
               endIcon={
                 <Icon
@@ -243,11 +255,14 @@ const Registro = () => {
             <Field
               label="Confirmar Contraseña"
               type={mostrarConfirmacion ? "text" : "password"}
+              id="register-password-confirm"
               name="passwordConfirmacion"
               value={formData.passwordConfirmacion}
               onChange={handleChange}
               placeholder="Repite tu contraseña"
               autoComplete="new-password"
+              autoCapitalize="none"
+              autoCorrect="off"
               startIcon={<Icon path={mdiLockOutline} size={0.9} />}
               endIcon={
                 <Icon

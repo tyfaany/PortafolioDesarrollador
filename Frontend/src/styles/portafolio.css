@@ -19,3 +19,22 @@
   padding: 20px;
   border-radius: 8px;
 }
+
+@media (max-width: 768px) {
+  .softsave-portafolio-shell {
+    padding: 24px 16px 32px;
+  }
+
+  .softsave-portafolio-header {
+    margin-bottom: 32px;
+  }
+
+  .softsave-portafolio-grid {
+    max-width: none;
+    gap: 16px;
+  }
+
+  .softsave-portafolio-card {
+    padding: 16px;
+  }
+}

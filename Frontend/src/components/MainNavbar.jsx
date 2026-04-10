@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import Icon from '@mdi/react';
 import { mdiAccountCircle, mdiFolder, mdiHome } from '@mdi/js';
-import './MainNavbar.css';
+import "../styles/MainNavbar.css";
 
 const NAV_ITEMS = [
   { id: 'inicio', label: 'Inicio', route: '/portafolio', icon: mdiHome },

@@ -16,7 +16,7 @@ import {
   mdiWeb,
 } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
-import './ProfileSettings.css';
+import '../styles/ProfileSettings.css';
 
 const SECCIONES_PERFIL = [
   { id: 'contacto', label: 'Información de contacto', route: '/perfil/contacto' },
