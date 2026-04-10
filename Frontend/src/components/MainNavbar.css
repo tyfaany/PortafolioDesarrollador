@@ -23,38 +23,38 @@
 
 .softsave-navbar__brand {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
 }
 
 .softsave-navbar__logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
-  color: var(--color-blanco);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   font-family: var(--font-titulos);
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.85rem;
+  color: var(--color-texto);
+  line-height: 1;
 }
 
-.softsave-navbar__brand-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.05;
+.softsave-navbar__logo-brace {
+  color: #2f3e4f;
+  font-weight: 700;
+}
+
+.softsave-navbar__logo-letter {
+  color: var(--color-primario);
+  font-weight: 800;
 }
 
 .softsave-navbar__brand-title {
   font-family: var(--font-titulos);
   font-weight: 700;
-  font-size: 1.3rem;
-}
-
-.softsave-navbar__brand-subtitle {
-  color: var(--color-texto-suave);
-  font-size: 0.82rem;
+  font-size: 1.2rem;
+  line-height: 1.1;
 }
 
 .softsave-navbar__nav {
@@ -73,12 +73,20 @@
   font-size: 0.78rem;
   font-weight: 600;
   text-decoration: none;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 4px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.softsave-navbar__nav-item:hover {
+  text-decoration: none;
+  transform: translateY(-1px);
+  border-bottom-color: var(--color-texto);
 }
 
 .softsave-navbar__nav-item.is-active {
   color: var(--color-texto);
-  border-bottom: 2px solid var(--color-texto);
-  padding-bottom: 4px;
+  border-bottom-color: var(--color-texto);
 }
 
 .softsave-navbar__nav-icon {

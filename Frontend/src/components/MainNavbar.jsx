@@ -1,12 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import Icon from '@mdi/react';
-import { mdiAccount, mdiCodeTags, mdiHome } from '@mdi/js';
+import { mdiAccountCircle, mdiFolder, mdiHome } from '@mdi/js';
 import './MainNavbar.css';
 
 const NAV_ITEMS = [
   { id: 'inicio', label: 'Inicio', route: '/portafolio', icon: mdiHome },
-  { id: 'portafolio', label: 'Mi portafolio', route: '/portafolio', icon: mdiCodeTags },
-  { id: 'perfil', label: 'Mi perfil', route: '/perfil', icon: mdiAccount },
+  { id: 'portafolio', label: 'Mi portafolio', route: '/portafolio', icon: mdiFolder },
+  { id: 'perfil', label: 'Mi perfil', route: '/perfil', icon: mdiAccountCircle },
 ];
 
 function obtenerNavActivo(pathname) {
@@ -29,11 +29,12 @@ function MainNavbar() {
     <header className="softsave-navbar">
       <div className="softsave-navbar__container">
         <div className="softsave-navbar__brand">
-          <div className="softsave-navbar__logo">{'{S}'}</div>
-          <div className="softsave-navbar__brand-text">
-            <span className="softsave-navbar__brand-title">DevStack</span>
-            <span className="softsave-navbar__brand-subtitle">Perfil profesional</span>
+          <div className="softsave-navbar__logo" aria-hidden="true">
+            <span className="softsave-navbar__logo-brace">{'{'}</span>
+            <span className="softsave-navbar__logo-letter">S</span>
+            <span className="softsave-navbar__logo-brace">{'}'}</span>
           </div>
+          <span className="softsave-navbar__brand-title">DevStack</span>
         </div>
 
         <nav className="softsave-navbar__nav" aria-label="Navegacion principal">
@@ -45,7 +46,7 @@ function MainNavbar() {
               aria-current={navActivo === item.id ? 'page' : undefined}
             >
               <span className="softsave-navbar__nav-icon" aria-hidden="true">
-                <Icon path={item.icon} size={1} />
+                <Icon path={item.icon} size={1.5} />
               </span>
               <span>{item.label}</span>
             </Link>

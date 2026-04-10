@@ -92,10 +92,13 @@ const Registro = () => {
 
   return (
     <section className="auth-split">
-      <aside className="auth-split__visual" aria-hidden="true">
+      <aside className="auth-split__visual auth-split__visual--soft-shapes" aria-hidden="true">
         <div className="auth-split__decor">
           <span className="auth-split__square auth-split__square--left" />
           <span className="auth-split__square auth-split__square--right" />
+          <span className="auth-split__square auth-split__square--mid" />
+          <span className="auth-split__circle auth-split__circle--large" />
+          <span className="auth-split__circle auth-split__circle--small" />
         </div>
         <div className="auth-split__visual-inner">
           {/* <span className="auth-split__eyebrow">SISTEMA DE PORTAFOLIOS · UMSS</span> */}
