@@ -25,3 +25,5 @@ export const restablecerPassword = ({ token, email, password, passwordConfirmaci
   password,
   password_confirmation: passwordConfirmacion,
 });
+
+export const actualizarPerfil = (datos) => api.put('/user/update', datos);
