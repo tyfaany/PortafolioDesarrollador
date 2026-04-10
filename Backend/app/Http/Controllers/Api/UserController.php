@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\User;
 
 class UserController extends Controller
 {
@@ -25,23 +26,57 @@ class UserController extends Controller
     /**
      * Actualizar datos del usuario autenticado
      */
-   public function updateInfo(Request $request)
+   public function update(Request $request)
 {
     $user = $request->user();
 
     $validated = $request->validate([
-        'name'            => 'filled|string|max:255',
-        'profession'      => 'nullable|string|max:100',
-        'biography'       => 'nullable|string',
-        'github_username' => 'nullable|string|max:100',
-        'linkedin_url'    => 'nullable|string|max:200',
+        'name'         => 'required|string|max:255',
+        'profession'   => 'nullable|string|max:100',
+        'biography'    => 'nullable|string|max:1000',
+        'github_url'   => [
+            'nullable', 'url', 'max:200',
+            'regex:/^(https?:\/\/)?(www\.)?github\.com\/[a-zA-Z0-9_-]+\/?$/i'
+        ],
+        'linkedin_url' => [
+            'nullable', 'url', 'max:200',
+            'regex:/^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/i'
+        ],
     ]);
 
-    $user->update($validated);
+    $sanitized = array_map(function($value) {
+        return is_string($value) ? strip_tags($value) : $value;
+    }, $validated);
+
+   
+    $isComplete = $this->checkIfProfileIsComplete($user, $sanitized);
+    
+    
+    $sanitized['profile_completed'] = $isComplete;
+
+    
+    $user->fill($sanitized);
+    $user->save();
 
     return response()->json([
         'message' => 'Información actualizada',
-        'user' => $user
+        
+        'user' => $user->fresh() 
     ]);
 }
+private function checkIfProfileIsComplete(User $user, array $newData): bool
+    {
+        $requiredFields = ['name', 'profession', 'biography', 'github_url', 'linkedin_url'];
+
+        foreach ($requiredFields as $field) {
+            // Buscamos en los datos nuevos, si no están, buscamos en los que ya tiene el usuario
+            $value = $newData[$field] ?? $user->$field;
+
+            if (empty($value)) {
+                return false; 
+            }
+        }
+
+        return true; 
+    }
 }

@@ -17,9 +17,10 @@ class User extends Authenticatable
         'password',
         'profession',
         'biography',
-        'github_username',
+        'github_url',
         'linkedin_url',
         'profile_photo',
+        'profile_completed',
     ];
 
     protected $hidden = [
