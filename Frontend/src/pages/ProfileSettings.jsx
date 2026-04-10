@@ -121,12 +121,12 @@ function ProfileSettings() {
   const [perfilCabecera, setPerfilCabecera] = useState({
     nombreCompleto: user?.name || '',
     profesion: user?.profession || '',
-    biografia: user?.bio || '',
+    biografia: user?.biography || '',
   });
   const [formularioPerfil, setFormularioPerfil] = useState({
     nombreCompleto: user?.name || '',
     profesion: user?.profession || '',
-    biografia: user?.bio || '',
+    biografia: user?.biography || '',
   });
 
   const inicialesPerfil = useMemo(
