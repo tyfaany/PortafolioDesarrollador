@@ -90,6 +90,11 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    const respuesta = await getMe();
+    setUser(respuesta.data);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -97,6 +102,7 @@ export const AuthProvider = ({ children }) => {
         login,
         registrar,
         logout,
+        refreshUser,
         loading,
         isAuthenticated: !!user,
       }}
