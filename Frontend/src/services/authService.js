@@ -26,4 +26,12 @@ export const restablecerPassword = ({ token, email, password, passwordConfirmaci
   password_confirmation: passwordConfirmacion,
 });
 
+export const subirFoto = (archivo) => {
+  const formData = new FormData();
+  formData.append('photo', archivo);
+  return api.post('/user/photo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
 export const actualizarPerfil = (datos) => api.put('/user/update', datos);
