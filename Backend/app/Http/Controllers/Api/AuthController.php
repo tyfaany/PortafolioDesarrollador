@@ -200,7 +200,7 @@ class AuthController extends Controller
     {
         // 1. Validamos que el archivo sea una imagen válida y pese máximo 2MB
         $request->validate([
-            'photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:10240',
         ]);
 
         $user = $request->user();
@@ -220,7 +220,7 @@ class AuthController extends Controller
         // 5. Devolvemos una respuesta exitosa con la URL completa de la imagen para que React la muestre
         return response()->json([
             'message' => 'Foto de perfil actualizada correctamente',
-            'photo_url' => asset('storage/' . $path)
+            'photo_url' => $user->profile_photo_url
         ], 200);
     }
 }

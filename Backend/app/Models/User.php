@@ -11,7 +11,6 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-   
     protected $fillable = [
         'name',
         'email',
@@ -20,13 +19,17 @@ class User extends Authenticatable
         'biography',
         'github_username',
         'linkedin_url',
-        'profile_image',
+        'profile_photo',
     ];
 
-   
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    // --- NUEVO
+    protected $appends = [
+        'profile_photo_url',
     ];
 
     /**
@@ -74,5 +77,17 @@ class User extends Authenticatable
     public function skills()
     {
         return $this->belongsToMany(TechnicalSkill::class, 'user_skills');
+    }
+
+    // --- NUEVO: Agregamos la función del Accessor al final ---
+    /**
+     * Accessor para obtener la URL completa de la foto de perfil automáticamente
+     */
+    public function getProfilePhotoUrlAttribute()
+    {
+        if ($this->profile_photo) {
+            return asset('storage/' . $this->profile_photo);
+        }
+        return null;
     }
 }
