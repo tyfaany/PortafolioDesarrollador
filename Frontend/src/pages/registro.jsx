@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import Icon from '@mdi/react';
 import {
@@ -32,6 +32,21 @@ const Registro = () => {
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    const completarPerfil = sessionStorage.getItem('post_register');
+    if (completarPerfil) {
+      sessionStorage.removeItem('post_register');
+      navigate('/perfil', { state: { completarPerfil: true }, replace: true });
+      return;
+    }
+
+    navigate('/portafolio', { replace: true });
+  }, [isAuthenticated, navigate]);
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((current) => ({ ...current, [name]: value }));
@@ -43,7 +58,7 @@ const Registro = () => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/portafolio" replace />;
+    return null;
   }
 
   const handleSubmit = async (event) => {
@@ -63,7 +78,8 @@ const Registro = () => {
           formData.password,
           formData.passwordConfirmacion
         );
-        navigate('/perfil');
+        sessionStorage.setItem('post_register', 'true');
+        navigate('/perfil', { state: { completarPerfil: true } });
       } catch (error) {
         if (error.response?.status === 422) {
           const erroresBackend = error.response.data.errors;

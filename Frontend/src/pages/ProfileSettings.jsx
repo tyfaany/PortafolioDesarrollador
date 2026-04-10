@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon from '@mdi/react';
 import {
   mdiAccount,
@@ -122,13 +122,16 @@ function normalizarUrlImagen(url) {
 
 function ProfileSettings() {
   const { user, refreshUser } = useAuth();
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { pathname } = location;
   const inputImagenRef = useRef(null);
   const [estaModalAbierto, setEstaModalAbierto] = useState(false);
   const [mensajeImagenError, setMensajeImagenError] = useState('');
   const [erroresFormulario, setErroresFormulario] = useState({});
   const [mensajeGuardadoError, setMensajeGuardadoError] = useState('');
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
+  const [estaModoEdicion, setEstaModoEdicion] = useState(false);
   const [imagenTemporal, setImagenTemporal] = useState('');
   const [imagenPerfil, setImagenPerfil] = useState(() => normalizarUrlImagen(user?.profile_photo_url));
   const [estaFormularioSkillAbierto, setEstaFormularioSkillAbierto] = useState(false);
@@ -156,6 +159,11 @@ function ProfileSettings() {
     [perfilCabecera.nombreCompleto],
   );
   const seccionActiva = obtenerSeccionActiva(pathname);
+  const [permitirCompletar, setPermitirCompletar] = useState(
+    Boolean(location.state?.completarPerfil),
+  );
+  const completarPerfil = Boolean(location.state?.completarPerfil);
+  const edicionDisponible = permitirCompletar;
 
   useEffect(() => {
     if (!estaModalAbierto) {
@@ -169,6 +177,14 @@ function ProfileSettings() {
       document.body.style.overflow = overflowPrevio;
     };
   }, [estaModalAbierto]);
+
+  useEffect(() => {
+    if (completarPerfil) {
+      setPermitirCompletar(true);
+      setEstaModoEdicion(true);
+      setMensajeGuardadoError('');
+    }
+  }, [completarPerfil]);
 
   useEffect(() => {
     if (user?.profile_photo_url) {
@@ -208,6 +224,10 @@ function ProfileSettings() {
   const manejarGuardarCambios = async (evento) => {
     evento.preventDefault();
 
+    if (!estaModoEdicion) {
+      return;
+    }
+
     if (!validarFormulario()) {
       return;
     }
@@ -229,6 +249,11 @@ function ProfileSettings() {
         profesion: payloadPerfil.profession,
         biografia: payloadPerfil.biography,
       });
+      setEstaModoEdicion(false);
+      setPermitirCompletar(false);
+      if (location.state?.completarPerfil) {
+        navigate('/perfil', { replace: true });
+      }
     } catch (error) {
       setMensajeGuardadoError('No se pudo guardar los cambios. Intenta de nuevo.');
     } finally {
@@ -351,6 +376,19 @@ function ProfileSettings() {
       biografia: perfilCabecera.biografia,
     });
     setErroresFormulario({});
+    setMensajeGuardadoError('');
+    setEstaModoEdicion(false);
+  };
+
+  const manejarHabilitarEdicion = () => {
+    setFormularioPerfil({
+      nombreCompleto: perfilCabecera.nombreCompleto,
+      profesion: perfilCabecera.profesion,
+      biografia: perfilCabecera.biografia,
+    });
+    setErroresFormulario({});
+    setEstaModoEdicion(true);
+    setMensajeGuardadoError('');
   };
 
   const manejarToggleFormularioSkill = () => {
@@ -394,7 +432,6 @@ function ProfileSettings() {
   return (
     <div className="softsave-profile">
       <div className="softsave-profile__container">
-
         <section className="softsave-profile__card">
           <div className="softsave-profile__banner">
             <div className="softsave-profile__avatar-wrap">
@@ -408,9 +445,15 @@ function ProfileSettings() {
                     draggable={false}
                   />
                 ) : inicialesPerfil ? (
-                  <span className="softsave-profile__avatar-initials">{inicialesPerfil}</span>
+                  <span className="softsave-profile__avatar-initials">
+                    {inicialesPerfil}
+                  </span>
                 ) : (
-                  <Icon path={mdiAccount} size={1.6} className="softsave-profile__avatar-icon" />
+                  <Icon
+                    path={mdiAccount}
+                    size={1.6}
+                    className="softsave-profile__avatar-icon"
+                  />
                 )}
               </div>
 
@@ -431,8 +474,10 @@ function ProfileSettings() {
                 <Link
                   key={seccion.id}
                   to={seccion.route}
-                  className={`softsave-profile__tab ${seccionActiva === seccion.id ? 'is-active' : ''}`}
-                  aria-current={seccionActiva === seccion.id ? 'page' : undefined}
+                  className={`softsave-profile__tab ${seccionActiva === seccion.id ? "is-active" : ""}`}
+                  aria-current={
+                    seccionActiva === seccion.id ? "page" : undefined
+                  }
                 >
                   {seccion.label}
                 </Link>
@@ -442,10 +487,11 @@ function ProfileSettings() {
             <div className="softsave-profile__header-row">
               <div>
                 <h1 className="softsave-profile__name">
-                  {perfilCabecera.nombreCompleto || 'Completa tu perfil'}
+                  {perfilCabecera.nombreCompleto || "Completa tu perfil"}
                 </h1>
                 <p className="softsave-profile__role">
-                  {perfilCabecera.profesion || 'Agrega tu profesion para mostrar tu especialidad.'}
+                  {perfilCabecera.profesion ||
+                    "Agrega tu profesion para mostrar tu especialidad."}
                 </p>
                 {enlacesSociales[0]?.url ? (
                   <a
@@ -461,98 +507,151 @@ function ProfileSettings() {
 
               <div>
                 <p className="softsave-profile__bio">
-                  {perfilCabecera.biografia || 'Tu biografia aparecera aqui cuando completes la informacion personal.'}
+                  {perfilCabecera.biografia ||
+                    "Tu biografia aparecera aqui cuando completes la informacion personal."}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="softsave-profile__grid">
-            <aside>
-              <Link to="/perfil/contacto" className="softsave-button softsave-profile__side-link">
-                Información de contacto
-              </Link>
-            </aside>
-
+          <div className="softsave-profile__grid softsave-profile__grid--single">
             <section className="softsave-profile__form-card">
-              <h2 className="softsave-profile__form-title">Configuracion de Perfil</h2>
+              <h2 className="softsave-profile__form-title">
+                Configuracion de Perfil
+              </h2>
               <p className="softsave-profile__form-subtitle">
                 Personaliza como te ven otros desarrolladores y reclutadores.
               </p>
 
-              <form className="softsave-profile__form" onSubmit={manejarGuardarCambios}>
-                <label className="softsave-profile__field">
-                  <span className="softsave-profile__label">Nombre Completo</span>
-                  <input
-                    type="text"
-                    name="nombreCompleto"
-                    value={formularioPerfil.nombreCompleto}
-                    onChange={manejarCambioFormulario}
-                    className="softsave-input softsave-profile__input"
-                    placeholder="Ej. Alejandra Garcia"
-                  />
-                  {erroresFormulario.nombreCompleto && (
-                    <span className="error-text softsave-profile__error-text" role="alert">
-                      {erroresFormulario.nombreCompleto}
+              {edicionDisponible && estaModoEdicion ? (
+                <form
+                  className="softsave-profile__form"
+                  onSubmit={manejarGuardarCambios}
+                >
+                  <label className="softsave-profile__field">
+                    <span className="softsave-profile__label">
+                      Nombre Completo
                     </span>
-                  )}
-                </label>
+                    <input
+                      type="text"
+                      name="nombreCompleto"
+                      value={formularioPerfil.nombreCompleto}
+                      onChange={manejarCambioFormulario}
+                      className="softsave-input softsave-profile__input"
+                      placeholder="Ej. Alejandra Garcia"
+                    />
+                    {erroresFormulario.nombreCompleto && (
+                      <span
+                        className="error-text softsave-profile__error-text"
+                        role="alert"
+                      >
+                        {erroresFormulario.nombreCompleto}
+                      </span>
+                    )}
+                  </label>
 
-                <label className="softsave-profile__field">
-                  <span className="softsave-profile__label">Profesion</span>
-                  <input
-                    type="text"
-                    name="profesion"
-                    value={formularioPerfil.profesion}
-                    onChange={manejarCambioFormulario}
-                    className="softsave-input softsave-profile__input"
-                    placeholder="Ej. Senior Full Stack Developer"
-                  />
-                  {erroresFormulario.profesion && (
-                    <span className="error-text softsave-profile__error-text" role="alert">
-                      {erroresFormulario.profesion}
+                  <label className="softsave-profile__field">
+                    <span className="softsave-profile__label">Profesion</span>
+                    <input
+                      type="text"
+                      name="profesion"
+                      value={formularioPerfil.profesion}
+                      onChange={manejarCambioFormulario}
+                      className="softsave-input softsave-profile__input"
+                      placeholder="Ej. Senior Full Stack Developer"
+                    />
+                    {erroresFormulario.profesion && (
+                      <span
+                        className="error-text softsave-profile__error-text"
+                        role="alert"
+                      >
+                        {erroresFormulario.profesion}
+                      </span>
+                    )}
+                  </label>
+
+                  <label className="softsave-profile__field">
+                    <span className="softsave-profile__label">Biografia</span>
+                    <textarea
+                      name="biografia"
+                      value={formularioPerfil.biografia}
+                      onChange={manejarCambioFormulario}
+                      className="softsave-input softsave-profile__textarea"
+                      placeholder="Cuentanos sobre tu trayectoria, tecnologias favoritas y que te apasiona construir."
+                    />
+                  </label>
+
+                  <div className="softsave-profile__actions">
+                    <button
+                      type="submit"
+                      className="softsave-button softsave-profile__primary-button"
+                      disabled={guardandoPerfil}
+                    >
+                      <Icon path={mdiContentSaveOutline} size={0.8} />
+                      {guardandoPerfil ? "Guardando..." : "Guardar cambios"}
+                    </button>
+                    <button
+                      type="button"
+                      className="softsave-profile__secondary-button"
+                      onClick={manejarDescartarCambios}
+                    >
+                      Descartar
+                    </button>
+                  </div>
+
+                  {mensajeGuardadoError ? (
+                    <span
+                      className="error-text softsave-profile__error-text"
+                      role="alert"
+                    >
+                      {mensajeGuardadoError}
                     </span>
-                  )}
-                </label>
-
-                <label className="softsave-profile__field">
-                  <span className="softsave-profile__label">Biografia</span>
-                  <textarea
-                    name="biografia"
-                    value={formularioPerfil.biografia}
-                    onChange={manejarCambioFormulario}
-                    className="softsave-input softsave-profile__textarea"
-                    placeholder="Cuentanos sobre tu trayectoria, tecnologias favoritas y que te apasiona construir."
-                  />
-                </label>
-
-                <div className="softsave-profile__actions">
-                  <button
-                    type="submit"
-                    className="softsave-button softsave-profile__primary-button"
-                    disabled={guardandoPerfil}
-                  >
-                    <Icon path={mdiContentSaveOutline} size={0.8} />
-                    {guardandoPerfil ? 'Guardando...' : 'Guardar cambios'}
-                  </button>
-                  <button
-                    type="button"
-                    className="softsave-profile__secondary-button"
-                    onClick={manejarDescartarCambios}
-                  >
-                    Descartar
-                  </button>
+                  ) : null}
+                </form>
+              ) : (
+                <div className="softsave-profile__view">
+                  <div className="softsave-profile__view-row">
+                    <span className="softsave-profile__view-label">
+                      Nombre completo
+                    </span>
+                    <p className="softsave-profile__view-value">
+                      {perfilCabecera.nombreCompleto || "Sin registrar"}
+                    </p>
+                  </div>
+                  <div className="softsave-profile__view-row">
+                    <span className="softsave-profile__view-label">
+                      Profesion
+                    </span>
+                    <p className="softsave-profile__view-value">
+                      {perfilCabecera.profesion || "Sin registrar"}
+                    </p>
+                  </div>
+                  <div className="softsave-profile__view-row">
+                    <span className="softsave-profile__view-label">
+                      Biografia
+                    </span>
+                    <p className="softsave-profile__view-value">
+                      {perfilCabecera.biografia || "Sin registrar"}
+                    </p>
+                  </div>
+                  <div className="softsave-profile__actions">
+                    <button
+                      type="button"
+                      className="softsave-button softsave-profile__primary-button"
+                      onClick={manejarHabilitarEdicion}
+                      disabled
+                      title="Editar perfil"
+                    >
+                      Editar perfil
+                    </button>
+                  </div>
                 </div>
-
-                {mensajeGuardadoError ? (
-                  <span className="error-text softsave-profile__error-text" role="alert">
-                    {mensajeGuardadoError}
-                  </span>
-                ) : null}
-              </form>
+              )}
             </section>
 
-            <aside className="softsave-profile__aside">
+            <aside className="softsave-profile__aside softsave-profile__aside--hidden">
+              {/* TODO Sprint fuera de alcance: Stack Tecnologico y Enlaces Sociales. */}
+              {/*
               <div className="softsave-profile__panel">
                 <div className="softsave-profile__panel-title">
                   <Icon path={mdiCodeTags} size={0.92} className="softsave-profile__panel-icon" />
@@ -661,19 +760,27 @@ function ProfileSettings() {
                   <p className="softsave-profile__empty">No hay enlaces sociales cargados todavia.</p>
                 )}
               </div>
+              */}
             </aside>
           </div>
         </section>
       </div>
 
       {estaModalAbierto ? (
-        <div className="softsave-profile__modal-overlay" role="dialog" aria-modal="true">
+        <div
+          className="softsave-profile__modal-overlay"
+          role="dialog"
+          aria-modal="true"
+        >
           <div className="softsave-profile__modal">
             <div className="softsave-profile__modal-header">
               <div className="softsave-profile__modal-content">
-                <h3 className="softsave-profile__modal-title">Añadir o Actualizar Fotografia de Perfil</h3>
+                <h3 className="softsave-profile__modal-title">
+                  Añadir o Actualizar Fotografia de Perfil
+                </h3>
                 <p className="softsave-profile__modal-text">
-                  Selecciona una imagen de hasta 10MB. La previsualizacion se actualiza de inmediato.
+                  Selecciona una imagen de hasta 10MB. La previsualizacion se
+                  actualiza de inmediato.
                 </p>
               </div>
 
@@ -743,7 +850,10 @@ function ProfileSettings() {
                 evento.preventDefault();
                 evento.stopPropagation();
                 const delta = -evento.deltaY * 0.0015;
-                const nuevoZoom = Math.min(2.5, Math.max(1, zoomImagen + delta));
+                const nuevoZoom = Math.min(
+                  2.5,
+                  Math.max(1, zoomImagen + delta),
+                );
                 const nuevo = limitarDesplazamiento(
                   desplazamientoImagen.x,
                   desplazamientoImagen.y,
@@ -765,10 +875,13 @@ function ProfileSettings() {
                   onDragStart={(evento) => evento.preventDefault()}
                 />
               ) : (
-                <Icon path={mdiImageOutline} size={2.2} className="softsave-profile__panel-icon" />
+                <Icon
+                  path={mdiImageOutline}
+                  size={2.2}
+                  className="softsave-profile__panel-icon"
+                />
               )}
             </div>
-
 
             <input
               ref={inputImagenRef}
@@ -787,13 +900,20 @@ function ProfileSettings() {
                 <Icon path={mdiCameraOutline} size={0.8} />
                 Seleccionar Imagen
               </button>
-              <button type="button" className="softsave-button" onClick={confirmarNuevaImagen}>
+              <button
+                type="button"
+                className="softsave-button"
+                onClick={confirmarNuevaImagen}
+              >
                 Guardar foto
               </button>
             </div>
 
             {mensajeImagenError ? (
-              <p className="error-text softsave-profile__error-text softsave-profile__error-text--center" role="alert">
+              <p
+                className="error-text softsave-profile__error-text softsave-profile__error-text--center"
+                role="alert"
+              >
                 {mensajeImagenError}
               </p>
             ) : null}
