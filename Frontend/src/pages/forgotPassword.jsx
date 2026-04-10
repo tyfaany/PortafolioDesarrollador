@@ -1,17 +1,10 @@
 import { useState } from 'react';
-import * as Yup from 'yup';
 import { Link } from 'react-router-dom';
-import api from '../axios/api';
 import Icon from '@mdi/react';
 import { mdiEmailOutline } from '@mdi/js';
 import Field from '../components/Field';
-
-// Esquema de validacion para recuperacion de contraseña
-const esquemaEmail = Yup.object({
-  email: Yup.string()
-    .email('Formato de correo invalido')
-    .required('El correo es obligatorio'),
-});
+import forgotPasswordSchema from '../schemas/forgotPasswordSchema';
+import { solicitarRecuperacion } from '../services/authService';
 
 // Pagina para solicitar el enlace de recuperacion de contraseña
 const ForgotPassword = () => {
@@ -34,11 +27,11 @@ const ForgotPassword = () => {
     setErrorServidor('');
 
     try {
-      await esquemaEmail.validate(formData, { abortEarly: false });
+      await forgotPasswordSchema.validate(formData, { abortEarly: false });
       setErrores({});
 
       try {
-        await api.post('/forgot-password', { email: formData.email });
+        await solicitarRecuperacion(formData.email);
         setMensajeExito('Enlace de recuperación enviado al correo');
       } catch {
         setErrorServidor('No pudimos procesar la solicitud. Intenta de nuevo.');

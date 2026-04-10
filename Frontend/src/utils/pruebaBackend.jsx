@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import api from "./axios/api.js"; // importa tu instancia de Axios
+import api from "./services/api.js"; // importa tu instancia de Axios
 
 function TestBackend() {
   useEffect(() => {

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
-import * as Yup from 'yup';
 import Icon from '@mdi/react';
 import {
   mdiAccountOutline,
@@ -11,21 +10,7 @@ import {
   mdiLockOutline,
 } from '@mdi/js';
 import Field from '../components/Field';
-
-// Esquema de validacion para el formulario de registro
-const esquemaRegistro = Yup.object({
-  nombre: Yup.string()
-    .required('El nombre es obligatorio'),
-  email: Yup.string()
-    .email('Formato de correo invalido')
-    .required('El correo es obligatorio'),
-  password: Yup.string()
-    .min(8, 'Minimo 8 caracteres')
-    .required('La contraseña es obligatoria'),
-  passwordConfirmacion: Yup.string()
-    .oneOf([Yup.ref('password')], 'Las contraseñas no coinciden')
-    .required('Confirma tu contraseña'),
-});
+import registerSchema from '../schemas/registerSchema';
 
 // Formulario de registro de nuevo usuario
 const Registro = () => {
@@ -63,7 +48,7 @@ const Registro = () => {
     setErrores({});
 
     try {
-      await esquemaRegistro.validate(formData, { abortEarly: false });
+      await registerSchema.validate(formData, { abortEarly: false });
       setErrores({});
       setCargando(true);
 
