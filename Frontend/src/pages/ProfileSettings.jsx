@@ -208,13 +208,24 @@ function ProfileSettings() {
 
   const validarFormulario = () => {
     const nuevosErrores = {};
+    const nombreLimpio = formularioPerfil.nombreCompleto.trim();
+    const profesionLimpia = formularioPerfil.profesion.trim();
+    const biografiaLimpia = formularioPerfil.biografia.trim();
 
-    if (!formularioPerfil.nombreCompleto.trim()) {
+    if (!nombreLimpio) {
       nuevosErrores.nombreCompleto = 'El nombre es obligatorio.';
+    } else if (nombreLimpio.length > 20) {
+      nuevosErrores.nombreCompleto = 'El nombre debe tener máximo 20 caracteres.';
     }
 
-    if (!formularioPerfil.profesion.trim()) {
+    if (!profesionLimpia) {
       nuevosErrores.profesion = 'La profesion es obligatoria.';
+    } else if (profesionLimpia.length > 20) {
+      nuevosErrores.profesion = 'La profesion debe tener máximo 20 caracteres.';
+    }
+
+    if (biografiaLimpia.length > 100) {
+      nuevosErrores.biografia = 'La biografia debe tener máximo 100 caracteres.';
     }
 
     setErroresFormulario(nuevosErrores);
@@ -537,6 +548,7 @@ function ProfileSettings() {
                       name="nombreCompleto"
                       value={formularioPerfil.nombreCompleto}
                       onChange={manejarCambioFormulario}
+                      maxLength={20}
                       className="softsave-input softsave-profile__input"
                       placeholder="Ej. Alejandra Garcia"
                     />
@@ -557,6 +569,7 @@ function ProfileSettings() {
                       name="profesion"
                       value={formularioPerfil.profesion}
                       onChange={manejarCambioFormulario}
+                      maxLength={20}
                       className="softsave-input softsave-profile__input"
                       placeholder="Ej. Senior Full Stack Developer"
                     />
@@ -576,9 +589,15 @@ function ProfileSettings() {
                       name="biografia"
                       value={formularioPerfil.biografia}
                       onChange={manejarCambioFormulario}
+                      maxLength={100}
                       className="softsave-input softsave-profile__textarea"
                       placeholder="Cuentanos sobre tu trayectoria, tecnologias favoritas y que te apasiona construir."
                     />
+                    {erroresFormulario.biografia && (
+                      <span className="error-text softsave-profile__error-text" role="alert">
+                        {erroresFormulario.biografia}
+                      </span>
+                    )}
                   </label>
 
                   <div className="softsave-profile__actions">
