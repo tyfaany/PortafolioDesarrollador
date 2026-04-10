@@ -14,6 +14,16 @@
   --color-rojo-rgb: 231, 76, 60;
   --color-verde: #27AE60;
   --color-verde-rgb: 39, 174, 96;
+  --color-arena: #e8d3c4;
+  --color-arena-rgb: 232, 211, 196;
+  --color-salvia: #c7d6cd;
+  --color-salvia-rgb: 199, 214, 205;
+  --color-menta: #bfe3d7;
+  --color-menta-rgb: 191, 227, 215;
+  --color-lavanda: #d6d1f0;
+  --color-lavanda-rgb: 214, 209, 240;
+  --color-durazno: #f3dcc9;
+  --color-durazno-rgb: 243, 220, 201;
 
   /* Tipografia */
   --font-principal: 'Roboto', sans-serif;
