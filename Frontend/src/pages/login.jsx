@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import Icon from '@mdi/react';
@@ -18,8 +18,17 @@ const Login = () => {
   });
   const [errores, setErrores] = useState({});
   const [errorServidor, setErrorServidor] = useState('');
+  const [mensajeSesionExpirada, setMensajeSesionExpirada] = useState('');
   const [cargando, setCargando] = useState(false);
   const [mostrarPassword, setMostrarPassword] = useState(false);
+
+  useEffect(() => {
+    const sesionExpirada = sessionStorage.getItem('session_expired');
+    if (sesionExpirada) {
+      setMensajeSesionExpirada('Su sesión ha expirado');
+      sessionStorage.removeItem('session_expired');
+    }
+  }, []);
 
   if (loading) {
     return <p>Cargando...</p>;
@@ -86,7 +95,7 @@ const Login = () => {
         <div className="auth-split__visual-inner">
           {/* <span className="auth-split__eyebrow">BIENVENIDO DE NUEVO</span> */}
           <h2 className="auth-split__title">
-            Entra.
+            <span className="auth-split__title-line">Entra.</span>
             <span className="auth-split__title-line">Actualiza.</span>
             <span className="auth-split__accent">Comparte.</span>
           </h2>
@@ -212,6 +221,11 @@ const Login = () => {
             {errorServidor && (
               <div className="error-alert error-alert--inline" role="alert">
                 {errorServidor}
+              </div>
+            )}
+            {mensajeSesionExpirada && (
+              <div className="error-alert error-alert--inline" role="alert">
+                {mensajeSesionExpirada}
               </div>
             )}
 
