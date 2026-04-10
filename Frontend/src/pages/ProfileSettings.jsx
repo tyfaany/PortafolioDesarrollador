@@ -282,6 +282,49 @@ function ProfileSettings() {
     setMensajeImagenError('');
   };
 
+  const generarImagenRecortada = async () => {
+    if (!imagenTemporal || !modalAvatarRef.current) {
+      return null;
+    }
+
+    const imagen = new Image();
+    imagen.src = imagenTemporal;
+
+    await imagen.decode();
+
+    const anchoContenedor = modalAvatarRef.current.clientWidth;
+    const altoContenedor = modalAvatarRef.current.clientHeight;
+
+    const escalaBase = Math.max(anchoContenedor / imagen.naturalWidth, altoContenedor / imagen.naturalHeight);
+    const anchoBase = imagen.naturalWidth * escalaBase;
+    const altoBase = imagen.naturalHeight * escalaBase;
+
+    const zoomFinal = zoomImagen;
+    const anchoFinal = anchoBase * zoomFinal;
+    const altoFinal = altoBase * zoomFinal;
+
+    const centroX = anchoContenedor / 2 + desplazamientoImagen.x;
+    const centroY = altoContenedor / 2 + desplazamientoImagen.y;
+
+    const x = centroX - anchoFinal / 2;
+    const y = centroY - altoFinal / 2;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = anchoContenedor;
+    canvas.height = altoContenedor;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      return null;
+    }
+
+    ctx.drawImage(imagen, x, y, anchoFinal, altoFinal);
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), 'image/webp', 0.92);
+    });
+  };
+
   const manejarSeleccionImagen = (evento) => {
     const archivoSeleccionado = evento.target.files?.[0];
 
@@ -310,7 +353,7 @@ function ProfileSettings() {
   };
 
   const confirmarNuevaImagen = async () => {
-    const archivo = inputImagenRef.current?.files?.[0];
+    let archivo = inputImagenRef.current?.files?.[0];
 
     if (!archivo) {
       setMensajeImagenError('Selecciona una imagen antes de continuar.');
@@ -318,6 +361,15 @@ function ProfileSettings() {
     }
 
     try {
+      if (imagenTemporal) {
+        const recorte = await generarImagenRecortada();
+        if (recorte) {
+          archivo = new File([recorte], 'foto-perfil.webp', {
+            type: recorte.type || 'image/webp',
+          });
+        }
+      }
+
       const respuesta = await subirFoto(archivo);
       const nuevaUrl = respuesta?.data?.photo_url;
       await refreshUser();
@@ -452,7 +504,6 @@ function ProfileSettings() {
                     src={imagenPerfil}
                     alt="Foto de perfil"
                     className="softsave-profile__avatar-img"
-                    style={estiloRecorteImagen}
                     draggable={false}
                   />
                 ) : inicialesPerfil ? (
@@ -790,155 +841,182 @@ function ProfileSettings() {
           className="softsave-profile__modal-overlay"
           role="dialog"
           aria-modal="true"
-        >
-          <div className="softsave-profile__modal">
-            <div className="softsave-profile__modal-header">
-              <div className="softsave-profile__modal-content">
-                <h3 className="softsave-profile__modal-title">
-                  Añadir o Actualizar Fotografia de Perfil
-                </h3>
-                <p className="softsave-profile__modal-text">
-                  Selecciona una imagen de hasta 10MB. La previsualizacion se
-                  actualiza de inmediato.
-                </p>
+          >
+            <div className="softsave-profile__modal softsave-profile__modal--editor">
+              <header className="softsave-profile__modal-header softsave-profile__modal-header--editor">
+                <h3 className="softsave-profile__modal-title">Editar imagen</h3>
+                <button
+                  type="button"
+                  onClick={cerrarModalImagen}
+                  className="softsave-profile__icon-button"
+                  aria-label="Cerrar modal"
+                >
+                  <Icon path={mdiClose} size={1} />
+                </button>
+              </header>
+
+              <div className="softsave-profile__editor">
+                <section className="softsave-profile__editor-preview">
+                  <div
+                    ref={modalAvatarRef}
+                    className="softsave-profile__editor-canvas"
+                      onPointerDown={(evento) => {
+                        if (!vistaPreviaModal) {
+                          return;
+                        }
+
+                        if (evento.button !== 0) {
+                          return;
+                        }
+
+                        evento.preventDefault();
+                        arrastreImagenRef.current = {
+                          activo: true,
+                          inicioX: evento.clientX,
+                          inicioY: evento.clientY,
+                          baseX: desplazamientoImagen.x,
+                          baseY: desplazamientoImagen.y,
+                        };
+                      }}
+                      onPointerMove={(evento) => {
+                        const estadoArrastre = arrastreImagenRef.current;
+
+                        if (!estadoArrastre.activo) {
+                          return;
+                        }
+
+                        const deltaX = evento.clientX - estadoArrastre.inicioX;
+                        const deltaY = evento.clientY - estadoArrastre.inicioY;
+                        const nuevo = limitarDesplazamiento(
+                          estadoArrastre.baseX + deltaX,
+                          estadoArrastre.baseY + deltaY,
+                          zoomImagen,
+                          modalAvatarRef.current,
+                        );
+
+                        setDesplazamientoImagen(nuevo);
+                      }}
+                      onPointerLeave={() => {
+                        arrastreImagenRef.current.activo = false;
+                      }}
+                      onPointerUp={() => {
+                        arrastreImagenRef.current.activo = false;
+                      }}
+                      onPointerCancel={() => {
+                        arrastreImagenRef.current.activo = false;
+                      }}
+                      onWheel={(evento) => {
+                        if (!vistaPreviaModal) {
+                          return;
+                        }
+
+                        evento.preventDefault();
+                        evento.stopPropagation();
+                        const delta = -evento.deltaY * 0.0015;
+                        const nuevoZoom = Math.min(
+                          2.5,
+                          Math.max(1, zoomImagen + delta),
+                        );
+                        const nuevo = limitarDesplazamiento(
+                          desplazamientoImagen.x,
+                          desplazamientoImagen.y,
+                          nuevoZoom,
+                          modalAvatarRef.current,
+                        );
+
+                        setZoomImagen(nuevoZoom);
+                        setDesplazamientoImagen(nuevo);
+                      }}
+                  >
+                    {vistaPreviaModal ? (
+                      <img
+                        src={vistaPreviaModal}
+                        alt="Vista previa"
+                        className="softsave-profile__editor-image"
+                        style={estiloRecorteImagen}
+                        draggable={false}
+                        onDragStart={(evento) => evento.preventDefault()}
+                      />
+                    ) : (
+                      <Icon
+                        path={mdiImageOutline}
+                        size={2.2}
+                        className="softsave-profile__panel-icon"
+                      />
+                    )}
+                    <div className="softsave-profile__editor-mask" aria-hidden="true" />
+                  </div>
+                </section>
+
+                <aside className="softsave-profile__editor-panel">
+                  <div className="softsave-profile__editor-section">
+                    <span className="softsave-profile__editor-label">Zoom</span>
+                    <input
+                      type="range"
+                      min="1"
+                      max="2.5"
+                      step="0.01"
+                      value={zoomImagen}
+                      onChange={(evento) => {
+                        const nuevoZoom = Number(evento.target.value);
+                        const nuevo = limitarDesplazamiento(
+                          desplazamientoImagen.x,
+                          desplazamientoImagen.y,
+                          nuevoZoom,
+                          modalAvatarRef.current,
+                        );
+                        setZoomImagen(nuevoZoom);
+                        setDesplazamientoImagen(nuevo);
+                      }}
+                      className="softsave-profile__editor-range"
+                    />
+                    <p className="softsave-profile__editor-hint">
+                      Arrastra la imagen o usa la rueda del mouse para ajustar.
+                    </p>
+                    <p className="softsave-profile__editor-meta">
+                      Imagen máxima: 10MB. Formatos: JPG, PNG, WEBP.
+                    </p>
+                  </div>
+
+                  <input
+                    ref={inputImagenRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={manejarSeleccionImagen}
+                    className="softsave-profile__file-input"
+                  />
+
+                  <div className="softsave-profile__modal-actions softsave-profile__modal-actions--panel">
+                    <button
+                      type="button"
+                      className="softsave-profile__file-button"
+                      onClick={manejarClickSelectorImagen}
+                    >
+                      <Icon path={mdiCameraOutline} size={0.8} />
+                      Seleccionar Imagen
+                    </button>
+                    <button
+                      type="button"
+                      className="softsave-button"
+                      onClick={confirmarNuevaImagen}
+                    >
+                      Guardar cambios
+                    </button>
+                  </div>
+
+                  {mensajeImagenError ? (
+                    <p
+                      className="error-text softsave-profile__error-text softsave-profile__error-text--center"
+                      role="alert"
+                    >
+                      {mensajeImagenError}
+                    </p>
+                  ) : null}
+                </aside>
               </div>
-
-              <button
-                type="button"
-                onClick={cerrarModalImagen}
-                className="softsave-profile__icon-button"
-                aria-label="Cerrar modal"
-              >
-                <Icon path={mdiClose} size={1} />
-              </button>
             </div>
-
-            <div
-              ref={modalAvatarRef}
-              className="softsave-profile__modal-avatar"
-              onPointerDown={(evento) => {
-                if (!vistaPreviaModal) {
-                  return;
-                }
-
-                if (evento.button !== 0) {
-                  return;
-                }
-
-                evento.preventDefault();
-                arrastreImagenRef.current = {
-                  activo: true,
-                  inicioX: evento.clientX,
-                  inicioY: evento.clientY,
-                  baseX: desplazamientoImagen.x,
-                  baseY: desplazamientoImagen.y,
-                };
-              }}
-              onPointerMove={(evento) => {
-                const estadoArrastre = arrastreImagenRef.current;
-
-                if (!estadoArrastre.activo) {
-                  return;
-                }
-
-                const deltaX = evento.clientX - estadoArrastre.inicioX;
-                const deltaY = evento.clientY - estadoArrastre.inicioY;
-                const nuevo = limitarDesplazamiento(
-                  estadoArrastre.baseX + deltaX,
-                  estadoArrastre.baseY + deltaY,
-                  zoomImagen,
-                  modalAvatarRef.current,
-                );
-
-                setDesplazamientoImagen(nuevo);
-              }}
-              onPointerLeave={() => {
-                arrastreImagenRef.current.activo = false;
-              }}
-              onPointerUp={() => {
-                arrastreImagenRef.current.activo = false;
-              }}
-              onPointerCancel={() => {
-                arrastreImagenRef.current.activo = false;
-              }}
-              onWheel={(evento) => {
-                if (!vistaPreviaModal) {
-                  return;
-                }
-
-                evento.preventDefault();
-                evento.stopPropagation();
-                const delta = -evento.deltaY * 0.0015;
-                const nuevoZoom = Math.min(
-                  2.5,
-                  Math.max(1, zoomImagen + delta),
-                );
-                const nuevo = limitarDesplazamiento(
-                  desplazamientoImagen.x,
-                  desplazamientoImagen.y,
-                  nuevoZoom,
-                  modalAvatarRef.current,
-                );
-
-                setZoomImagen(nuevoZoom);
-                setDesplazamientoImagen(nuevo);
-              }}
-            >
-              {vistaPreviaModal ? (
-                <img
-                  src={vistaPreviaModal}
-                  alt="Vista previa"
-                  className="softsave-profile__avatar-img softsave-profile__avatar-img--editable"
-                  style={estiloRecorteImagen}
-                  draggable={false}
-                  onDragStart={(evento) => evento.preventDefault()}
-                />
-              ) : (
-                <Icon
-                  path={mdiImageOutline}
-                  size={2.2}
-                  className="softsave-profile__panel-icon"
-                />
-              )}
-            </div>
-
-            <input
-              ref={inputImagenRef}
-              type="file"
-              accept="image/*"
-              onChange={manejarSeleccionImagen}
-              className="softsave-profile__file-input"
-            />
-
-            <div className="softsave-profile__modal-actions">
-              <button
-                type="button"
-                className="softsave-profile__file-button"
-                onClick={manejarClickSelectorImagen}
-              >
-                <Icon path={mdiCameraOutline} size={0.8} />
-                Seleccionar Imagen
-              </button>
-              <button
-                type="button"
-                className="softsave-button"
-                onClick={confirmarNuevaImagen}
-              >
-                Guardar foto
-              </button>
-            </div>
-
-            {mensajeImagenError ? (
-              <p
-                className="error-text softsave-profile__error-text softsave-profile__error-text--center"
-                role="alert"
-              >
-                {mensajeImagenError}
-              </p>
-            ) : null}
           </div>
-        </div>
-      ) : null}
+        ) : null}
     </div>
   );
 }

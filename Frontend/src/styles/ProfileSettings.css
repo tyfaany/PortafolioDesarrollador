@@ -435,10 +435,117 @@
   position: relative;
 }
 
+.softsave-profile__modal--editor {
+  width: min(100%, 860px);
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--color-blanco);
+}
+
 .softsave-profile__modal-header {
   display: block;
   margin-bottom: 18px;
   position: relative;
+}
+
+.softsave-profile__modal-header--editor {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--color-borde-tarjeta);
+  position: relative;
+}
+
+.softsave-profile__editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  min-height: 360px;
+}
+
+.softsave-profile__editor-preview {
+  background-color: rgba(var(--color-texto-rgb), 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.softsave-profile__editor-canvas {
+  position: relative;
+  width: 360px;
+  height: 360px;
+  display: grid;
+  place-items: center;
+  background-color: rgba(var(--color-texto-rgb), 0.08);
+}
+
+.softsave-profile__editor-mask {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 2px solid rgba(var(--color-blanco-rgb), 0.95);
+  box-shadow: 0 0 0 999px rgba(var(--color-texto-rgb), 0.4);
+  pointer-events: none;
+}
+
+.softsave-profile__editor-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.softsave-profile__editor-panel {
+  background-color: var(--color-blanco);
+  padding: 20px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  border-left: 1px solid var(--color-borde-tarjeta);
+}
+
+.softsave-profile__editor-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.softsave-profile__editor-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-texto);
+}
+
+.softsave-profile__editor-range {
+  accent-color: var(--color-primario);
+}
+
+.softsave-profile__editor-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-texto-suave);
+}
+
+.softsave-profile__editor-meta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-texto-suave);
+}
+
+.softsave-profile__modal-actions--panel {
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: auto;
+  padding-top: 24px;
+  gap: 12px;
 }
 
 .softsave-profile__modal-content {
@@ -478,8 +585,8 @@
   justify-content: center;
   cursor: pointer;
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 10px;
+  right: 12px;
 }
 
 .softsave-profile__modal-avatar {
@@ -578,6 +685,22 @@
 
   .softsave-profile__modal {
     padding: 24px;
+  }
+
+  .softsave-profile__modal--editor {
+    padding: 0;
+  }
+
+  .softsave-profile__editor {
+    grid-template-columns: 1fr;
+  }
+
+  .softsave-profile__editor-preview {
+    padding: 16px;
+  }
+
+  .softsave-profile__editor-panel {
+    padding: 18px;
   }
 
   .softsave-profile__modal-actions {
