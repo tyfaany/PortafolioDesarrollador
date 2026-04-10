@@ -3,7 +3,11 @@ import '../styles/Auth.css';
 import '../styles/Ui.css';
 
 function AuthLayout() {
-  return <Outlet />;
+  return (
+    <div className="auth-page">
+      <Outlet />
+    </div>
+  );
 }
 
 export default AuthLayout;
