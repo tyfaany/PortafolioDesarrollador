@@ -16,7 +16,7 @@ import {
   mdiWeb,
 } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
-import { actualizarPerfil } from '../services/authService';
+import { actualizarPerfil, subirFoto } from '../services/authService';
 import '../styles/ProfileSettings.css';
 
 const SECCIONES_PERFIL = [
@@ -100,6 +100,25 @@ function obtenerSeccionActiva(pathname) {
   return seccionActiva?.id || 'contacto';
 }
 
+function normalizarUrlImagen(url) {
+  if (!url) {
+    return '';
+  }
+
+  if (url.startsWith('http')) {
+    return url;
+  }
+
+  const baseApi = import.meta.env.VITE_LARAVEL_API_URL || '';
+  const baseUrl = baseApi.replace(/\/api\/?$/, '');
+
+  if (!baseUrl) {
+    return url;
+  }
+
+  return `${baseUrl}/${url.replace(/^\/+/, '')}`;
+}
+
 
 function ProfileSettings() {
   const { user, refreshUser } = useAuth();
@@ -111,7 +130,7 @@ function ProfileSettings() {
   const [mensajeGuardadoError, setMensajeGuardadoError] = useState('');
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
   const [imagenTemporal, setImagenTemporal] = useState('');
-  const [imagenPerfil, setImagenPerfil] = useState('');
+  const [imagenPerfil, setImagenPerfil] = useState(() => normalizarUrlImagen(user?.profile_photo_url));
   const [estaFormularioSkillAbierto, setEstaFormularioSkillAbierto] = useState(false);
   const [nuevaHabilidad, setNuevaHabilidad] = useState('');
   const [mensajeSkillError, setMensajeSkillError] = useState('');
@@ -150,6 +169,12 @@ function ProfileSettings() {
       document.body.style.overflow = overflowPrevio;
     };
   }, [estaModalAbierto]);
+
+  useEffect(() => {
+    if (user?.profile_photo_url) {
+      setImagenPerfil(normalizarUrlImagen(user.profile_photo_url));
+    }
+  }, [user?.profile_photo_url]);
 
   const manejarCambioFormulario = (evento) => {
     const { name, value } = evento.target;
@@ -248,16 +273,32 @@ function ProfileSettings() {
     lectorArchivo.readAsDataURL(archivoSeleccionado);
   };
 
-  const confirmarNuevaImagen = () => {
-    if (!imagenTemporal) {
+  const confirmarNuevaImagen = async () => {
+    const archivo = inputImagenRef.current?.files?.[0];
+
+    if (!archivo) {
       setMensajeImagenError('Selecciona una imagen antes de continuar.');
       return;
     }
 
-    setImagenPerfil(imagenTemporal);
-    setImagenTemporal('');
-    setEstaModalAbierto(false);
-    setMensajeImagenError('');
+    try {
+      const respuesta = await subirFoto(archivo);
+      const nuevaUrl = respuesta?.data?.photo_url;
+      await refreshUser();
+      if (nuevaUrl) {
+        setImagenPerfil(normalizarUrlImagen(nuevaUrl));
+      } else if (imagenTemporal) {
+        setImagenPerfil(imagenTemporal);
+      }
+      if (inputImagenRef.current) {
+        inputImagenRef.current.value = '';
+      }
+      setImagenTemporal('');
+      setEstaModalAbierto(false);
+      setMensajeImagenError('');
+    } catch (error) {
+      setMensajeImagenError('No se pudo subir la imagen. Intenta de nuevo.');
+    }
   };
 
   const manejarAgregarHabilidad = () => {
