@@ -9,9 +9,8 @@
 .softsave-profile__container {
   max-width: 1120px;
   margin: 0 auto;
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-principal);
 }
-
 
 .softsave-profile__card {
   background-color: var(--color-blanco);
@@ -68,7 +67,7 @@
 }
 
 .softsave-profile__avatar-initials {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--font-titulos);
   color: var(--color-blanco);
   font-weight: 700;
   font-size: 3rem;
@@ -130,7 +129,7 @@
 }
 
 .softsave-profile__name {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--font-titulos);
   font-size: 1.7rem;
   font-weight: 700;
   margin: 0;
@@ -146,17 +145,6 @@
   color: var(--color-primario);
   font-size: 0.82rem;
   font-weight: 600;
-}
-
-.softsave-profile__status {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: 8px 12px;
-  background-color: rgba(var(--color-exito-rgb), 0.12);
-  color: var(--color-exito);
-  font-size: 0.84rem;
-  font-weight: 700;
 }
 
 .softsave-profile__bio {
@@ -191,7 +179,7 @@
 
 .softsave-profile__form-title {
   margin: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--font-titulos);
   font-size: 2rem;
   font-weight: 700;
 }
@@ -259,10 +247,6 @@
   padding: 10px 0;
   font-weight: 700;
   cursor: pointer;
-}
-
-.softsave-profile__success {
-  margin-top: 8px;
 }
 
 .softsave-profile__aside {
@@ -436,7 +420,7 @@
 
 .softsave-profile__modal-title {
   margin: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--font-titulos);
   font-size: 1.3rem;
   font-weight: 700;
   color: var(--color-texto);
@@ -516,23 +500,6 @@
   font-size: 0.95rem;
 }
 
-
-@media (max-width: 768px) {
-  .softsave-profile__modal {
-    padding: 24px;
-  }
-
-  .softsave-profile__modal-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .softsave-profile__modal-actions .softsave-button,
-  .softsave-profile__file-button {
-    width: 100%;
-  }
-}
-
 .softsave-profile__error-text {
   display: inline-block;
 }
@@ -562,5 +529,19 @@
 
   .softsave-profile__side-link {
     min-height: auto;
+  }
+
+  .softsave-profile__modal {
+    padding: 24px;
+  }
+
+  .softsave-profile__modal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .softsave-profile__modal-actions .softsave-button,
+  .softsave-profile__file-button {
+    width: 100%;
   }
 }

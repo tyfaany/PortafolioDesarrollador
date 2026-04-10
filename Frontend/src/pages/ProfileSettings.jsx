@@ -106,8 +106,6 @@ function ProfileSettings() {
   const inputImagenRef = useRef(null);
   const [estaModalAbierto, setEstaModalAbierto] = useState(false);
   const [mensajeImagenError, setMensajeImagenError] = useState('');
-  const [mensajeGuardado, setMensajeGuardado] = useState('');
-  const [estadoHu07, setEstadoHu07] = useState('pendiente');
   const [erroresFormulario, setErroresFormulario] = useState({});
   const [imagenTemporal, setImagenTemporal] = useState('');
   const [imagenPerfil, setImagenPerfil] = useState('');
@@ -162,7 +160,6 @@ function ProfileSettings() {
       ...estadoActual,
       [name]: '',
     }));
-    setMensajeGuardado('');
   };
 
   const validarFormulario = () => {
@@ -184,8 +181,6 @@ function ProfileSettings() {
     evento.preventDefault();
 
     if (!validarFormulario()) {
-      setEstadoHu07('pendiente');
-      setMensajeGuardado('');
       return;
     }
 
@@ -194,8 +189,6 @@ function ProfileSettings() {
       profesion: formularioPerfil.profesion.trim(),
       biografia: formularioPerfil.biografia.trim(),
     });
-    setEstadoHu07('completado');
-    setMensajeGuardado('HU-07 completada: la cabecera refleja la informacion personal guardada.');
   };
 
   const abrirModalImagen = () => {
@@ -297,7 +290,6 @@ function ProfileSettings() {
       biografia: perfilCabecera.biografia,
     });
     setErroresFormulario({});
-    setMensajeGuardado('');
   };
 
   const manejarToggleFormularioSkill = () => {
@@ -407,11 +399,6 @@ function ProfileSettings() {
               </div>
 
               <div>
-                {estadoHu07 === 'completado' && (
-                  <span className="softsave-profile__status" role="status">
-                    Estado HU-07: completado
-                  </span>
-                )}
                 <p className="softsave-profile__bio">
                   {perfilCabecera.biografia || 'Tu biografia aparecera aqui cuando completes la informacion personal.'}
                 </p>
@@ -492,11 +479,6 @@ function ProfileSettings() {
                   </button>
                 </div>
 
-                {mensajeGuardado ? (
-                  <span className="success-alert softsave-profile__success" role="status">
-                    {mensajeGuardado}
-                  </span>
-                ) : null}
               </form>
             </section>
 

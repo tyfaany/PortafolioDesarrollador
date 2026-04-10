@@ -35,7 +35,7 @@
   place-items: center;
   background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
   color: var(--color-blanco);
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--font-titulos);
   font-weight: 700;
   font-size: 1.1rem;
 }
@@ -47,7 +47,7 @@
 }
 
 .softsave-navbar__brand-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--font-titulos);
   font-weight: 700;
   font-size: 1.3rem;
 }

@@ -1,20 +1,10 @@
 import { useState } from 'react';
-import * as Yup from 'yup';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import api from '../axios/api';
 import Icon from '@mdi/react';
 import { mdiEyeOffOutline, mdiEyeOutline, mdiLockOutline } from '@mdi/js';
 import Field from '../components/Field';
-
-// Esquema de validacion para restablecer contraseña
-const esquemaPassword = Yup.object({
-  password: Yup.string()
-    .min(8, 'Minimo 8 caracteres')
-    .required('La contraseña es obligatoria'),
-  passwordConfirmacion: Yup.string()
-    .oneOf([Yup.ref('password')], 'Las contraseñas no coinciden')
-    .required('Confirma tu contraseña'),
-});
+import resetPasswordSchema from '../schemas/resetPasswordSchema';
+import { restablecerPassword } from '../services/authService';
 
 // Pagina para establecer la nueva contraseña con el token del email
 const ResetPassword = () => {
@@ -47,15 +37,15 @@ const ResetPassword = () => {
     setErrorServidor('');
 
     try {
-      await esquemaPassword.validate(formData, { abortEarly: false });
+      await resetPasswordSchema.validate(formData, { abortEarly: false });
       setErrores({});
 
       try {
-        await api.post('/reset-password', {
+        await restablecerPassword({
           token,
           email,
           password: formData.password,
-          password_confirmation: formData.passwordConfirmacion,
+          passwordConfirmacion: formData.passwordConfirmacion,
         });
         setMensajeExito('Contraseña restablecida correctamente');
         setTimeout(() => navigate('/login'), 2000);

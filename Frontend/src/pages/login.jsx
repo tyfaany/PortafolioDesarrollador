@@ -1,19 +1,10 @@
 import { useState } from 'react';
-import * as Yup from 'yup';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import Icon from '@mdi/react';
 import { mdiEmailOutline, mdiEyeOffOutline, mdiEyeOutline, mdiLockOutline } from '@mdi/js';
 import Field from '../components/Field';
-
-// Esquema de validacion para inicio de sesion
-const esquemaLogin = Yup.object({
-  email: Yup.string()
-    .email('Formato de correo invalido')
-    .required('El correo es obligatorio'),
-  password: Yup.string()
-    .required('La contraseña es obligatoria'),
-});
+import loginSchema from '../schemas/loginSchema';
 
 // Formulario de inicio de sesion
 const Login = () => {
@@ -56,7 +47,7 @@ const Login = () => {
     setErrores({});
 
     try {
-      await esquemaLogin.validate(formData, { abortEarly: false });
+      await loginSchema.validate(formData, { abortEarly: false });
       setErrores({});
 
       try {

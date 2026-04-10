@@ -1,6 +1,11 @@
 import { createContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import api from '../axios/api';
+import {
+  getMe,
+  login as loginService,
+  logout as logoutService,
+  registrar as registrarService,
+} from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -13,7 +18,7 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
 
     if (token) {
-      api.get('/me')
+      getMe()
         .then((response) => {
           setUser(response.data);
         })
@@ -36,7 +41,7 @@ export const AuthProvider = ({ children }) => {
         if (!tokenActual) {
           setUser(null);
         } else {
-          api.get('/me')
+          getMe()
             .then((response) => {
               setUser(response.data);
             })
@@ -54,7 +59,7 @@ export const AuthProvider = ({ children }) => {
 
   // Login con opcion de recordar sesion
   const login = async (email, password, recordarme = false) => {
-    const response = await api.post('/login', { email, password, remember: recordarme });
+    const response = await loginService(email, password, recordarme);
 
     const { token, user } = response.data;
 
@@ -66,12 +71,7 @@ export const AuthProvider = ({ children }) => {
 
   // Registrar nuevo usuario y guardar sesion automaticamente
   const registrar = async (nombre, email, password, passwordConfirmacion) => {
-    const respuesta = await api.post('/register', {
-      name: nombre,
-      email,
-      password,
-      password_confirmation: passwordConfirmacion,
-    });
+    const respuesta = await registrarService(nombre, email, password, passwordConfirmacion);
     const { token, user: usuario } = respuesta.data;
     localStorage.setItem('token', token);
     setUser(usuario);
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
   // Logout
   const logout = async () => {
     try {
-      await api.post('/logout');
+      await logoutService();
     } catch (error) {
       // El backend puede fallar al cerrar sesion, pero se limpia el token igual
     }

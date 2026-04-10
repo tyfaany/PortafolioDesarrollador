@@ -1,0 +1,131 @@
+.auth-card {
+  background: var(--color-blanco);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 10px 25px rgba(var(--color-negro-rgb), 0.05);
+  max-width: 400px;
+  width: 100%;
+  border: 1px solid var(--color-borde-tarjeta);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.auth-header p {
+  margin-top: 8px;
+  font-size: 0.95rem;
+  color: var(--color-texto-suave);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--color-texto);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.auth-field__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-field__control--icon-start .softsave-input {
+  padding-left: 44px;
+}
+
+.auth-field__control--icon-end .softsave-input {
+  padding-right: 44px;
+}
+
+.auth-field__icon {
+  position: absolute;
+  border: none;
+  background: transparent;
+  color: var(--color-texto-suave);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+.auth-field__icon--button {
+  cursor: pointer;
+  color: var(--color-texto);
+}
+
+.auth-field__icon--start {
+  left: 14px;
+}
+
+.auth-field__icon--end {
+  right: 14px;
+}
+
+.auth-field__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.auth-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.92rem;
+}
+
+.remember-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-texto);
+}
+
+.remember-option input {
+  accent-color: var(--color-primario);
+}
+
+.auth-link,
+.auth-footer a {
+  color: var(--color-primario);
+  font-weight: 700;
+}
+
+.auth-footer,
+.auth-terms {
+  margin: 20px 0 0;
+  text-align: center;
+  color: var(--color-texto-suave);
+}
+
+.auth-footer {
+  color: var(--color-texto);
+  font-weight: 500;
+}
+
+.auth-terms {
+  font-size: 0.82rem;
+}
+
+@media (max-width: 768px) {
+  .auth-card {
+    padding: 32px 24px;
+  }
+
+  .auth-options {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -1,0 +1,166 @@
+/* 1. TOKENS PRIMITIVOS */
+:root {
+  /* Colores */
+  --color-naranja: #E67E22;
+  --color-naranja-rgb: 230, 126, 34;
+  --color-naranja-oscuro: #D35400;
+  --color-oscuro: #2C3E50;
+  --color-oscuro-rgb: 44, 62, 80;
+  --color-gris-claro: #F4F7F6;
+  --color-blanco: #ffffff;
+  --color-blanco-rgb: 255, 255, 255;
+  --color-negro-rgb: 0, 0, 0;
+  --color-rojo: #E74C3C;
+  --color-rojo-rgb: 231, 76, 60;
+  --color-verde: #27AE60;
+  --color-verde-rgb: 39, 174, 96;
+
+  /* Tipografia */
+  --font-principal: 'Roboto', sans-serif;
+  --font-titulos: 'Poppins', sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --line-height-base: 1.6;
+
+  /* Espaciado */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+
+  /* Bordes */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+
+/* 2. TOKENS SEMANTICOS */
+:root {
+  --color-primario: var(--color-naranja);
+  --color-primario-rgb: var(--color-naranja-rgb);
+  --color-secundario: var(--color-naranja-oscuro);
+  --color-texto: var(--color-oscuro);
+  --color-texto-rgb: var(--color-oscuro-rgb);
+  --color-texto-suave: #708090;
+  --color-fondo: var(--color-gris-claro);
+  --color-borde-tarjeta: rgba(44, 62, 80, 0.1);
+  --color-exito: var(--color-verde);
+  --color-exito-rgb: var(--color-verde-rgb);
+  --color-error: var(--color-rojo);
+  --color-error-rgb: var(--color-rojo-rgb);
+  --color-borde-input: #cfd8dc;
+  --color-sombra-input: rgba(230, 126, 34, 0.12);
+  --color-fondo-gradiente-inicio: #fcfdfc;
+  --color-fondo-gradiente-fin: #f4f7f6;
+  --color-card-gradiente-fin: #f7f9f8;
+  --color-rocket-fin: #e9eff4;
+  --color-rocket-window: #f4f7f6;
+  --color-rocket-window-borde: #dbe4ea;
+}
+
+
+/* 3. OVERRIDES A BOOTSTRAP 5 */
+:root {
+  --bs-primary: var(--color-primario);
+  --bs-primary-rgb: var(--color-primario-rgb);
+  --bs-font-sans-serif: var(--font-principal);
+  --bs-body-font-family: var(--font-principal);
+  --bs-body-color: var(--color-texto);
+  --bs-body-bg: var(--color-fondo);
+  --bs-border-radius: var(--radius-md);
+  --bs-border-radius-sm: var(--radius-sm);
+  --bs-border-radius-lg: var(--radius-lg);
+}
+
+
+/* 4. ESTILOS BASE GLOBALES */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow-y: auto;
+  font-family: var(--font-principal);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  background:
+    radial-gradient(circle at top right, rgba(var(--color-primario-rgb), 0.14), transparent 24%),
+    linear-gradient(180deg, var(--color-fondo-gradiente-inicio) 0%, var(--color-fondo-gradiente-fin) 100%);
+  color: var(--color-texto);
+}
+
+body > div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  padding: var(--spacing-lg);
+  background-color: var(--color-fondo);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-titulos);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-texto);
+}
+
+a {
+  color: var(--color-primario);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+
+/* 5. UTILIDADES GLOBALES */
+.softsave-app-shell {
+  width: 100%;
+  padding-top: 6rem;
+}
+
+
+/* 6. RESPONSIVE */
+@media (max-width: 768px) {
+  body > div {
+    padding: var(--spacing-md);
+  }
+
+  .softsave-app-shell {
+    padding-top: 6.5rem;
+  }
+}
