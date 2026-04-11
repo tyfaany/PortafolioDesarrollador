@@ -33,9 +33,16 @@ const Registro = () => {
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
 
   const normalizarMensajeBackend = (mensaje = '') => {
-    if (mensaje.includes('must not be greater than 255 characters')) {
+    const mensajeNormalizado = String(mensaje).toLowerCase();
+
+    if (mensajeNormalizado.includes('has already been taken')) {
+      return 'Este correo ya está registrado.';
+    }
+
+    if (mensajeNormalizado.includes('must not be greater than 255 characters')) {
       return 'El nombre no debe superar 50 caracteres';
     }
+
     return mensaje;
   };
 
