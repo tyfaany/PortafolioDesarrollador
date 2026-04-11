@@ -12,6 +12,7 @@ const ForgotPassword = () => {
   const [errores, setErrores] = useState({});
   const [errorServidor, setErrorServidor] = useState('');
   const [mensajeExito, setMensajeExito] = useState('');
+  const [mensajeEstado, setMensajeEstado] = useState('');
   const [cargando, setCargando] = useState(false);
 
   const handleChange = (event) => {
@@ -22,9 +23,16 @@ const ForgotPassword = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (cargando) {
+      return;
+    }
+
     setCargando(true);
     setErrores({});
     setErrorServidor('');
+    setMensajeExito('');
+    setMensajeEstado('Enviando enlace, esto puede tardar unos segundos...');
 
     try {
       await forgotPasswordSchema.validate(formData, { abortEarly: false });
@@ -33,8 +41,10 @@ const ForgotPassword = () => {
       try {
         await solicitarRecuperacion(formData.email);
         setMensajeExito('Enlace de recuperación enviado al correo');
+        setMensajeEstado('');
       } catch {
         setErrorServidor('No pudimos procesar la solicitud. Intenta de nuevo.');
+        setMensajeEstado('');
       } finally {
         setCargando(false);
       }
@@ -46,56 +56,64 @@ const ForgotPassword = () => {
         });
         setErrores(mapaErrores);
       }
+      setMensajeEstado('');
       setCargando(false);
     }
   };
 
   return (
-    <section className="auth-card">
-      <div className="auth-header">
-        <h2>Recuperar contraseña</h2>
-      </div>
-
-      {errorServidor && (
-        <div className="error-alert" role="alert">
-          {errorServidor}
+    <div className="auth-centered auth-centered--forgot">
+      <section className="auth-card">
+        <div className="auth-header">
+          <h2>Recuperar contraseña</h2>
         </div>
-      )}
 
-      {mensajeExito ? (
-        <div className="success-alert" role="status">
-          {mensajeExito}. Revisa tu buzón
-        </div>
-      ) : (
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <Field
-            label="Correo Electrónico"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Ingresa tu correo"
-            autoComplete="email"
-            icon={<Icon path={mdiEmailOutline} size={0.9} />}
-          />
-          {errores.email && (
-            <small className="error-text">{errores.email}</small>
-          )}
-          <button
-            className="softsave-button"
-            type="submit"
-            disabled={cargando}
-            data-loading={cargando ? 'true' : 'false'}
-          >
-            {cargando ? 'Enviando' : 'Enviar enlace'}
-          </button>
-        </form>
-      )}
+        {errorServidor && (
+          <div className="error-alert" role="alert">
+            {errorServidor}
+          </div>
+        )}
 
-      <p className="auth-footer">
-        <Link to="/login">Volver al inicio de sesión</Link>
-      </p>
-    </section>
+        {mensajeExito ? (
+          <div className="success-alert" role="status">
+            {mensajeExito}. Revisa tu buzón
+          </div>
+        ) : (
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <Field
+              label="Correo Electrónico"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Ingresa tu correo"
+              autoComplete="email"
+              icon={<Icon path={mdiEmailOutline} size={0.9} />}
+            />
+            {errores.email && (
+              <small className="error-text">{errores.email}</small>
+            )}
+            <button
+              className="softsave-button"
+              type="submit"
+              disabled={cargando}
+              data-loading={cargando ? 'true' : 'false'}
+            >
+              {cargando ? 'Enviando' : 'Enviar enlace'}
+            </button>
+            {mensajeEstado && (
+              <p className="auth-helper" role="status">
+                {mensajeEstado}
+              </p>
+            )}
+          </form>
+        )}
+
+        <p className="auth-footer">
+          <Link to="/login">Volver al inicio de sesión</Link>
+        </p>
+      </section>
+    </div>
   );
 };
 

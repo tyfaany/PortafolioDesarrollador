@@ -67,69 +67,71 @@ const ResetPassword = () => {
   };
 
   return (
-    <section className="auth-card">
-      <div className="auth-header">
-        <h2>Nueva contraseña</h2>
-      </div>
-
-      {errorServidor && (
-        <div className="error-alert" role="alert">
-          {errorServidor}
+    <div className="auth-centered auth-centered--reset">
+      <section className="auth-card">
+        <div className="auth-header">
+          <h2>Nueva contraseña</h2>
         </div>
-      )}
-      {mensajeExito && (
-        <div className="success-alert" role="status">
-          {mensajeExito}
-        </div>
-      )}
 
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <Field
-          label="Nueva contraseña"
-          type={mostrarPassword ? 'text' : 'password'}
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          placeholder="Nueva contraseña"
-          autoComplete="new-password"
-          startIcon={<Icon path={mdiLockOutline} size={0.9} />}
-          endIcon={<Icon path={mostrarPassword ? mdiEyeOffOutline : mdiEyeOutline} size={0.9} />}
-          onEndIconClick={() => setMostrarPassword((current) => !current)}
-          endIconLabel={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-        />
-        {errores.password && (
-          <small className="error-text">{errores.password}</small>
+        {errorServidor && (
+          <div className="error-alert" role="alert">
+            {errorServidor}
+          </div>
         )}
-        <Field
-          label="Confirmar contraseña"
-          type={mostrarConfirmacion ? 'text' : 'password'}
-          name="passwordConfirmacion"
-          value={formData.passwordConfirmacion}
-          onChange={handleChange}
-          placeholder="Confirma tu contraseña"
-          autoComplete="new-password"
-          startIcon={<Icon path={mdiLockOutline} size={0.9} />}
-          endIcon={<Icon path={mostrarConfirmacion ? mdiEyeOffOutline : mdiEyeOutline} size={0.9} />}
-          onEndIconClick={() => setMostrarConfirmacion((current) => !current)}
-          endIconLabel={mostrarConfirmacion ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-        />
-        {errores.passwordConfirmacion && (
-          <small className="error-text">{errores.passwordConfirmacion}</small>
+        {mensajeExito && (
+          <div className="success-alert" role="status">
+            {mensajeExito}
+          </div>
         )}
-        <button
-          className="softsave-button"
-          type="submit"
-          disabled={cargando || !!mensajeExito}
-          data-loading={cargando ? 'true' : 'false'}
-        >
-          {cargando ? 'Guardando' : 'Restablecer contraseña'}
-        </button>
-      </form>
 
-      <p className="auth-footer">
-        <Link to="/login">Volver al inicio de sesión</Link>
-      </p>
-    </section>
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <Field
+            label="Nueva contraseña"
+            type={mostrarPassword ? 'text' : 'password'}
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Nueva contraseña"
+            autoComplete="new-password"
+            startIcon={<Icon path={mdiLockOutline} size={0.9} />}
+            endIcon={<Icon path={mostrarPassword ? mdiEyeOffOutline : mdiEyeOutline} size={0.9} />}
+            onEndIconClick={() => setMostrarPassword((current) => !current)}
+            endIconLabel={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          />
+          {errores.password && (
+            <small className="error-text">{errores.password}</small>
+          )}
+          <Field
+            label="Confirmar contraseña"
+            type={mostrarConfirmacion ? 'text' : 'password'}
+            name="passwordConfirmacion"
+            value={formData.passwordConfirmacion}
+            onChange={handleChange}
+            placeholder="Confirma tu contraseña"
+            autoComplete="new-password"
+            startIcon={<Icon path={mdiLockOutline} size={0.9} />}
+            endIcon={<Icon path={mostrarConfirmacion ? mdiEyeOffOutline : mdiEyeOutline} size={0.9} />}
+            onEndIconClick={() => setMostrarConfirmacion((current) => !current)}
+            endIconLabel={mostrarConfirmacion ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          />
+          {errores.passwordConfirmacion && (
+            <small className="error-text">{errores.passwordConfirmacion}</small>
+          )}
+          <button
+            className="softsave-button"
+            type="submit"
+            disabled={cargando || !!mensajeExito}
+            data-loading={cargando ? 'true' : 'false'}
+          >
+            {cargando ? 'Guardando' : 'Restablecer contraseña'}
+          </button>
+        </form>
+
+        <p className="auth-footer">
+          <Link to="/login">Volver al inicio de sesión</Link>
+        </p>
+      </section>
+    </div>
   );
 };
 
