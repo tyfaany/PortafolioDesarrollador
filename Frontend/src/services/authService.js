@@ -15,7 +15,7 @@ export const registrar = (nombre, email, password, passwordConfirmacion) => api.
 
 export const logout = () => api.post('/logout');
 
-export const getMe = () => api.get('/me');
+export const getMe = () => api.get('/user');
 
 export const solicitarRecuperacion = (email) => api.post('/forgot-password', { email });
 

@@ -19,9 +19,7 @@ class UserController extends Controller
         $user->profile_photo_url = null; // O una imagen por defecto
     }
 
-    return response()->json([
-        'user' => $user
-    ]);
+    return response()->json($user);
 }
     /**
      * Actualizar datos del usuario autenticado
