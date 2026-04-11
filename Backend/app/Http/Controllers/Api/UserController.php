@@ -66,7 +66,7 @@ class UserController extends Controller
 }
 private function checkIfProfileIsComplete(User $user, array $newData): bool
     {
-        $requiredFields = ['name', 'profession', 'biography', 'github_url', 'linkedin_url'];
+        $requiredFields = ['name', 'profession', 'biography'];
 
         foreach ($requiredFields as $field) {
             // Buscamos en los datos nuevos, si no están, buscamos en los que ya tiene el usuario
