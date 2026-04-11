@@ -192,6 +192,23 @@ function ProfileSettings() {
     }
   }, [user?.profile_photo_url]);
 
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    const datosPerfil = {
+      nombreCompleto: user.name || '',
+      profesion: user.profession || '',
+      biografia: user.biography || '',
+    };
+
+    setPerfilCabecera(datosPerfil);
+    if (!estaModoEdicion) {
+      setFormularioPerfil(datosPerfil);
+    }
+  }, [user, estaModoEdicion]);
+
   const manejarCambioFormulario = (evento) => {
     const { name, value } = evento.target;
 
@@ -214,8 +231,8 @@ function ProfileSettings() {
 
     if (!nombreLimpio) {
       nuevosErrores.nombreCompleto = 'El nombre es obligatorio.';
-    } else if (nombreLimpio.length > 20) {
-      nuevosErrores.nombreCompleto = 'El nombre debe tener máximo 20 caracteres.';
+    } else if (nombreLimpio.length > 50) {
+      nuevosErrores.nombreCompleto = 'El nombre debe tener máximo 50 caracteres.';
     }
 
     if (!profesionLimpia) {
@@ -599,7 +616,7 @@ function ProfileSettings() {
                       name="nombreCompleto"
                       value={formularioPerfil.nombreCompleto}
                       onChange={manejarCambioFormulario}
-                      maxLength={20}
+                      maxLength={50}
                       className="softsave-input softsave-profile__input"
                       placeholder="Ej. Alejandra Garcia"
                     />

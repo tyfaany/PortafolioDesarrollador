@@ -95,23 +95,27 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password, recordarme = false) => {
     const response = await loginService(email, password, recordarme);
 
-    const { token, user } = response.data;
+    const { token } = response.data;
 
     localStorage.setItem('token', token);
     localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
-    setUser(user);
+    const perfilRespuesta = await getMe();
+    const usuarioCompleto = perfilRespuesta.data;
+    setUser(usuarioCompleto);
 
-    return user;
+    return usuarioCompleto;
   };
 
   // Registrar nuevo usuario y guardar sesion automaticamente
   const registrar = async (nombre, email, password, passwordConfirmacion) => {
     const respuesta = await registrarService(nombre, email, password, passwordConfirmacion);
-    const { token, user: usuario } = respuesta.data;
+    const { token } = respuesta.data;
     localStorage.setItem('token', token);
     localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
-    setUser(usuario);
-    return usuario;
+    const perfilRespuesta = await getMe();
+    const usuarioCompleto = perfilRespuesta.data;
+    setUser(usuarioCompleto);
+    return usuarioCompleto;
   };
 
   // Logout

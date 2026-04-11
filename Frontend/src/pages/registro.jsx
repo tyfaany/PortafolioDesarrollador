@@ -34,7 +34,7 @@ const Registro = () => {
 
   const normalizarMensajeBackend = (mensaje = '') => {
     if (mensaje.includes('must not be greater than 255 characters')) {
-      return 'El nombre no debe superar 20 caracteres';
+      return 'El nombre no debe superar 50 caracteres';
     }
     return mensaje;
   };
@@ -226,7 +226,7 @@ const Registro = () => {
               onChange={handleChange}
               placeholder="Ingresa tu nombre"
               autoComplete="name"
-              maxLength={20}
+              maxLength={50}
               icon={<Icon path={mdiAccountOutline} size={0.9} />}
             />
             {errores.nombre && (
