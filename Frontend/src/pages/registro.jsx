@@ -32,6 +32,13 @@ const Registro = () => {
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
 
+  const normalizarMensajeBackend = (mensaje = '') => {
+    if (mensaje.includes('must not be greater than 255 characters')) {
+      return 'El nombre no debe superar 20 caracteres';
+    }
+    return mensaje;
+  };
+
   useEffect(() => {
     if (!isAuthenticated) {
       return;
@@ -84,9 +91,9 @@ const Registro = () => {
         if (error.response?.status === 422) {
           const erroresBackend = error.response.data.errors;
           setErrores({
-            nombre: erroresBackend.name?.[0] || '',
-            email: erroresBackend.email?.[0] || '',
-            password: erroresBackend.password?.[0] || '',
+            nombre: normalizarMensajeBackend(erroresBackend.name?.[0] || ''),
+            email: normalizarMensajeBackend(erroresBackend.email?.[0] || ''),
+            password: normalizarMensajeBackend(erroresBackend.password?.[0] || ''),
           });
         } else {
           setErrorServidor('Ocurrió un error. Intenta de nuevo.');
@@ -219,6 +226,7 @@ const Registro = () => {
               onChange={handleChange}
               placeholder="Ingresa tu nombre"
               autoComplete="name"
+              maxLength={20}
               icon={<Icon path={mdiAccountOutline} size={0.9} />}
             />
             {errores.nombre && (
