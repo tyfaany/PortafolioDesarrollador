@@ -6,36 +6,34 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-   public function up(): void
-{
-    Schema::create('jobs', function (Blueprint $table) {
-        $table->id();
-        // Relación con el programador
-        $table->foreignId('user_id')->constrained()->onDelete('cascade');
-        
-        $table->string('company_name', 100);
-        $table->string('job_title', 100); // Ejemplo: Junior Developer
-        $table->text('description')->nullable(); // Tareas realizadas
-        
-        // Fecha de Inicio
-        $table->foreignId('start_month_id')->nullable()->constrained('months')->onDelete('set null');
-        $table->foreignId('start_year_id')->nullable()->constrained('years')->onDelete('set null');
-        
-        // Fecha de Fin (puede ser null si sigue trabajando ahí)
-        $table->foreignId('end_month_id')->nullable()->constrained('months')->onDelete('set null');
-        $table->foreignId('end_year_id')->nullable()->constrained('years')->onDelete('set null');
-        
-        $table->boolean('is_current_job')->default(false); // Checkbox de "Trabajo actualmente aquí"
-        
-        $table->timestamps();
-    });
-}
-    /**
-     * Reverse the migrations.
-     */
+    public function up(): void
+    {
+        Schema::create('jobs', function (Blueprint $table) {
+            $table->id();
+            
+            // Relación con el usuario
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            
+            // Datos del empleo
+            $table->string('company_name', 100);
+            $table->string('position', 100); // Puesto o Cargo
+            $table->text('achievements')->nullable(); // Logros (área de texto multilinea)
+            
+            // Fechas simplificadas (Sin anti-patrones de relaciones)
+            // Se guardarán como strings (ej. "Enero", "Febrero") o enteros (ej. 2023)
+            $table->string('start_month', 20);
+            $table->integer('start_year');
+            
+            $table->string('end_month', 20)->nullable();
+            $table->integer('end_year')->nullable();
+            
+            // Estado actual
+            $table->boolean('is_current_job')->default(false);
+            
+            $table->timestamps();
+        });
+    }
+
     public function down(): void
     {
         Schema::dropIfExists('jobs');

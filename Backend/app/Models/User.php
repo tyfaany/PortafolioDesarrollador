@@ -77,7 +77,16 @@ class User extends Authenticatable
      */
     public function skills()
     {
-        return $this->belongsToMany(TechnicalSkill::class, 'user_skills');
+        return $this->belongsToMany(TechnicalSkill::class, 'user_skills')
+                    ->withPivot('level'); // Agregamos esto para que traiga el nivel
+    }
+    /**
+     * Un usuario tiene muchas habilidades blandas (Muchos a Muchos).
+     * Laravel asume por defecto que la tabla intermedia se llama 'soft_skill_user'
+     */
+    public function softSkills()
+    {
+        return $this->belongsToMany(SoftSkill::class);
     }
 
     // --- NUEVO: Agregamos la función del Accessor al final ---
