@@ -18,4 +18,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/photo', [AuthController::class, 'uploadPhoto']);
     Route::get('/user', [UserController::class, 'show']);
+
+    Route::get('studies', [StudyController::class, 'index']);
+    Route::post('studies', [StudyController::class, 'store']);
+    Route::put('studies/{study}', [StudyController::class, 'update']);
+    Route::delete('studies/{study}', [StudyController::class, 'destroy']);
+    Route::get('users/{user}/studies', [StudyController::class, 'indexPublic']);
 });
