@@ -1,11 +1,12 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -20,7 +21,6 @@ class User extends Authenticatable
         'github_url',
         'linkedin_url',
         'profile_photo',
-        'profile_completed',
     ];
 
     protected $hidden = [
@@ -28,62 +28,57 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    // --- NUEVO
     protected $appends = [
         'profile_photo_url',
     ];
 
-    /**
-     * Conversión de tipos automáticos.
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed', // Esto asegura que la contraseña siempre se guarde cifrada
+        'password' => 'hashed',
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | RELACIONES (Eloquent Relationships)
-    |--------------------------------------------------------------------------
-    | Esto permite hacer: $user->projects, $user->studies, etc.
-    */
+   
 
-    /**
-     * Un usuario (programador) tiene muchos proyectos.
-     */
-    public function projects()
+    public function projects(): HasMany
     {
         return $this->hasMany(Project::class);
     }
 
-    /**
-     * Un usuario tiene muchos estudios académicos.
-     */
-    public function studies()
+    public function studies(): HasMany
     {
         return $this->hasMany(Study::class);
     }
 
-    /**
-     * Un usuario tiene muchas experiencias laborales.
-     */
-    public function jobs()
+    public function jobs(): HasMany
     {
         return $this->hasMany(Job::class);
     }
 
     /**
-     * Un usuario tiene muchas habilidades (Muchos a Muchos).
+     * Habilidades Técnicas: Relación Muchos a Muchos .
      */
-    public function skills()
+    public function technicalSkills(): BelongsToMany
     {
-        return $this->belongsToMany(TechnicalSkill::class, 'user_skills');
+        return $this->belongsToMany(TechnicalSkill::class, 'user_technical_skill')
+                    ->withPivot('level_id')
+                    ->withTimestamps();
     }
 
-    // --- NUEVO: Agregamos la función del Accessor al final ---
     /**
-     * Accessor para obtener la URL completa de la foto de perfil automáticamente
+     * Habilidades Blandas: Relación Muchos a Muchos .
      */
+    public function softSkills(): BelongsToMany
+    {
+        return $this->belongsToMany(SoftSkill::class, 'user_soft_skill')
+                    ->withTimestamps();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESSORS
+    |--------------------------------------------------------------------------
+    */
+
     public function getProfilePhotoUrlAttribute()
     {
         if ($this->profile_photo) {
