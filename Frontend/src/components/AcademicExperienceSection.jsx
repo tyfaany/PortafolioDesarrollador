@@ -188,8 +188,8 @@ function AcademicExperienceSection({
     const institucion = sanitizarTexto(formularioEstudio.academic_institution);
     const titulo = sanitizarTexto(formularioEstudio.degree);
     const hoy = new Date();
-    const inicio = formularioEstudio.start_month ? new Date(`${formularioEstudio.start_month}-01T00:00:00`) : null;
-    const fin = formularioEstudio.end_month ? new Date(`${formularioEstudio.end_month}-01T00:00:00`) : null;
+    const inicio = formularioEstudio.start_month ? new Date(`${formularioEstudio.start_month}-01T00:00:00Z`) : null;
+    const fin = formularioEstudio.end_month ? new Date(`${formularioEstudio.end_month}-01T00:00:00Z`) : null;
     const mesActual = new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), 1));
 
     if (!institucion) {
@@ -208,6 +208,8 @@ function AcademicExperienceSection({
 
     if (!formularioEstudio.currentlyStudying && !formularioEstudio.end_month) {
       nuevosErrores.end_month = 'La fecha de fin es obligatoria.';
+    } else if (!formularioEstudio.currentlyStudying && fin && fin > mesActual) {
+      nuevosErrores.end_month = 'La fecha de fin no puede ser posterior a la fecha actual.';
     }
 
     if (inicio && fin && inicio > fin) {

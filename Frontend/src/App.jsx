@@ -2,12 +2,12 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import AuthLayout from './layouts/AuthLayout';
 import MainLayout from './layouts/MainLayout';
 import ProtectedRoute from './routes/ProtectedRoute';
-import Login from './pages/Login';
-import Registro from './pages/Registro';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
+import Login from './pages/login';
+import Registro from './pages/registro';
+import ForgotPassword from './pages/forgotPassword';
+import ResetPassword from './pages/resetPassword';
 import Inicio from './pages/Inicio';
-import Portafolio from './pages/Portafolio';
+import Portafolio from './pages/portafolio';
 import ProfileSettings from './pages/ProfileSettings';
 
 // Definicion de rutas de la aplicacion
