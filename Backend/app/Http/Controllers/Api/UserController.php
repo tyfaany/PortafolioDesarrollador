@@ -11,6 +11,10 @@ class UserController extends Controller
     public function show(Request $request)
 {
     $user = $request->user();
+    $user->load([
+        'studies', 
+        'jobs', 
+    ]);
 
     // Agregamos manualmente la URL completa de la foto si existe
     if ($user->profile_photo) {
