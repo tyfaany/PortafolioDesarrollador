@@ -90,32 +90,12 @@ function validarUrlProfesional(valor, plataforma) {
     return '';
   }
 
-  let url;
+  const patronGitHub = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9_.-]+/i;
+  const patronLinkedIn = /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/i;
+  const patron = plataforma === 'GitHub' ? patronGitHub : patronLinkedIn;
 
-  try {
-    url = new URL(limpio);
-  } catch {
+  if (!patron.test(limpio)) {
     return `Por favor, ingresa una URL válida de ${plataforma}`;
-  }
-
-  if (url.protocol !== 'https:') {
-    return `Por favor, ingresa una URL válida de ${plataforma}`;
-  }
-
-  const host = url.hostname.toLowerCase();
-  const path = url.pathname.toLowerCase();
-
-  if (plataforma === 'LinkedIn') {
-    if (!(host === 'linkedin.com' || host === 'www.linkedin.com') || !path.startsWith('/in/')) {
-      return 'Por favor, ingresa una URL válida de LinkedIn';
-    }
-  }
-
-  if (plataforma === 'GitHub') {
-    const segmentos = path.split('/').filter(Boolean);
-    if (!(host === 'github.com' || host === 'www.github.com') || segmentos.length < 1) {
-      return 'Por favor, ingresa una URL válida de GitHub';
-    }
   }
 
   return '';

@@ -33,11 +33,11 @@ class UserController extends Controller
         'biography'    => 'nullable|string|max:1000',
         'github_url'   => [
             'nullable', 'url', 'max:200',
-            'regex:/^(https?:\/\/)?(www\.)?github\.com\/[a-zA-Z0-9_-]+\/?$/i'
+            'regex:/^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9_.-]+/i'
         ],
         'linkedin_url' => [
             'nullable', 'url', 'max:200',
-            'regex:/^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/i'
+            'regex:/^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/i'
         ],
     ]);
 
