@@ -13,6 +13,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::get('users/{user}/studies', [StudyController::class, 'indexPublic']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user', [AuthController::class, 'updatePassword']);
@@ -36,5 +37,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('studies', [StudyController::class, 'store']);
     Route::put('studies/{study}', [StudyController::class, 'update']);
     Route::delete('studies/{study}', [StudyController::class, 'destroy']);
-    Route::get('users/{user}/studies', [StudyController::class, 'indexPublic']);
 });

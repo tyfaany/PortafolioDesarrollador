@@ -16,13 +16,6 @@ class UserController extends Controller
         'jobs', 
     ]);
 
-    // Agregamos manualmente la URL completa de la foto si existe
-    if ($user->profile_photo) {
-       $user->profile_photo_url = $request->getSchemeAndHttpHost() . '/storage/' . $user->profile_photo;
-    } else {
-        $user->profile_photo_url = null; // O una imagen por defecto
-    }
-
     return response()->json($user);
 }
     /**
