@@ -12,7 +12,7 @@ import useAuth from '../hooks/useAuth';
 const FORMULARIO_LABORAL_INICIAL = {
   id: null,
   company_name: '',
-  job_title: '',
+  position: '',
   start_month: '01',
   start_year: String(new Date().getFullYear()),
   end_month: '12',
@@ -101,7 +101,7 @@ function normalizarTrabajos(trabajos) {
       ...trabajo,
       id: trabajo.id || `local-job-${indice}`,
       company_name: trabajo.company_name || '',
-      job_title: trabajo.job_title || '',
+      position: trabajo.position || '',
       start_date: trabajo.start_date ? String(trabajo.start_date).slice(0, 10) : '',
       end_date: trabajo.end_date ? String(trabajo.end_date).slice(0, 10) : null,
       is_current_job: Boolean(trabajo.is_current_job || !trabajo.end_date),
@@ -117,7 +117,7 @@ function construirFormularioTrabajo(trabajo) {
   return {
     id: trabajo?.id || null,
     company_name: trabajo?.company_name || '',
-    job_title: trabajo?.job_title || '',
+    position: trabajo?.position || '',
     start_month: inicio.month,
     start_year: inicio.year,
     end_month: fin.month,
@@ -251,7 +251,7 @@ function PortfolioWorkExperienceSection() {
   const validarFormulario = () => {
     const nuevosErrores = {};
     const empresa = sanitizarTexto(formulario.company_name);
-    const cargo = sanitizarTexto(formulario.job_title);
+    const cargo = sanitizarTexto(formulario.position);
     const fechaInicio = construirFechaDesdePartes(formulario.start_year, formulario.start_month);
     const fechaFin = construirFechaDesdePartes(formulario.end_year, formulario.end_month);
     const inicio = fechaInicio ? new Date(`${fechaInicio}T00:00:00`) : null;
@@ -262,7 +262,7 @@ function PortfolioWorkExperienceSection() {
     }
 
     if (!cargo) {
-      nuevosErrores.job_title = 'El cargo / puesto es obligatorio.';
+      nuevosErrores.position = 'El cargo / puesto es obligatorio.';
     }
 
     if (!formulario.start_month || !formulario.start_year) {
@@ -295,7 +295,7 @@ function PortfolioWorkExperienceSection() {
       const trabajoActualizado = {
         id: formulario.id || `local-job-${Date.now()}-${contadorLocal + 1}`,
         company_name: sanitizarTexto(formulario.company_name),
-        job_title: sanitizarTexto(formulario.job_title),
+        position: sanitizarTexto(formulario.position),
         start_date: construirFechaDesdePartes(formulario.start_year, formulario.start_month),
         end_date: formulario.is_current_job
           ? null
@@ -369,7 +369,7 @@ function PortfolioWorkExperienceSection() {
               <article key={trabajo.id} className="softsave-portafolio-study-card">
                 <div className="softsave-portafolio-study-card__body">
                   <h3 className="softsave-portafolio-study-card__title">{trabajo.company_name}</h3>
-                  <p className="softsave-portafolio-study-card__degree">{trabajo.job_title}</p>
+                  <p className="softsave-portafolio-study-card__degree">{trabajo.position}</p>
                   <p className="softsave-portafolio-study-card__period">
                     {formatearPeriodo(trabajo.start_date, trabajo.end_date)}
                   </p>
@@ -445,14 +445,14 @@ function PortfolioWorkExperienceSection() {
                 <span className="softsave-profile__label">Puesto o Cargo</span>
                 <input
                   type="text"
-                  name="job_title"
-                  value={formulario.job_title}
+                  name="position"
+                  value={formulario.position}
                   onChange={manejarCambio}
                   className="softsave-input softsave-profile__input"
                 />
-                {errores.job_title ? (
+                {errores.position ? (
                   <span className="error-text softsave-profile__error-text" role="alert">
-                    {errores.job_title}
+                    {errores.position}
                   </span>
                 ) : null}
               </label>
