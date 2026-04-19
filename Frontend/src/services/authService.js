@@ -41,3 +41,9 @@ export const obtenerEstudios = () => api.get('/studies');
 export const crearEstudio = (datos) => api.post('/studies', datos);
 
 export const actualizarEstudio = (id, datos) => api.put(`/studies/${id}`, datos);
+
+export const obtenerJobs = () => api.get('/user/jobs');
+
+export const crearJob = (datos) => api.post('/user/jobs', datos);
+
+export const actualizarJob = (id, datos) => api.put(`/user/jobs/${id}`, datos);
