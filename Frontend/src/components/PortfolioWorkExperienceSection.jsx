@@ -8,6 +8,7 @@ import {
   mdiPlus,
 } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
+import { obtenerJobs } from '../services/authService';
 
 const FORMULARIO_LABORAL_INICIAL = {
   id: null,
@@ -38,15 +39,6 @@ const MESES = [
 
 function sanitizarTexto(valor) {
   return String(valor || '').replace(/\s+/g, ' ').trim();
-}
-
-function leerTrabajosGuardados(storageKey) {
-  try {
-    const trabajosGuardados = localStorage.getItem(storageKey);
-    return trabajosGuardados ? JSON.parse(trabajosGuardados) : null;
-  } catch {
-    return null;
-  }
 }
 
 function obtenerAniosDisponibles() {
@@ -148,7 +140,6 @@ function formatearPeriodo(fechaInicio, fechaFin) {
 
 function PortfolioWorkExperienceSection() {
   const { user } = useAuth();
-  const storageKey = `softsave_jobs_${user?.id || 'user'}`;
   const aniosDisponibles = useMemo(() => obtenerAniosDisponibles(), []);
   const [trabajos, setTrabajos] = useState([]);
   const [estaModalAbierto, setEstaModalAbierto] = useState(false);
@@ -162,15 +153,14 @@ function PortfolioWorkExperienceSection() {
   const hayRegistros = trabajos.length > 0;
 
   useEffect(() => {
-    const trabajosGuardados = leerTrabajosGuardados(storageKey);
-    const trabajosIniciales = trabajosGuardados || normalizarTrabajos(user?.jobs);
-
-    setTrabajos(normalizarTrabajos(trabajosIniciales));
-  }, [storageKey, user?.jobs]);
-
-  useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(trabajos));
-  }, [storageKey, trabajos]);
+    obtenerJobs()
+      .then((respuesta) => {
+        setTrabajos(normalizarTrabajos(respuesta.data));
+      })
+      .catch(() => {
+        setTrabajos(normalizarTrabajos(user?.jobs));
+      });
+  }, []);
 
   useEffect(() => {
     if (!estaModalAbierto) {
