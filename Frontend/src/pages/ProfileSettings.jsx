@@ -424,11 +424,6 @@ function ProfileSettings() {
     setEstaModoEdicion(true);
   };
 
-  const manejarIrAEnlaces = () => {
-    botonEnlacesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    botonEnlacesRef.current?.focus();
-  };
-
   const abrirModalEnlaces = () => {
     setFormularioEnlaces({
       githubUrl: user?.github_url || '',
@@ -611,7 +606,7 @@ function ProfileSettings() {
             <button
               type="button"
               className="softsave-profile__secondary-button softsave-profile__secondary-button--pill"
-              onClick={manejarIrAEnlaces}
+              onClick={abrirModalEnlaces}
             >
               Vincular LinkedIn
             </button>
