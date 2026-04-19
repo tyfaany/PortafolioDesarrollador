@@ -8,7 +8,7 @@ import {
   mdiPlus,
 } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
-import { obtenerJobs } from '../services/authService';
+import { crearJob, obtenerJobs } from '../services/authService';
 
 const FORMULARIO_LABORAL_INICIAL = {
   id: null,
@@ -282,8 +282,26 @@ function PortfolioWorkExperienceSection() {
     setMensajeError('');
 
     try {
+      const esCreacion = !formulario.id;
+      const respuestaCreacion = esCreacion
+        ? await crearJob({
+          company_name: sanitizarTexto(formulario.company_name),
+          position: sanitizarTexto(formulario.position),
+          achievements: sanitizarTexto(formulario.description) || null,
+          start_month: MESES.find((mes) => mes.value === formulario.start_month)?.label,
+          start_year: Number(formulario.start_year),
+          end_month: formulario.is_current_job
+            ? null
+            : MESES.find((mes) => mes.value === formulario.end_month)?.label,
+          end_year: formulario.is_current_job ? null : Number(formulario.end_year),
+          is_current_job: formulario.is_current_job,
+        })
+        : null;
+
       const trabajoActualizado = {
-        id: formulario.id || `local-job-${Date.now()}-${contadorLocal + 1}`,
+        id: esCreacion
+          ? (respuestaCreacion?.data?.job?.id || `local-job-${Date.now()}-${contadorLocal + 1}`)
+          : formulario.id,
         company_name: sanitizarTexto(formulario.company_name),
         position: sanitizarTexto(formulario.position),
         start_date: construirFechaDesdePartes(formulario.start_year, formulario.start_month),
@@ -299,7 +317,7 @@ function PortfolioWorkExperienceSection() {
         return ordenarTrabajos([trabajoActualizado, ...sinDuplicados]);
       });
 
-      if (!formulario.id) {
+      if (esCreacion && !respuestaCreacion?.data?.job?.id) {
         setContadorLocal((actual) => actual + 1);
       }
 
