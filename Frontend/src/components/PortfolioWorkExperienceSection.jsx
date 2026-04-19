@@ -83,6 +83,25 @@ function ordenarTrabajos(trabajos) {
   });
 }
 
+function mesNombreANumero(nombreMes) {
+  const mapaMeses = {
+    Enero: '01',
+    Febrero: '02',
+    Marzo: '03',
+    Abril: '04',
+    Mayo: '05',
+    Junio: '06',
+    Julio: '07',
+    Agosto: '08',
+    Septiembre: '09',
+    Octubre: '10',
+    Noviembre: '11',
+    Diciembre: '12',
+  };
+
+  return mapaMeses[nombreMes] || '01';
+}
+
 function normalizarTrabajos(trabajos) {
   if (!Array.isArray(trabajos)) {
     return [];
@@ -94,10 +113,14 @@ function normalizarTrabajos(trabajos) {
       id: trabajo.id || `local-job-${indice}`,
       company_name: trabajo.company_name || '',
       position: trabajo.position || '',
-      start_date: trabajo.start_date ? String(trabajo.start_date).slice(0, 10) : '',
-      end_date: trabajo.end_date ? String(trabajo.end_date).slice(0, 10) : null,
-      is_current_job: Boolean(trabajo.is_current_job || !trabajo.end_date),
-      description: trabajo.description || '',
+      start_date: trabajo.start_year && trabajo.start_month
+        ? `${trabajo.start_year}-${mesNombreANumero(trabajo.start_month)}-01`
+        : (trabajo.start_date ? String(trabajo.start_date).slice(0, 10) : ''),
+      end_date: trabajo.is_current_job || !trabajo.end_year
+        ? null
+        : `${trabajo.end_year}-${mesNombreANumero(trabajo.end_month)}-01`,
+      is_current_job: Boolean(trabajo.is_current_job),
+      description: trabajo.achievements ?? trabajo.description ?? '',
     })),
   );
 }
