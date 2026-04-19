@@ -35,7 +35,7 @@ const Login = () => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/portafolio" replace />;
+    return <Navigate to="/inicio" replace />;
   }
 
   const handleChange = (event) => {
@@ -61,7 +61,7 @@ const Login = () => {
 
       try {
         await login(formData.email, formData.password, formData.recordarme);
-        navigate('/portafolio');
+        navigate('/inicio');
       } catch {
         setErrorServidor('Credenciales no coinciden con nuestros registros');
       } finally {

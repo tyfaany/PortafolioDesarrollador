@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Registro from './pages/Registro';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Inicio from './pages/Inicio';
 import Portafolio from './pages/Portafolio';
 import ProfileSettings from './pages/ProfileSettings';
 
@@ -29,6 +30,7 @@ function App() {
           </ProtectedRoute>
         )}
       >
+        <Route path="/inicio" element={<Inicio />} />
         <Route path="/portafolio" element={<Portafolio />} />
         <Route path="/perfil/*" element={<ProfileSettings />} />
       </Route>

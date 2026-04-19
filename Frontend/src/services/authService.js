@@ -35,3 +35,9 @@ export const subirFoto = (archivo) => {
 };
 
 export const actualizarPerfil = (datos) => api.put('/user/update', datos);
+
+export const obtenerEstudios = () => api.get('/studies');
+
+export const crearEstudio = (datos) => api.post('/studies', datos);
+
+export const actualizarEstudio = (id, datos) => api.put(`/studies/${id}`, datos);

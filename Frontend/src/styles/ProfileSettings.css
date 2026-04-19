@@ -147,6 +147,22 @@
   font-weight: 600;
 }
 
+.softsave-profile__link--chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background-color: rgba(var(--color-primario-rgb), 0.1);
+}
+
+.softsave-profile__header-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
 .softsave-profile__bio {
   margin: 12px 0 0;
   color: var(--color-texto-suave);
@@ -184,6 +200,34 @@
   margin-top: 6px;
   color: var(--color-texto-suave);
   font-size: 0.9rem;
+}
+
+.softsave-profile__section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.softsave-profile__section-button {
+  width: auto;
+}
+
+.softsave-profile__section-button--icon {
+  min-width: 48px;
+  padding-inline: 14px;
+}
+
+.softsave-profile__section-alert {
+  margin-top: 20px;
+  margin-bottom: 0;
+}
+
+.softsave-profile__title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .softsave-profile__form {
@@ -236,6 +280,23 @@
   color: var(--color-texto);
 }
 
+.softsave-profile__links-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.softsave-profile__inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background-color: rgba(var(--color-primario-rgb), 0.08);
+  color: var(--color-texto);
+  font-weight: 600;
+}
+
 .softsave-profile__textarea {
   min-height: 110px;
   resize: vertical;
@@ -244,6 +305,10 @@
 .softsave-profile__help {
   font-size: 0.8rem;
   color: var(--color-texto-suave);
+}
+
+.softsave-profile__link-actions {
+  margin-top: -6px;
 }
 
 .softsave-profile__actions {
@@ -275,6 +340,21 @@
   padding: 10px 0;
   font-weight: 700;
   cursor: pointer;
+}
+
+.softsave-profile__secondary-button--pill,
+.softsave-profile__secondary-button--modal {
+  border-radius: 12px;
+  padding: 11px 16px;
+}
+
+.softsave-profile__secondary-button--pill {
+  background-color: rgba(var(--color-primario-rgb), 0.08);
+  color: var(--color-primario);
+}
+
+.softsave-profile__secondary-button--modal {
+  background-color: rgba(var(--color-texto-rgb), 0.06);
 }
 
 .softsave-profile__aside {
@@ -609,7 +689,7 @@
 .softsave-profile__modal-actions {
   display: flex;
   gap: 10px;
-  justify-content: center;
+  justify-content: flex-end;
   flex-wrap: wrap;
   margin-top: 12px;
 }
@@ -647,6 +727,95 @@
   margin-top: 14px;
 }
 
+.softsave-profile__study-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.softsave-profile__study-card {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid var(--color-borde-tarjeta);
+  background-color: rgba(var(--color-primario-rgb), 0.05);
+}
+
+.softsave-profile__study-body {
+  min-width: 0;
+}
+
+.softsave-profile__study-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.softsave-profile__study-degree {
+  margin: 4px 0 0;
+  color: var(--color-texto);
+  font-weight: 600;
+}
+
+.softsave-profile__study-period {
+  margin: 8px 0 0;
+  color: var(--color-texto-suave);
+  text-transform: capitalize;
+}
+
+.softsave-profile__academic-empty {
+  margin-top: 20px;
+}
+
+.softsave-profile__icon-button--inline {
+  position: static;
+  flex-shrink: 0;
+}
+
+.softsave-profile__study-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.softsave-profile__study-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.softsave-profile__checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
+.softsave-profile__checkbox input {
+  accent-color: var(--color-primario);
+}
+
+.softsave-profile__external-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 20px;
+  margin-top: 18px;
+  border-radius: 16px;
+  background-color: rgba(var(--color-primario-rgb), 0.08);
+  color: var(--color-texto);
+}
+
+.softsave-profile__external-card p {
+  margin: 4px 0 0;
+  color: var(--color-texto-suave);
+  word-break: break-word;
+}
+
 @media (max-width: 768px) {
   .softsave-profile {
     padding: 24px 16px 36px;
@@ -677,6 +846,18 @@
   .softsave-profile__grid {
     grid-template-columns: 1fr;
     padding: 0 20px 24px;
+  }
+
+  .softsave-profile__section-head {
+    flex-direction: column;
+  }
+
+  .softsave-profile__section-button {
+    width: 100%;
+  }
+
+  .softsave-profile__study-grid {
+    grid-template-columns: 1fr;
   }
 
   .softsave-profile__side-link {

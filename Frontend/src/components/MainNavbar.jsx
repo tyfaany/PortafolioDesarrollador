@@ -4,7 +4,7 @@ import { mdiAccountCircle, mdiFolder, mdiHome } from '@mdi/js';
 import "../styles/MainNavbar.css";
 
 const NAV_ITEMS = [
-  { id: 'inicio', label: 'Inicio', route: '/portafolio', icon: mdiHome },
+  { id: 'inicio', label: 'Inicio', route: '/inicio', icon: mdiHome },
   { id: 'portafolio', label: 'Mi portafolio', route: '/portafolio', icon: mdiFolder },
   { id: 'perfil', label: 'Mi perfil', route: '/perfil', icon: mdiAccountCircle },
 ];
@@ -16,6 +16,10 @@ function obtenerNavActivo(pathname) {
 
   if (pathname.startsWith('/portafolio')) {
     return 'portafolio';
+  }
+
+  if (pathname.startsWith('/inicio')) {
+    return 'inicio';
   }
 
   return 'inicio';
