@@ -47,3 +47,13 @@ export const obtenerJobs = () => api.get('/user/jobs');
 export const crearJob = (datos) => api.post('/user/jobs', datos);
 
 export const actualizarJob = (id, datos) => api.put(`/user/jobs/${id}`, datos);
+
+export const obtenerSkillsTecnicas = () => api.get('/user/technical-skills');
+
+export const sincronizarSkillsTecnicas = (skills) =>
+  api.post('/user/technical-skills/sync', { skills });
+
+export const obtenerSoftSkills = () => api.get('/user/soft-skills');
+
+export const sincronizarSoftSkills = (skills) =>
+  api.post('/user/soft-skills/sync', { skills });
