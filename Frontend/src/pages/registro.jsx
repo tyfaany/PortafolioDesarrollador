@@ -58,7 +58,7 @@ const Registro = () => {
       return;
     }
 
-    navigate('/portafolio', { replace: true });
+    navigate('/inicio', { replace: true });
   }, [isAuthenticated, navigate]);
 
   const handleChange = (event) => {
