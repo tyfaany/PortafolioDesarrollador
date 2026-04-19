@@ -33,7 +33,7 @@ class SoftSkillController extends Controller
         foreach ($request->skills as $skillName) {
             // Buscamos o creamos la habilidad en el catálogo global
             $softSkill = SoftSkill::firstOrCreate([
-                'name' => trim($skillName)
+                'name' => mb_strtolower(trim($skillName), 'UTF-8')
             ]);
 
             // Solo guardamos los IDs para sincronizar

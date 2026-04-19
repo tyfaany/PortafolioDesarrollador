@@ -37,7 +37,7 @@ class TechnicalSkillController extends Controller
             // Buscamos si la habilidad ya existe en el catálogo general.
             // Si no existe, la CREAMOS al vuelo (firstOrCreate).
             $technicalSkill = TechnicalSkill::firstOrCreate([
-                'name' => trim($skillData['name']) 
+                'name' => mb_strtolower(trim($skillData['name']), 'UTF-8')
             ]);
 
             // Preparamos los datos para sincronizar usando el ID que encontramos o acabamos de crear
