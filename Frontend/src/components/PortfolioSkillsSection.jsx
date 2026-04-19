@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@mdi/react';
 import { mdiClose, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
+import { obtenerSkillsTecnicas, obtenerSoftSkills } from '../services/authService';
 
 const NIVELES_TECNICOS = ['Básico', 'Intermedio', 'Avanzado'];
 const SUGERENCIAS_BLANDAS = [
@@ -16,15 +17,6 @@ const SUGERENCIAS_BLANDAS = [
 
 function sanitizarTexto(valor) {
   return String(valor || '').replace(/\s+/g, ' ').trim();
-}
-
-function leerSkillsGuardadas(storageKey) {
-  try {
-    const skillsGuardadas = localStorage.getItem(storageKey);
-    return skillsGuardadas ? JSON.parse(skillsGuardadas) : null;
-  } catch {
-    return null;
-  }
 }
 
 function normalizarNivel(nivel) {
@@ -102,7 +94,6 @@ function obtenerClaseNivel(nivel) {
 function PortfolioSkillsSection() {
   const { user } = useAuth();
   const skillInputRef = useRef(null);
-  const storageKey = `softsave_skills_${user?.id || 'user'}`;
   const [tecnicas, setTecnicas] = useState([]);
   const [blandas, setBlandas] = useState([]);
   const [editando, setEditando] = useState(false);
@@ -117,21 +108,14 @@ function PortfolioSkillsSection() {
   const tieneSkills = useMemo(() => tecnicas.length > 0 || blandas.length > 0, [tecnicas, blandas]);
 
   useEffect(() => {
-    const skillsGuardados = leerSkillsGuardadas(storageKey);
+    obtenerSkillsTecnicas()
+      .then((respuesta) => setTecnicas(normalizarSkillsTecnicas(respuesta.data)))
+      .catch(() => setTecnicas(normalizarSkillsTecnicas(user?.skills)));
 
-    if (skillsGuardados) {
-      setTecnicas(normalizarSkillsTecnicas(skillsGuardados.tecnicas));
-      setBlandas(normalizarHabilidadesBlandas(skillsGuardados.blandas));
-      return;
-    }
-
-    setTecnicas(normalizarSkillsTecnicas(user?.skills));
-    setBlandas([]);
-  }, [storageKey, user?.skills]);
-
-  useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify({ tecnicas, blandas }));
-  }, [storageKey, tecnicas, blandas]);
+    obtenerSoftSkills()
+      .then((respuesta) => setBlandas(normalizarHabilidadesBlandas(respuesta.data)))
+      .catch(() => setBlandas(normalizarHabilidadesBlandas(user?.softSkills)));
+  }, []);
 
   const limpiarMensajes = () => {
     setErrores({});
