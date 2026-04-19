@@ -8,7 +8,7 @@ import {
   mdiPlus,
 } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
-import { crearJob, obtenerJobs } from '../services/authService';
+import { actualizarJob, crearJob, obtenerJobs } from '../services/authService';
 
 const FORMULARIO_LABORAL_INICIAL = {
   id: null,
@@ -283,7 +283,7 @@ function PortfolioWorkExperienceSection() {
 
     try {
       const esCreacion = !formulario.id;
-      const respuestaCreacion = esCreacion
+      const respuesta = esCreacion
         ? await crearJob({
           company_name: sanitizarTexto(formulario.company_name),
           position: sanitizarTexto(formulario.position),
@@ -296,20 +296,37 @@ function PortfolioWorkExperienceSection() {
           end_year: formulario.is_current_job ? null : Number(formulario.end_year),
           is_current_job: formulario.is_current_job,
         })
-        : null;
+        : await actualizarJob(formulario.id, {
+          company_name: sanitizarTexto(formulario.company_name),
+          position: sanitizarTexto(formulario.position),
+          achievements: sanitizarTexto(formulario.description) || null,
+          start_month: MESES.find((mes) => mes.value === formulario.start_month)?.label,
+          start_year: Number(formulario.start_year),
+          end_month: formulario.is_current_job
+            ? null
+            : MESES.find((mes) => mes.value === formulario.end_month)?.label,
+          end_year: formulario.is_current_job ? null : Number(formulario.end_year),
+          is_current_job: formulario.is_current_job,
+        });
+
+      const trabajoRespuesta = respuesta?.data?.job;
 
       const trabajoActualizado = {
         id: esCreacion
-          ? (respuestaCreacion?.data?.job?.id || `local-job-${Date.now()}-${contadorLocal + 1}`)
-          : formulario.id,
-        company_name: sanitizarTexto(formulario.company_name),
-        position: sanitizarTexto(formulario.position),
-        start_date: construirFechaDesdePartes(formulario.start_year, formulario.start_month),
-        end_date: formulario.is_current_job
+          ? (trabajoRespuesta?.id || `local-job-${Date.now()}-${contadorLocal + 1}`)
+          : (trabajoRespuesta?.id || formulario.id),
+        company_name: trabajoRespuesta?.company_name || sanitizarTexto(formulario.company_name),
+        position: trabajoRespuesta?.position || sanitizarTexto(formulario.position),
+        start_date: trabajoRespuesta?.start_date
+          ? String(trabajoRespuesta.start_date).slice(0, 10)
+          : construirFechaDesdePartes(formulario.start_year, formulario.start_month),
+        end_date: trabajoRespuesta?.end_date
+          ? String(trabajoRespuesta.end_date).slice(0, 10)
+          : (formulario.is_current_job
           ? null
-          : construirFechaDesdePartes(formulario.end_year, formulario.end_month),
-        is_current_job: formulario.is_current_job,
-        description: sanitizarTexto(formulario.description),
+          : construirFechaDesdePartes(formulario.end_year, formulario.end_month)),
+        is_current_job: trabajoRespuesta?.is_current_job ?? formulario.is_current_job,
+        description: trabajoRespuesta?.description ?? sanitizarTexto(formulario.description),
       };
 
       setTrabajos((actual) => {
@@ -317,7 +334,7 @@ function PortfolioWorkExperienceSection() {
         return ordenarTrabajos([trabajoActualizado, ...sinDuplicados]);
       });
 
-      if (esCreacion && !respuestaCreacion?.data?.job?.id) {
+      if (esCreacion && !trabajoRespuesta?.id) {
         setContadorLocal((actual) => actual + 1);
       }
 
