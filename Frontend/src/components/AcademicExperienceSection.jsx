@@ -300,17 +300,6 @@ function AcademicExperienceSection({
             >
               {esPortafolio ? <Icon path={mdiPlus} size={0.85} /> : '+'}
             </button>
-            {esPortafolio ? (
-              <button
-                type="button"
-                className="softsave-portafolio-module-card__action"
-                onClick={() => abrirModalEditarEstudio(estudios[0])}
-                aria-label="Editar experiencia académica"
-                disabled={estudios.length === 0}
-              >
-                <Icon path={mdiPencilOutline} size={0.85} />
-              </button>
-            ) : null}
           </div>
         </div>
 
