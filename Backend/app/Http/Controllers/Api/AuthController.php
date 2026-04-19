@@ -67,12 +67,6 @@ class AuthController extends Controller
             'remember' => 'boolean'
         ]);    
 
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-            'remember' => 'boolean' // <-- Añadido para la opción "Recordarme"
-        ]);
-
         // Extraemos las credenciales y el valor de remember (si no lo envían, es false)
         $credentials = $request->only('email', 'password');
         $remember = $request->boolean('remember');
