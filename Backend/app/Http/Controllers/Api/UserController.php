@@ -14,6 +14,8 @@ class UserController extends Controller
     $user->load([
         'studies', 
         'jobs', 
+        'skills',
+        'softSkills',
     ]);
 
     return response()->json($user);
