@@ -108,13 +108,17 @@ function obtenerClaseNivel(nivel) {
 function PortfolioSkillsSection() {
   const { user } = useAuth();
   const skillInputRef = useRef(null);
+  const softSkillsUsuario = useMemo(
+    () => user?.softSkills ?? user?.soft_skills ?? [],
+    [user?.softSkills, user?.soft_skills],
+  );
   const tecnicasDesdeContexto = useMemo(
     () => normalizarSkillsTecnicas(user?.skills),
     [user?.skills],
   );
   const blandasDesdeContexto = useMemo(
-    () => normalizarHabilidadesBlandas(user?.softSkills),
-    [user?.softSkills],
+    () => normalizarHabilidadesBlandas(softSkillsUsuario),
+    [softSkillsUsuario],
   );
   const skillsCacheKey = useMemo(
     () => (user?.id ? `portfolio:skills:${user.id}` : null),
@@ -172,7 +176,7 @@ function PortfolioSkillsSection() {
           : user?.skills;
         const blandasFuente = blandasResultado.status === 'fulfilled'
           ? blandasResultado.value.data
-          : user?.softSkills;
+          : softSkillsUsuario;
 
         const tecnicasNormalizadas = normalizarSkillsTecnicas(tecnicasFuente);
         const blandasNormalizadas = normalizarHabilidadesBlandas(blandasFuente);
@@ -185,7 +189,7 @@ function PortfolioSkillsSection() {
     return () => {
       sigueMontado = false;
     };
-  }, [actualizarCacheSkills, blandasDesdeContexto, skillsCacheKey, tecnicasDesdeContexto, user?.skills, user?.softSkills]);
+  }, [actualizarCacheSkills, blandasDesdeContexto, skillsCacheKey, softSkillsUsuario, tecnicasDesdeContexto, user?.skills]);
 
   const limpiarMensajes = () => {
     setErrores({});
