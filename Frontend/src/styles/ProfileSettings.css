@@ -141,6 +141,12 @@
   font-weight: 500;
 }
 
+.softsave-profile__completeness-hint {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: var(--color-texto-suave);
+}
+
 .softsave-profile__link {
   color: var(--color-primario);
   font-size: 0.82rem;

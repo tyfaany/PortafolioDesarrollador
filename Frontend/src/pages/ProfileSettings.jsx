@@ -900,6 +900,12 @@ function ProfileSettings() {
                   {perfilCabecera.profesion ||
                     "Agrega tu profesión para mostrar tu especialidad."}
                 </p>
+                {!user?.profile_completed ? (
+                  <p className="softsave-profile__completeness-hint">
+                    Completa tu nombre, profesión y biografía para habilitar tu
+                    perfil público.
+                  </p>
+                ) : null}
 
                 {enlacesProfesionales.length > 0 ? (
                   <div className="softsave-profile__header-links">
