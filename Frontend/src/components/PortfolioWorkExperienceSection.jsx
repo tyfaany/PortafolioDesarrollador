@@ -66,23 +66,6 @@ function extraerPartesFecha(fecha) {
   };
 }
 
-function ordenarTrabajos(trabajos) {
-  return [...trabajos].sort((a, b) => {
-    const fechaA = a.end_date || a.start_date || '';
-    const fechaB = b.end_date || b.start_date || '';
-
-    if (a.is_current_job && !b.is_current_job) {
-      return -1;
-    }
-
-    if (!a.is_current_job && b.is_current_job) {
-      return 1;
-    }
-
-    return fechaB.localeCompare(fechaA);
-  });
-}
-
 function mesNombreANumero(nombreMes) {
   const mapaMeses = {
     Enero: '01',
@@ -107,22 +90,20 @@ function normalizarTrabajos(trabajos) {
     return [];
   }
 
-  return ordenarTrabajos(
-    trabajos.map((trabajo, indice) => ({
-      ...trabajo,
-      id: trabajo.id || `local-job-${indice}`,
-      company_name: trabajo.company_name || '',
-      position: trabajo.position || '',
-      start_date: trabajo.start_year && trabajo.start_month
-        ? `${trabajo.start_year}-${mesNombreANumero(trabajo.start_month)}-01`
-        : (trabajo.start_date ? String(trabajo.start_date).slice(0, 10) : ''),
-      end_date: trabajo.is_current_job || !trabajo.end_year
-        ? null
-        : `${trabajo.end_year}-${mesNombreANumero(trabajo.end_month)}-01`,
-      is_current_job: Boolean(trabajo.is_current_job),
-      description: trabajo.achievements ?? trabajo.description ?? '',
-    })),
-  );
+  return trabajos.map((trabajo, indice) => ({
+    ...trabajo,
+    id: trabajo.id || `local-job-${indice}`,
+    company_name: trabajo.company_name || '',
+    position: trabajo.position || '',
+    start_date: trabajo.start_year && trabajo.start_month
+      ? `${trabajo.start_year}-${mesNombreANumero(trabajo.start_month)}-01`
+      : (trabajo.start_date ? String(trabajo.start_date).slice(0, 10) : ''),
+    end_date: trabajo.is_current_job || !trabajo.end_year
+      ? null
+      : `${trabajo.end_year}-${mesNombreANumero(trabajo.end_month)}-01`,
+    is_current_job: Boolean(trabajo.is_current_job),
+    description: trabajo.achievements ?? trabajo.description ?? '',
+  }));
 }
 
 function construirFormularioTrabajo(trabajo) {
@@ -354,7 +335,7 @@ function PortfolioWorkExperienceSection() {
 
       setTrabajos((actual) => {
         const sinDuplicados = actual.filter((item) => String(item.id) !== String(trabajoActualizado.id));
-        return ordenarTrabajos([trabajoActualizado, ...sinDuplicados]);
+        return [trabajoActualizado, ...sinDuplicados];
       });
 
       if (esCreacion && !trabajoRespuesta?.id) {
