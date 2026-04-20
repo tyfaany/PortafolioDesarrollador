@@ -395,7 +395,7 @@ function ProfileSettings() {
       }
 
       const respuesta = await subirFoto(archivo);
-      const nuevaUrl = respuesta?.data?.photo_url;
+      const nuevaUrl = respuesta?.data?.profile_photo_url;
       await refreshUser();
 
       if (nuevaUrl) {

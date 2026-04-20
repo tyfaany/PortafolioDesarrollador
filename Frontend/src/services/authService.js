@@ -26,12 +26,21 @@ export const restablecerPassword = ({ token, email, password, passwordConfirmaci
   password_confirmation: passwordConfirmacion,
 });
 
-export const subirFoto = (archivo) => {
+export const subirFoto = async (archivo) => {
   const formData = new FormData();
   formData.append('photo', archivo);
-  return api.post('/user/photo', formData, {
+  const respuesta = await api.post('/user/photo', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+
+  const profilePhotoUrl = respuesta?.data?.profile_photo_url || respuesta?.data?.photo_url || null;
+  return {
+    ...respuesta,
+    data: {
+      ...respuesta.data,
+      profile_photo_url: profilePhotoUrl,
+    },
+  };
 };
 
 export const actualizarPerfil = (datos) => api.put('/user/update', datos);
