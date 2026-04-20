@@ -163,11 +163,15 @@ function formatearPeriodo(fechaInicio, fechaFin) {
 function PortfolioWorkExperienceSection() {
   const { user } = useAuth();
   const aniosDisponibles = useMemo(() => obtenerAniosDisponibles(), []);
+  const trabajosDesdeContexto = useMemo(
+    () => normalizarTrabajos(user?.jobs),
+    [user?.jobs],
+  );
   const jobsCacheKey = useMemo(
     () => (user?.id ? `portfolio:jobs:${user.id}` : null),
     [user?.id],
   );
-  const [trabajos, setTrabajos] = useState([]);
+  const [trabajos, setTrabajos] = useState(() => trabajosDesdeContexto);
   const [estaModalAbierto, setEstaModalAbierto] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [errores, setErrores] = useState({});
@@ -191,6 +195,14 @@ function PortfolioWorkExperienceSection() {
       };
     }
 
+    if (trabajosDesdeContexto.length > 0) {
+      setTrabajos(trabajosDesdeContexto);
+      setPortfolioCache(jobsCacheKey, trabajosDesdeContexto);
+      return () => {
+        sigueMontado = false;
+      };
+    }
+
     obtenerJobs()
       .then((respuesta) => {
         if (sigueMontado) {
@@ -201,7 +213,7 @@ function PortfolioWorkExperienceSection() {
       })
       .catch(() => {
         if (sigueMontado) {
-          const trabajosNormalizados = normalizarTrabajos(user?.jobs);
+          const trabajosNormalizados = trabajosDesdeContexto;
           setTrabajos(trabajosNormalizados);
           setPortfolioCache(jobsCacheKey, trabajosNormalizados);
         }
@@ -210,7 +222,7 @@ function PortfolioWorkExperienceSection() {
     return () => {
       sigueMontado = false;
     };
-  }, [jobsCacheKey, user?.jobs]);
+  }, [jobsCacheKey, trabajosDesdeContexto]);
 
   useEffect(() => {
     if (!estaModalAbierto) {

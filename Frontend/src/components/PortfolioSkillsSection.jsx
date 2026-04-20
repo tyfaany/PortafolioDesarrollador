@@ -108,12 +108,20 @@ function obtenerClaseNivel(nivel) {
 function PortfolioSkillsSection() {
   const { user } = useAuth();
   const skillInputRef = useRef(null);
+  const tecnicasDesdeContexto = useMemo(
+    () => normalizarSkillsTecnicas(user?.skills),
+    [user?.skills],
+  );
+  const blandasDesdeContexto = useMemo(
+    () => normalizarHabilidadesBlandas(user?.softSkills),
+    [user?.softSkills],
+  );
   const skillsCacheKey = useMemo(
     () => (user?.id ? `portfolio:skills:${user.id}` : null),
     [user?.id],
   );
-  const [tecnicas, setTecnicas] = useState([]);
-  const [blandas, setBlandas] = useState([]);
+  const [tecnicas, setTecnicas] = useState(() => tecnicasDesdeContexto);
+  const [blandas, setBlandas] = useState(() => blandasDesdeContexto);
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [mostrandoAgregarBlanda, setMostrandoAgregarBlanda] = useState(false);
@@ -144,6 +152,15 @@ function PortfolioSkillsSection() {
       };
     }
 
+    if (tecnicasDesdeContexto.length > 0 || blandasDesdeContexto.length > 0) {
+      setTecnicas(tecnicasDesdeContexto);
+      setBlandas(blandasDesdeContexto);
+      actualizarCacheSkills(tecnicasDesdeContexto, blandasDesdeContexto);
+      return () => {
+        sigueMontado = false;
+      };
+    }
+
     Promise.allSettled([obtenerSkillsTecnicas(), obtenerSoftSkills()])
       .then(([tecnicasResultado, blandasResultado]) => {
         if (!sigueMontado) {
@@ -168,7 +185,7 @@ function PortfolioSkillsSection() {
     return () => {
       sigueMontado = false;
     };
-  }, [actualizarCacheSkills, skillsCacheKey, user?.skills, user?.softSkills]);
+  }, [actualizarCacheSkills, blandasDesdeContexto, skillsCacheKey, tecnicasDesdeContexto, user?.skills, user?.softSkills]);
 
   const limpiarMensajes = () => {
     setErrores({});
