@@ -95,9 +95,21 @@ class User extends Authenticatable
      */
     public function getProfilePhotoUrlAttribute()
     {
-        if ($this->profile_photo) {
-            return asset('storage/' . $this->profile_photo);
+        if (!$this->profile_photo) {
+            return null;
         }
-        return null;
+
+        if (preg_match('/^https?:\/\//i', $this->profile_photo)) {
+            return $this->profile_photo;
+        }
+
+        $relativePath = 'storage/' . ltrim($this->profile_photo, '/');
+        $request = request();
+
+        if ($request) {
+            return rtrim($request->getSchemeAndHttpHost(), '/') . '/' . $relativePath;
+        }
+
+        return asset($relativePath);
     }
 }
