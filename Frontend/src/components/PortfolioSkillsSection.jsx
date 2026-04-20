@@ -140,11 +140,18 @@ function PortfolioSkillsSection() {
   };
 
   const persistirSkillsTecnicas = async (skillsActuales) => {
+    const sinNivel = skillsActuales.some((skill) => !skill.level);
+    if (sinNivel) {
+      setErrores({ tecnica: 'Todas las habilidades deben tener un nivel asignado.' });
+      return false;
+    }
+
     const payload = skillsActuales.map((skill) => ({
       name: skill.name,
       level: normalizarNivel(skill.level).normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
     }));
     await sincronizarSkillsTecnicas(payload);
+    return true;
   };
 
   const persistirSoftSkills = async (blandasActuales) => {
@@ -179,7 +186,10 @@ function PortfolioSkillsSection() {
     ];
 
     try {
-      await persistirSkillsTecnicas(nuevasTecnicas);
+      const persistido = await persistirSkillsTecnicas(nuevasTecnicas);
+      if (!persistido) {
+        return;
+      }
       setTecnicas(nuevasTecnicas);
       setSkillTecnicaNueva('');
       setNivelNuevo('Intermedio');
@@ -194,7 +204,10 @@ function PortfolioSkillsSection() {
     const tecnicasActualizadas = tecnicas.map((skill) => (skill.id === id ? { ...skill, level: nivel } : skill));
 
     try {
-      await persistirSkillsTecnicas(tecnicasActualizadas);
+      const persistido = await persistirSkillsTecnicas(tecnicasActualizadas);
+      if (!persistido) {
+        return;
+      }
       setTecnicas(tecnicasActualizadas);
       setMensajeExito('Nivel actualizado correctamente.');
     } catch {
