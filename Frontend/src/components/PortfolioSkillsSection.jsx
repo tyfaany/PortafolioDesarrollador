@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@mdi/react';
 import { mdiClose, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
-import { obtenerSkillsTecnicas, obtenerSoftSkills } from '../services/authService';
+import { obtenerSkillsTecnicas, obtenerSoftSkills, sincronizarSkillsTecnicas } from '../services/authService';
 
 const NIVELES_TECNICOS = ['Básico', 'Intermedio', 'Avanzado'];
 const SUGERENCIAS_BLANDAS = [
@@ -21,6 +21,9 @@ function sanitizarTexto(valor) {
 
 function normalizarNivel(nivel) {
   const limpio = sanitizarTexto(nivel);
+  if (limpio === 'Basico') {
+    return 'Básico';
+  }
   if (NIVELES_TECNICOS.includes(limpio)) {
     return limpio;
   }
@@ -131,7 +134,15 @@ function PortfolioSkillsSection() {
     setTimeout(() => skillInputRef.current?.focus(), 0);
   };
 
-  const agregarHabilidadTecnica = () => {
+  const persistirSkillsTecnicas = async (skillsActuales) => {
+    const payload = skillsActuales.map((skill) => ({
+      name: skill.name,
+      level: normalizarNivel(skill.level).normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+    }));
+    await sincronizarSkillsTecnicas(payload);
+  };
+
+  const agregarHabilidadTecnica = async () => {
     const nombre = sanitizarTexto(skillTecnicaNueva);
 
     if (!nombre) {
@@ -149,25 +160,37 @@ function PortfolioSkillsSection() {
       return;
     }
 
-    setTecnicas((actual) => [
-      ...actual,
+    const nuevasTecnicas = [
+      ...tecnicas,
       {
         id: `tech-${Date.now()}-${nombre}`,
         name: nombre,
         level: nivelNuevo,
       },
-    ]);
-    setSkillTecnicaNueva('');
-    setNivelNuevo('Intermedio');
-    setErrores({});
-    setMensajeExito('Habilidad técnica registrada correctamente.');
+    ];
+
+    try {
+      await persistirSkillsTecnicas(nuevasTecnicas);
+      setTecnicas(nuevasTecnicas);
+      setSkillTecnicaNueva('');
+      setNivelNuevo('Intermedio');
+      setErrores({});
+      setMensajeExito('Habilidad técnica registrada correctamente.');
+    } catch {
+      setErrores({ tecnica: 'No se pudo guardar la habilidad técnica.' });
+    }
   };
 
-  const cambiarNivel = (id, nivel) => {
-    setTecnicas((actual) =>
-      actual.map((skill) => (skill.id === id ? { ...skill, level: nivel } : skill)),
-    );
-    setMensajeExito('Nivel actualizado correctamente.');
+  const cambiarNivel = async (id, nivel) => {
+    const tecnicasActualizadas = tecnicas.map((skill) => (skill.id === id ? { ...skill, level: nivel } : skill));
+
+    try {
+      await persistirSkillsTecnicas(tecnicasActualizadas);
+      setTecnicas(tecnicasActualizadas);
+      setMensajeExito('Nivel actualizado correctamente.');
+    } catch {
+      setErrores({ tecnica: 'No se pudo actualizar el nivel.' });
+    }
   };
 
   const guardarBlanda = () => {
