@@ -9,6 +9,8 @@ class Job extends Model
 {
     use HasFactory;
 
+    protected $table = 'work_experiences';
+
     /**
      * Campos que permitimos llenar masivamente desde el formulario.
      * Aquí usamos 'position' para el "Puesto o Cargo" y 'achievements' para los "Logros".
