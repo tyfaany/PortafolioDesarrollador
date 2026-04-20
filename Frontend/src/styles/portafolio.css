@@ -526,6 +526,11 @@
     flex-direction: column;
   }
 
+  .softsave-portafolio-module-card__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
   .softsave-portafolio-module-card__subtitle {
     margin-left: 0;
   }
@@ -553,5 +558,29 @@
 
   .softsave-portafolio-skills__footer .softsave-button {
     width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .softsave-portafolio-module-card {
+    padding: 16px;
+  }
+
+  .softsave-portafolio-module-card__title {
+    font-size: 1.35rem;
+  }
+
+  .softsave-portafolio-module-card__action {
+    width: 40px;
+    height: 40px;
+  }
+
+  .softsave-portafolio-study-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .softsave-portafolio-study-card > .softsave-portafolio-module-card__action {
+    align-self: flex-end;
   }
 }
