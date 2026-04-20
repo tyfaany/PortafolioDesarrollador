@@ -109,25 +109,27 @@ class JobController extends Controller
             $data['end_year'] = null;
         }
 
-        // Compatibilidad con esquemas legacy (si faltan columnas canónicas).
-        if (!in_array('position', $columnas, true)) {
-            unset($data['position']);
-            foreach (['role', 'job_title', 'title', 'cargo'] as $legacyColumn) {
-                if (in_array($legacyColumn, $columnas, true)) {
-                    $data[$legacyColumn] = $request->input('position');
-                    break;
-                }
+        // Compatibilidad con esquemas legacy.
+        // Si existen columnas alternativas, también las rellenamos para evitar errores
+        // cuando sean NOT NULL en bases antiguas.
+        $positionValor = $request->input('position');
+        foreach (['role', 'job_title', 'title', 'cargo'] as $legacyColumn) {
+            if (in_array($legacyColumn, $columnas, true)) {
+                $data[$legacyColumn] = $positionValor;
             }
         }
+        if (!in_array('position', $columnas, true)) {
+            unset($data['position']);
+        }
 
+        $achievementsValor = $request->input('achievements');
+        foreach (['achievement', 'achivement', 'achivements', 'description', 'logros'] as $legacyColumn) {
+            if (in_array($legacyColumn, $columnas, true)) {
+                $data[$legacyColumn] = $achievementsValor;
+            }
+        }
         if (!in_array('achievements', $columnas, true)) {
             unset($data['achievements']);
-            foreach (['achievement', 'achivement', 'achivements', 'description', 'logros'] as $legacyColumn) {
-                if (in_array($legacyColumn, $columnas, true)) {
-                    $data[$legacyColumn] = $request->input('achievements');
-                    break;
-                }
-            }
         }
 
         return array_intersect_key($data, array_flip($columnas));
