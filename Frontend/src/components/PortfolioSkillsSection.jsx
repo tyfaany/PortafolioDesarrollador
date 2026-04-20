@@ -2,7 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@mdi/react';
 import { mdiClose, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
-import { obtenerSkillsTecnicas, obtenerSoftSkills, sincronizarSkillsTecnicas } from '../services/authService';
+import {
+  obtenerSkillsTecnicas,
+  obtenerSoftSkills,
+  sincronizarSkillsTecnicas,
+  sincronizarSoftSkills,
+} from '../services/authService';
 
 const NIVELES_TECNICOS = ['Básico', 'Intermedio', 'Avanzado'];
 const SUGERENCIAS_BLANDAS = [
@@ -142,6 +147,10 @@ function PortfolioSkillsSection() {
     await sincronizarSkillsTecnicas(payload);
   };
 
+  const persistirSoftSkills = async (blandasActuales) => {
+    await sincronizarSoftSkills(blandasActuales);
+  };
+
   const agregarHabilidadTecnica = async () => {
     const nombre = sanitizarTexto(skillTecnicaNueva);
 
@@ -193,7 +202,7 @@ function PortfolioSkillsSection() {
     }
   };
 
-  const guardarBlanda = () => {
+  const guardarBlanda = async () => {
     const nombre = sanitizarTexto(skillBlandaNueva);
 
     if (!nombre) {
@@ -209,23 +218,25 @@ function PortfolioSkillsSection() {
       return;
     }
 
-    if (indiceBlandaEditando !== null) {
-      setBlandas((actual) =>
-        actual.map((skill, indice) => (indice === indiceBlandaEditando ? nombre : skill)),
-      );
-    } else {
-      setBlandas((actual) => [...actual, nombre]);
-    }
+    const nuevasBlandas = indiceBlandaEditando !== null
+      ? blandas.map((skill, indice) => (indice === indiceBlandaEditando ? nombre : skill))
+      : [...blandas, nombre];
 
-    setSkillBlandaNueva('');
-    setIndiceBlandaEditando(null);
-    setMostrandoAgregarBlanda(false);
-    setErrores({});
-    setMensajeExito(
-      indiceBlandaEditando !== null
-        ? 'Habilidad blanda actualizada correctamente.'
-        : 'Habilidad blanda agregada correctamente.',
-    );
+    try {
+      await persistirSoftSkills(nuevasBlandas);
+      setBlandas(nuevasBlandas);
+      setSkillBlandaNueva('');
+      setIndiceBlandaEditando(null);
+      setMostrandoAgregarBlanda(false);
+      setErrores({});
+      setMensajeExito(
+        indiceBlandaEditando !== null
+          ? 'Habilidad blanda actualizada correctamente.'
+          : 'Habilidad blanda agregada correctamente.',
+      );
+    } catch {
+      setErrores({ blanda: 'No se pudo guardar la habilidad blanda.' });
+    }
   };
 
   const editarBlanda = (skill, indice) => {
@@ -236,18 +247,32 @@ function PortfolioSkillsSection() {
     setMensajeExito('');
   };
 
-  const eliminarBlanda = (indice) => {
-    setBlandas((actual) => actual.filter((_, itemIndice) => itemIndice !== indice));
-    setMensajeExito('Habilidad blanda eliminada correctamente.');
+  const eliminarBlanda = async (indice) => {
+    const nuevasBlandas = blandas.filter((_, itemIndice) => itemIndice !== indice);
+
+    try {
+      await persistirSoftSkills(nuevasBlandas);
+      setBlandas(nuevasBlandas);
+      setMensajeExito('Habilidad blanda eliminada correctamente.');
+    } catch {
+      setErrores({ blanda: 'No se pudo eliminar la habilidad blanda.' });
+    }
   };
 
-  const agregarDesdeSugerencia = (skill) => {
+  const agregarDesdeSugerencia = async (skill) => {
     if (blandas.some((actual) => actual.toLowerCase() === skill.toLowerCase())) {
       return;
     }
 
-    setBlandas((actual) => [...actual, skill]);
-    setMensajeExito('Habilidad sugerida agregada correctamente.');
+    const nuevasBlandas = [...blandas, skill];
+
+    try {
+      await persistirSoftSkills(nuevasBlandas);
+      setBlandas(nuevasBlandas);
+      setMensajeExito('Habilidad sugerida agregada correctamente.');
+    } catch {
+      setErrores({ blanda: 'No se pudo agregar la habilidad sugerida.' });
+    }
   };
 
   return (
