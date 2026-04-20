@@ -34,38 +34,19 @@ function transformarFechaAMes(valorFecha) {
   return String(valorFecha).slice(0, 7);
 }
 
-function ordenarEstudios(estudios) {
-  return [...estudios].sort((a, b) => {
-    const fechaA = a.end_date || a.start_date || '';
-    const fechaB = b.end_date || b.start_date || '';
-
-    if (a.end_date === null && b.end_date !== null) {
-      return -1;
-    }
-
-    if (a.end_date !== null && b.end_date === null) {
-      return 1;
-    }
-
-    return fechaB.localeCompare(fechaA);
-  });
-}
-
 function normalizarEstudios(estudios) {
   if (!Array.isArray(estudios)) {
     return [];
   }
 
-  return ordenarEstudios(
-    estudios.map((estudio) => ({
-      ...estudio,
-      id: estudio.id,
-      academic_institution: estudio.academic_institution || '',
-      degree: estudio.degree || '',
-      start_date: estudio.start_date ? String(estudio.start_date).slice(0, 10) : '',
-      end_date: estudio.end_date ? String(estudio.end_date).slice(0, 10) : null,
-    })),
-  );
+  return estudios.map((estudio) => ({
+    ...estudio,
+    id: estudio.id,
+    academic_institution: estudio.academic_institution || '',
+    degree: estudio.degree || '',
+    start_date: estudio.start_date ? String(estudio.start_date).slice(0, 10) : '',
+    end_date: estudio.end_date ? String(estudio.end_date).slice(0, 10) : null,
+  }));
 }
 
 function formatearPeriodo(fechaInicio, fechaFin) {
@@ -247,7 +228,7 @@ function AcademicExperienceSection({
 
       setEstudios((estadoActual) => {
         const sinDuplicados = estadoActual.filter((item) => item.id !== estudioActualizado.id);
-        return ordenarEstudios([estudioActualizado, ...sinDuplicados]);
+        return [estudioActualizado, ...sinDuplicados];
       });
 
       setMensajeAcademicoExito(
