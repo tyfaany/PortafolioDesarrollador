@@ -10,6 +10,7 @@ import {
 const AuthContext = createContext();
 const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
 const LAST_ACTIVITY_KEY = 'last_activity_at';
+const TOKEN_KEY = 'token';
 const ACTIVITY_EVENTS = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
 
 export const AuthProvider = ({ children }) => {
@@ -17,18 +18,31 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const inactivityTimerRef = useRef(null);
 
+  const inicializarSesion = useCallback((token) => {
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
+  }, []);
+
+  const limpiarSesion = useCallback(() => {
+    localStorage.removeItem(TOKEN_KEY);
+    setUser(null);
+  }, []);
+
+  const cargarUsuarioAutenticado = useCallback(async () => {
+    const respuesta = await getMe();
+    const usuarioCompleto = respuesta.data;
+    setUser(usuarioCompleto);
+    return usuarioCompleto;
+  }, []);
+
   // Verificar si hay token al iniciar la app
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(TOKEN_KEY);
 
     if (token) {
-      getMe()
-        .then((response) => {
-          setUser(response.data);
-        })
+      cargarUsuarioAutenticado()
         .catch(() => {
-          localStorage.removeItem('token');
-          setUser(null);
+          limpiarSesion();
         })
         .finally(() => {
           setLoading(false);
@@ -36,30 +50,25 @@ export const AuthProvider = ({ children }) => {
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [cargarUsuarioAutenticado, limpiarSesion]);
 
   useEffect(() => {
     const manejarStorage = (event) => {
-      if (event.key === 'token') {
+      if (event.key === TOKEN_KEY) {
         const tokenActual = event.newValue;
         if (!tokenActual) {
           setUser(null);
         } else {
-          getMe()
-            .then((response) => {
-              setUser(response.data);
-            })
-            .catch(() => {
-              localStorage.removeItem('token');
-              setUser(null);
-            });
+          cargarUsuarioAutenticado().catch(() => {
+            limpiarSesion();
+          });
         }
       }
     };
 
     window.addEventListener('storage', manejarStorage);
     return () => window.removeEventListener('storage', manejarStorage);
-  }, []);
+  }, [cargarUsuarioAutenticado, limpiarSesion]);
 
   const detenerInactividad = useCallback(() => {
     if (inactivityTimerRef.current) {
@@ -69,7 +78,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const cerrarSesionPorInactividad = useCallback(() => {
-    localStorage.removeItem('token');
+    localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(LAST_ACTIVITY_KEY);
     setUser(null);
     sessionStorage.setItem('session_expired', 'true');
@@ -97,43 +106,33 @@ export const AuthProvider = ({ children }) => {
 
     const { token } = response.data;
 
-    localStorage.setItem('token', token);
-    localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
-    const perfilRespuesta = await getMe();
-    const usuarioCompleto = perfilRespuesta.data;
-    setUser(usuarioCompleto);
-
-    return usuarioCompleto;
+    inicializarSesion(token);
+    return cargarUsuarioAutenticado();
   };
 
   // Registrar nuevo usuario y guardar sesion automaticamente
   const registrar = async (nombre, email, password, passwordConfirmacion) => {
     const respuesta = await registrarService(nombre, email, password, passwordConfirmacion);
     const { token } = respuesta.data;
-    localStorage.setItem('token', token);
-    localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
-    const perfilRespuesta = await getMe();
-    const usuarioCompleto = perfilRespuesta.data;
-    setUser(usuarioCompleto);
-    return usuarioCompleto;
+    inicializarSesion(token);
+    return cargarUsuarioAutenticado();
   };
 
   // Logout
   const logout = async () => {
     try {
       await logoutService();
-    } catch (error) {
+    } catch {
       // El backend puede fallar al cerrar sesion, pero se limpia el token igual
     }
 
-    localStorage.removeItem('token');
+    localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(LAST_ACTIVITY_KEY);
     setUser(null);
   };
 
   const refreshUser = async () => {
-    const respuesta = await getMe();
-    setUser(respuesta.data);
+    await cargarUsuarioAutenticado();
   };
 
   useEffect(() => {
