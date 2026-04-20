@@ -11,6 +11,7 @@ const FORMULARIO_ESTUDIO_INICIAL = {
   degree: '',
   start_month: '',
   end_month: '',
+  achievements: '',
   currentlyStudying: false,
 };
 
@@ -46,6 +47,7 @@ function normalizarEstudios(estudios) {
     degree: estudio.degree || '',
     start_date: estudio.start_date ? String(estudio.start_date).slice(0, 10) : '',
     end_date: estudio.end_date ? String(estudio.end_date).slice(0, 10) : null,
+    achievements: estudio.achievements || '',
   }));
 }
 
@@ -75,6 +77,7 @@ function construirFormularioEstudio(estudio) {
     degree: estudio?.degree || '',
     start_month: transformarFechaAMes(estudio?.start_date),
     end_month: transformarFechaAMes(estudio?.end_date),
+    achievements: estudio?.achievements || '',
     currentlyStudying: !estudio?.end_date,
   };
 }
@@ -213,7 +216,7 @@ function AcademicExperienceSection({
       degree: sanitizarTexto(formularioEstudio.degree),
       start_date: transformarMesAFecha(formularioEstudio.start_month),
       end_date: formularioEstudio.currentlyStudying ? null : transformarMesAFecha(formularioEstudio.end_month),
-      achievements: null,
+      achievements: sanitizarTexto(formularioEstudio.achievements) || null,
     };
 
     setGuardandoEstudio(true);
@@ -424,6 +427,17 @@ function AcademicExperienceSection({
                   ) : null}
                 </label>
               </div>
+
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">Logros y observaciones</span>
+                <textarea
+                  name="achievements"
+                  value={formularioEstudio.achievements}
+                  onChange={manejarCambioEstudio}
+                  className="softsave-input softsave-profile__textarea"
+                  placeholder="Describe tus logros, proyectos o distinciones obtenidas."
+                />
+              </label>
 
               <label className="softsave-profile__checkbox">
                 <input
