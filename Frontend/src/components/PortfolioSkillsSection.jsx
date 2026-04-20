@@ -116,14 +116,36 @@ function PortfolioSkillsSection() {
   const tieneSkills = useMemo(() => tecnicas.length > 0 || blandas.length > 0, [tecnicas, blandas]);
 
   useEffect(() => {
+    let sigueMontado = true;
+
     obtenerSkillsTecnicas()
-      .then((respuesta) => setTecnicas(normalizarSkillsTecnicas(respuesta.data)))
-      .catch(() => setTecnicas(normalizarSkillsTecnicas(user?.skills)));
+      .then((respuesta) => {
+        if (sigueMontado) {
+          setTecnicas(normalizarSkillsTecnicas(respuesta.data));
+        }
+      })
+      .catch(() => {
+        if (sigueMontado) {
+          setTecnicas(normalizarSkillsTecnicas(user?.skills));
+        }
+      });
 
     obtenerSoftSkills()
-      .then((respuesta) => setBlandas(normalizarHabilidadesBlandas(respuesta.data)))
-      .catch(() => setBlandas(normalizarHabilidadesBlandas(user?.softSkills)));
-  }, []);
+      .then((respuesta) => {
+        if (sigueMontado) {
+          setBlandas(normalizarHabilidadesBlandas(respuesta.data));
+        }
+      })
+      .catch(() => {
+        if (sigueMontado) {
+          setBlandas(normalizarHabilidadesBlandas(user?.softSkills));
+        }
+      });
+
+    return () => {
+      sigueMontado = false;
+    };
+  }, [user?.skills, user?.softSkills]);
 
   const limpiarMensajes = () => {
     setErrores({});

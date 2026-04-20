@@ -157,14 +157,24 @@ function PortfolioWorkExperienceSection() {
   const hayRegistros = trabajos.length > 0;
 
   useEffect(() => {
+    let sigueMontado = true;
+
     obtenerJobs()
       .then((respuesta) => {
-        setTrabajos(normalizarTrabajos(respuesta.data));
+        if (sigueMontado) {
+          setTrabajos(normalizarTrabajos(respuesta.data));
+        }
       })
       .catch(() => {
-        setTrabajos(normalizarTrabajos(user?.jobs));
+        if (sigueMontado) {
+          setTrabajos(normalizarTrabajos(user?.jobs));
+        }
       });
-  }, []);
+
+    return () => {
+      sigueMontado = false;
+    };
+  }, [user?.jobs]);
 
   useEffect(() => {
     if (!estaModalAbierto) {

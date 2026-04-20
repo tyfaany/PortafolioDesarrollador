@@ -1,4 +1,4 @@
-import { createContext, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   getMe,
@@ -61,14 +61,14 @@ export const AuthProvider = ({ children }) => {
     return () => window.removeEventListener('storage', manejarStorage);
   }, []);
 
-  const detenerInactividad = () => {
+  const detenerInactividad = useCallback(() => {
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
       inactivityTimerRef.current = null;
     }
-  };
+  }, []);
 
-  const cerrarSesionPorInactividad = () => {
+  const cerrarSesionPorInactividad = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem(LAST_ACTIVITY_KEY);
     setUser(null);
@@ -76,20 +76,20 @@ export const AuthProvider = ({ children }) => {
     if (window.location.pathname !== '/login') {
       window.location.href = '/login';
     }
-  };
+  }, []);
 
-  const reiniciarInactividad = () => {
+  const reiniciarInactividad = useCallback(() => {
     detenerInactividad();
     const ultimoRegistro = Number(localStorage.getItem(LAST_ACTIVITY_KEY) || Date.now());
     const transcurrido = Date.now() - ultimoRegistro;
     const restante = Math.max(0, INACTIVITY_LIMIT_MS - transcurrido);
     inactivityTimerRef.current = setTimeout(cerrarSesionPorInactividad, restante);
-  };
+  }, [cerrarSesionPorInactividad, detenerInactividad]);
 
-  const registrarActividad = () => {
+  const registrarActividad = useCallback(() => {
     localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
     reiniciarInactividad();
-  };
+  }, [reiniciarInactividad]);
 
   // Login con opcion de recordar sesion
   const login = async (email, password, recordarme = false) => {
@@ -157,7 +157,7 @@ export const AuthProvider = ({ children }) => {
       });
       detenerInactividad();
     };
-  }, [user]);
+  }, [detenerInactividad, registrarActividad, reiniciarInactividad, user]);
 
   return (
     <AuthContext.Provider
