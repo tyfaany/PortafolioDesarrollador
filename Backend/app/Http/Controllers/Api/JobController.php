@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Job;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class JobController extends Controller
 {
@@ -88,13 +89,48 @@ class JobController extends Controller
 
     private function prepareData(Request $request)
     {
-        $data = $request->all();
+        $job = new Job();
+        $table = $job->getTable();
+        $columnas = Schema::getColumnListing($table);
+        $data = $request->only([
+            'company_name',
+            'position',
+            'achievements',
+            'start_month',
+            'start_year',
+            'end_month',
+            'end_year',
+            'is_current_job',
+        ]);
+
         // Si es trabajo actual, forzamos que las fechas de fin sean nulas para no guardar basura en la BD
         if ($request->is_current_job) {
             $data['end_month'] = null;
             $data['end_year'] = null;
         }
-        return $data;
+
+        // Compatibilidad con esquemas legacy (si faltan columnas canónicas).
+        if (!in_array('position', $columnas, true)) {
+            unset($data['position']);
+            foreach (['role', 'job_title', 'title', 'cargo'] as $legacyColumn) {
+                if (in_array($legacyColumn, $columnas, true)) {
+                    $data[$legacyColumn] = $request->input('position');
+                    break;
+                }
+            }
+        }
+
+        if (!in_array('achievements', $columnas, true)) {
+            unset($data['achievements']);
+            foreach (['achievement', 'achivement', 'achivements', 'description', 'logros'] as $legacyColumn) {
+                if (in_array($legacyColumn, $columnas, true)) {
+                    $data[$legacyColumn] = $request->input('achievements');
+                    break;
+                }
+            }
+        }
+
+        return array_intersect_key($data, array_flip($columnas));
     }
 
     private function checkDateLogic(Request $request)
