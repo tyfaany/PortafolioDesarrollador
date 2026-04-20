@@ -170,6 +170,8 @@ function PortfolioWorkExperienceSection() {
   const [mensajeExito, setMensajeExito] = useState('');
   const [contadorLocal, setContadorLocal] = useState(0);
   const [formulario, setFormulario] = useState(FORMULARIO_LABORAL_INICIAL);
+  const modalTituloId = 'softsave-job-modal-title';
+  const modalDescripcionId = 'softsave-job-modal-description';
 
   const hayRegistros = trabajos.length > 0;
 
@@ -436,15 +438,17 @@ function PortfolioWorkExperienceSection() {
           className="softsave-profile__modal-overlay"
           role="dialog"
           aria-modal="true"
+          aria-labelledby={modalTituloId}
+          aria-describedby={modalDescripcionId}
           onClick={cerrarModal}
         >
           <div className="softsave-profile__modal" onClick={(evento) => evento.stopPropagation()}>
             <header className="softsave-profile__modal-header">
               <div className="softsave-profile__modal-content">
-                <h3 className="softsave-profile__modal-title">
+                <h3 id={modalTituloId} className="softsave-profile__modal-title">
                   {formulario.id ? 'Editar Experiencia Laboral' : 'Añadir Experiencia Laboral'}
                 </h3>
-                <p className="softsave-profile__modal-text">
+                <p id={modalDescripcionId} className="softsave-profile__modal-text">
                   Completa la empresa, el cargo y el periodo laboral manteniendo la interfaz actual.
                 </p>
               </div>

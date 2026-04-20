@@ -13,6 +13,8 @@ const TABS_PORTAFOLIO = [
 
 function Portfolio() {
   const [tabActiva, setTabActiva] = useState('general');
+  const panelIdActivo = `portafolio-panel-${tabActiva}`;
+  const tabIdActiva = `portafolio-tab-${tabActiva}`;
 
   return (
     <div className="softsave-portafolio-shell softsave-portafolio-shell--portfolio">
@@ -21,9 +23,12 @@ function Portfolio() {
           {TABS_PORTAFOLIO.map((tab) => (
             <button
               key={tab.id}
+              id={`portafolio-tab-${tab.id}`}
               type="button"
               role="tab"
+              aria-controls={`portafolio-panel-${tab.id}`}
               aria-selected={tabActiva === tab.id}
+              tabIndex={tabActiva === tab.id ? 0 : -1}
               className={`softsave-portafolio-tab ${tabActiva === tab.id ? 'is-active' : ''}`}
               onClick={() => setTabActiva(tab.id)}
             >
@@ -33,14 +38,24 @@ function Portfolio() {
         </div>
 
         {tabActiva === 'general' ? (
-          <div className="softsave-portafolio-stack">
+          <div
+            id={panelIdActivo}
+            role="tabpanel"
+            aria-labelledby={tabIdActiva}
+            className="softsave-portafolio-stack"
+          >
             <PortfolioPersonalInfoCard />
             <AcademicExperienceSection variant="portfolio" />
             <PortfolioWorkExperienceSection />
             <PortfolioSkillsSection />
           </div>
         ) : (
-          <section className="softsave-portafolio-grid">
+          <section
+            id={panelIdActivo}
+            role="tabpanel"
+            aria-labelledby={tabIdActiva}
+            className="softsave-portafolio-grid"
+          >
             <div className="softsave-portafolio-card">
               <h3>Proyecto 1</h3>
               <p>Esta información es privada y solo tú puedes verla.</p>
