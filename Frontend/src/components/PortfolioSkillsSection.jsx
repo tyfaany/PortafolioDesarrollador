@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@mdi/react';
 import { mdiClose, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
@@ -8,6 +8,7 @@ import {
   sincronizarSkillsTecnicas,
   sincronizarSoftSkills,
 } from '../services/authService';
+import { getPortfolioCache, setPortfolioCache } from '../services/portfolioCache';
 
 const NIVELES_TECNICOS = ['Básico', 'Intermedio', 'Avanzado'];
 const ICON_SIZES = {
@@ -107,6 +108,10 @@ function obtenerClaseNivel(nivel) {
 function PortfolioSkillsSection() {
   const { user } = useAuth();
   const skillInputRef = useRef(null);
+  const skillsCacheKey = useMemo(
+    () => (user?.id ? `portfolio:skills:${user.id}` : null),
+    [user?.id],
+  );
   const [tecnicas, setTecnicas] = useState([]);
   const [blandas, setBlandas] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -120,38 +125,50 @@ function PortfolioSkillsSection() {
   const [mensajeExito, setMensajeExito] = useState('');
 
   const tieneSkills = useMemo(() => tecnicas.length > 0 || blandas.length > 0, [tecnicas, blandas]);
+  const actualizarCacheSkills = useCallback((tecnicasActuales, blandasActuales) => {
+    setPortfolioCache(skillsCacheKey, {
+      tecnicas: tecnicasActuales,
+      blandas: blandasActuales,
+    });
+  }, [skillsCacheKey]);
 
   useEffect(() => {
     let sigueMontado = true;
 
-    obtenerSkillsTecnicas()
-      .then((respuesta) => {
-        if (sigueMontado) {
-          setTecnicas(normalizarSkillsTecnicas(respuesta.data));
-        }
-      })
-      .catch(() => {
-        if (sigueMontado) {
-          setTecnicas(normalizarSkillsTecnicas(user?.skills));
-        }
-      });
+    const cacheSkills = getPortfolioCache(skillsCacheKey);
+    if (cacheSkills) {
+      setTecnicas(normalizarSkillsTecnicas(cacheSkills.tecnicas));
+      setBlandas(normalizarHabilidadesBlandas(cacheSkills.blandas));
+      return () => {
+        sigueMontado = false;
+      };
+    }
 
-    obtenerSoftSkills()
-      .then((respuesta) => {
-        if (sigueMontado) {
-          setBlandas(normalizarHabilidadesBlandas(respuesta.data));
+    Promise.allSettled([obtenerSkillsTecnicas(), obtenerSoftSkills()])
+      .then(([tecnicasResultado, blandasResultado]) => {
+        if (!sigueMontado) {
+          return;
         }
-      })
-      .catch(() => {
-        if (sigueMontado) {
-          setBlandas(normalizarHabilidadesBlandas(user?.softSkills));
-        }
+
+        const tecnicasFuente = tecnicasResultado.status === 'fulfilled'
+          ? tecnicasResultado.value.data
+          : user?.skills;
+        const blandasFuente = blandasResultado.status === 'fulfilled'
+          ? blandasResultado.value.data
+          : user?.softSkills;
+
+        const tecnicasNormalizadas = normalizarSkillsTecnicas(tecnicasFuente);
+        const blandasNormalizadas = normalizarHabilidadesBlandas(blandasFuente);
+
+        setTecnicas(tecnicasNormalizadas);
+        setBlandas(blandasNormalizadas);
+        actualizarCacheSkills(tecnicasNormalizadas, blandasNormalizadas);
       });
 
     return () => {
       sigueMontado = false;
     };
-  }, [user?.skills, user?.softSkills]);
+  }, [actualizarCacheSkills, skillsCacheKey, user?.skills, user?.softSkills]);
 
   const limpiarMensajes = () => {
     setErrores({});
@@ -245,6 +262,7 @@ function PortfolioSkillsSection() {
         return;
       }
       setTecnicas(nuevasTecnicas);
+      actualizarCacheSkills(nuevasTecnicas, blandas);
       setSkillTecnicaNueva('');
       setNivelNuevo('Intermedio');
       setErrores({});
@@ -263,6 +281,7 @@ function PortfolioSkillsSection() {
         return;
       }
       setTecnicas(tecnicasActualizadas);
+      actualizarCacheSkills(tecnicasActualizadas, blandas);
       setMensajeExito('Nivel actualizado correctamente.');
     } catch {
       setErrores({ tecnica: 'No se pudo actualizar el nivel.' });
@@ -292,6 +311,7 @@ function PortfolioSkillsSection() {
     try {
       await persistirSoftSkills(nuevasBlandas);
       setBlandas(nuevasBlandas);
+      actualizarCacheSkills(tecnicas, nuevasBlandas);
       setSkillBlandaNueva('');
       setIndiceBlandaEditando(null);
       setMostrandoAgregarBlanda(false);
@@ -320,6 +340,7 @@ function PortfolioSkillsSection() {
     try {
       await persistirSoftSkills(nuevasBlandas);
       setBlandas(nuevasBlandas);
+      actualizarCacheSkills(tecnicas, nuevasBlandas);
       setMensajeExito('Habilidad blanda eliminada correctamente.');
     } catch {
       setErrores({ blanda: 'No se pudo eliminar la habilidad blanda.' });
@@ -336,6 +357,7 @@ function PortfolioSkillsSection() {
     try {
       await persistirSoftSkills(nuevasBlandas);
       setBlandas(nuevasBlandas);
+      actualizarCacheSkills(tecnicas, nuevasBlandas);
       setMensajeExito('Habilidad sugerida agregada correctamente.');
     } catch {
       setErrores({ blanda: 'No se pudo agregar la habilidad sugerida.' });

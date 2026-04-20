@@ -9,6 +9,7 @@ import {
 } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
 import { actualizarJob, crearJob, obtenerJobs } from '../services/authService';
+import { getPortfolioCache, setPortfolioCache } from '../services/portfolioCache';
 
 const FORMULARIO_LABORAL_INICIAL = {
   id: null,
@@ -162,6 +163,10 @@ function formatearPeriodo(fechaInicio, fechaFin) {
 function PortfolioWorkExperienceSection() {
   const { user } = useAuth();
   const aniosDisponibles = useMemo(() => obtenerAniosDisponibles(), []);
+  const jobsCacheKey = useMemo(
+    () => (user?.id ? `portfolio:jobs:${user.id}` : null),
+    [user?.id],
+  );
   const [trabajos, setTrabajos] = useState([]);
   const [estaModalAbierto, setEstaModalAbierto] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -178,22 +183,34 @@ function PortfolioWorkExperienceSection() {
   useEffect(() => {
     let sigueMontado = true;
 
+    const cacheTrabajos = getPortfolioCache(jobsCacheKey);
+    if (cacheTrabajos) {
+      setTrabajos(normalizarTrabajos(cacheTrabajos));
+      return () => {
+        sigueMontado = false;
+      };
+    }
+
     obtenerJobs()
       .then((respuesta) => {
         if (sigueMontado) {
-          setTrabajos(normalizarTrabajos(respuesta.data));
+          const trabajosNormalizados = normalizarTrabajos(respuesta.data);
+          setTrabajos(trabajosNormalizados);
+          setPortfolioCache(jobsCacheKey, trabajosNormalizados);
         }
       })
       .catch(() => {
         if (sigueMontado) {
-          setTrabajos(normalizarTrabajos(user?.jobs));
+          const trabajosNormalizados = normalizarTrabajos(user?.jobs);
+          setTrabajos(trabajosNormalizados);
+          setPortfolioCache(jobsCacheKey, trabajosNormalizados);
         }
       });
 
     return () => {
       sigueMontado = false;
     };
-  }, [user?.jobs]);
+  }, [jobsCacheKey, user?.jobs]);
 
   useEffect(() => {
     if (!estaModalAbierto) {
@@ -343,7 +360,9 @@ function PortfolioWorkExperienceSection() {
 
       setTrabajos((actual) => {
         const sinDuplicados = actual.filter((item) => String(item.id) !== String(trabajoActualizado.id));
-        return [trabajoActualizado, ...sinDuplicados];
+        const trabajosActualizados = [trabajoActualizado, ...sinDuplicados];
+        setPortfolioCache(jobsCacheKey, trabajosActualizados);
+        return trabajosActualizados;
       });
 
       if (esCreacion && !trabajoRespuesta?.id) {
