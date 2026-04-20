@@ -10,6 +10,11 @@ import {
 } from '../services/authService';
 
 const NIVELES_TECNICOS = ['Básico', 'Intermedio', 'Avanzado'];
+const ICON_SIZES = {
+  section: 1,
+  action: 0.85,
+  chipRemove: 0.6,
+};
 const SUGERENCIAS_BLANDAS = [
   'Liderazgo',
   'Comunicación',
@@ -314,7 +319,7 @@ function PortfolioSkillsSection() {
     <section className="softsave-portafolio-module-card">
       <div className="softsave-portafolio-module-card__header">
         <div className="softsave-portafolio-module-card__title-wrap">
-          <Icon path={mdiViewGridOutline} size={1} className="softsave-portafolio-module-card__icon" />
+          <Icon path={mdiViewGridOutline} size={ICON_SIZES.section} className="softsave-portafolio-module-card__icon" />
           <h2 className="softsave-portafolio-module-card__title">Habilidades</h2>
         </div>
 
@@ -325,7 +330,7 @@ function PortfolioSkillsSection() {
             aria-label="Agregar habilidad"
             onClick={enfocarAgregar}
           >
-            <Icon path={mdiPlus} size={0.85} />
+            <Icon path={mdiPlus} size={ICON_SIZES.action} />
           </button>
           <button
             type="button"
@@ -333,7 +338,7 @@ function PortfolioSkillsSection() {
             aria-label="Editar habilidades"
             onClick={alternarEdicion}
           >
-            <Icon path={mdiPencilOutline} size={0.85} />
+            <Icon path={mdiPencilOutline} size={ICON_SIZES.action} />
           </button>
         </div>
       </div>
@@ -461,15 +466,17 @@ function PortfolioSkillsSection() {
               >
                 <span>{skill}</span>
                 {editando ? (
-                  <span
+                  <button
+                    type="button"
                     className="softsave-portafolio-skills__chip-remove"
+                    aria-label={`Eliminar habilidad blanda ${skill}`}
                     onClick={(evento) => {
                       evento.stopPropagation();
                       eliminarBlanda(indice);
                     }}
                   >
-                    <Icon path={mdiClose} size={0.6} />
-                  </span>
+                    <Icon path={mdiClose} size={ICON_SIZES.chipRemove} />
+                  </button>
                 ) : null}
               </button>
             ))}

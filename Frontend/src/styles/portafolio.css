@@ -445,9 +445,11 @@
   justify-content: center;
   width: 20px;
   height: 20px;
+  border: none;
   border-radius: 999px;
   background-color: var(--color-blanco);
   color: var(--color-error);
+  cursor: pointer;
 }
 
 .softsave-portafolio-skills__soft-form {
