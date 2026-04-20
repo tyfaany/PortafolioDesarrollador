@@ -400,7 +400,7 @@ function PortfolioSkillsSection() {
           </button>
           <button
             type="button"
-            className="softsave-portafolio-module-card__action"
+            className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary"
             aria-label="Editar habilidades"
             onClick={alternarEdicion}
           >

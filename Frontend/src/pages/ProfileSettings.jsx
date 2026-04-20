@@ -8,6 +8,7 @@ import {
   mdiContentSaveOutline,
   mdiGithub,
   mdiImageOutline,
+  mdiLinkedin,
   mdiOpenInNew,
   mdiPlus,
   mdiSchoolOutline,
@@ -60,7 +61,7 @@ function normalizarEnlacesProfesionales(user) {
       id: "linkedin",
       label: "LinkedIn",
       url: user.linkedin_url,
-      icono: mdiAccount,
+      icono: mdiLinkedin,
     });
   }
 

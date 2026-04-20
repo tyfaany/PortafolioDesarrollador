@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Icon from '@mdi/react';
-import { mdiAccount, mdiClose, mdiContentSaveOutline, mdiPencilOutline, mdiPlus } from '@mdi/js';
+import { mdiAccount, mdiClose, mdiContentSaveOutline, mdiPencilOutline } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
 import { actualizarPerfil } from '../services/authService';
 
@@ -150,15 +150,7 @@ function PortfolioPersonalInfoCard() {
           <div className="softsave-portafolio-module-card__actions">
             <button
               type="button"
-              className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--primary"
-              onClick={abrirModal}
-              aria-label="Añadir información personal"
-            >
-              <Icon path={mdiPlus} size={0.85} />
-            </button>
-            <button
-              type="button"
-              className="softsave-portafolio-module-card__action"
+              className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary"
               onClick={abrirModal}
               aria-label="Editar información personal"
             >

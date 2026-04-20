@@ -182,8 +182,6 @@ function PortfolioWorkExperienceSection() {
   const modalTituloId = 'softsave-job-modal-title';
   const modalDescripcionId = 'softsave-job-modal-description';
 
-  const hayRegistros = trabajos.length > 0;
-
   useEffect(() => {
     let sigueMontado = true;
 
@@ -413,15 +411,6 @@ function PortfolioWorkExperienceSection() {
             >
               <Icon path={mdiPlus} size={0.85} />
             </button>
-            <button
-              type="button"
-              className="softsave-portafolio-module-card__action"
-              aria-label="Editar experiencia laboral"
-              onClick={() => abrirModalEditar(trabajos[0])}
-              disabled={!hayRegistros}
-            >
-              <Icon path={mdiPencilOutline} size={0.85} />
-            </button>
           </div>
         </div>
 
@@ -431,7 +420,7 @@ function PortfolioWorkExperienceSection() {
           </div>
         ) : null}
 
-        {hayRegistros ? (
+        {trabajos.length > 0 ? (
           <div className="softsave-portafolio-study-list">
             {trabajos.map((trabajo) => (
               <article key={trabajo.id} className="softsave-portafolio-study-card">
@@ -448,7 +437,7 @@ function PortfolioWorkExperienceSection() {
 
                 <button
                   type="button"
-                  className="softsave-portafolio-module-card__action"
+                  className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary"
                   aria-label={`Editar ${trabajo.company_name}`}
                   onClick={() => abrirModalEditar(trabajo)}
                 >

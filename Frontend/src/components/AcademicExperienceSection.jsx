@@ -315,7 +315,7 @@ function AcademicExperienceSection({
 
                 <button
                   type="button"
-                  className={esPortafolio ? 'softsave-portafolio-module-card__action' : 'softsave-profile__icon-button softsave-profile__icon-button--inline'}
+                  className={esPortafolio ? 'softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary' : 'softsave-profile__icon-button softsave-profile__icon-button--inline'}
                   aria-label={`Editar ${estudio.academic_institution}`}
                   onClick={() => abrirModalEditarEstudio(estudio)}
                 >
