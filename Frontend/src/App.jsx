@@ -32,7 +32,11 @@ function App() {
       >
         <Route path="/inicio" element={<Inicio />} />
         <Route path="/portafolio" element={<Portafolio />} />
-        <Route path="/perfil/*" element={<ProfileSettings />} />
+        <Route path="/perfil" element={<Navigate to="/perfil/contacto" replace />} />
+        <Route path="/perfil/contacto" element={<ProfileSettings />} />
+        <Route path="/perfil/academica" element={<ProfileSettings />} />
+        <Route path="/perfil/github" element={<ProfileSettings />} />
+        <Route path="/perfil/*" element={<Navigate to="/perfil/contacto" replace />} />
       </Route>
 
       {/* Redirecciones */}
