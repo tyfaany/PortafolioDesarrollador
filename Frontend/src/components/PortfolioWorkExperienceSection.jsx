@@ -344,7 +344,7 @@ function PortfolioWorkExperienceSection() {
       nuevosErrores.end_month = 'La fecha de fin es obligatoria.';
     }
 
-    if (inicio && fin && inicio > fin) {
+    if (!formulario.is_current_job && inicio && fin && inicio > fin) {
       nuevosErrores.end_month = 'La fecha de inicio no puede ser posterior a la fecha de fin.';
     }
 
