@@ -85,6 +85,23 @@ function mesNombreANumero(nombreMes) {
   return mapaMeses[nombreMes] || '01';
 }
 
+function obtenerNombreMes(valorMes) {
+  return MESES.find((mes) => mes.value === valorMes)?.label;
+}
+
+function construirPayloadTrabajo(formulario) {
+  return {
+    company_name: sanitizarTexto(formulario.company_name),
+    position: sanitizarTexto(formulario.position),
+    achievements: sanitizarTexto(formulario.description) || null,
+    start_month: obtenerNombreMes(formulario.start_month),
+    start_year: Number(formulario.start_year),
+    end_month: formulario.is_current_job ? null : obtenerNombreMes(formulario.end_month),
+    end_year: formulario.is_current_job ? null : Number(formulario.end_year),
+    is_current_job: formulario.is_current_job,
+  };
+}
+
 function normalizarTrabajos(trabajos) {
   if (!Array.isArray(trabajos)) {
     return [];
@@ -297,31 +314,10 @@ function PortfolioWorkExperienceSection() {
 
     try {
       const esCreacion = !formulario.id;
+      const payloadTrabajo = construirPayloadTrabajo(formulario);
       const respuesta = esCreacion
-        ? await crearJob({
-          company_name: sanitizarTexto(formulario.company_name),
-          position: sanitizarTexto(formulario.position),
-          achievements: sanitizarTexto(formulario.description) || null,
-          start_month: MESES.find((mes) => mes.value === formulario.start_month)?.label,
-          start_year: Number(formulario.start_year),
-          end_month: formulario.is_current_job
-            ? null
-            : MESES.find((mes) => mes.value === formulario.end_month)?.label,
-          end_year: formulario.is_current_job ? null : Number(formulario.end_year),
-          is_current_job: formulario.is_current_job,
-        })
-        : await actualizarJob(formulario.id, {
-          company_name: sanitizarTexto(formulario.company_name),
-          position: sanitizarTexto(formulario.position),
-          achievements: sanitizarTexto(formulario.description) || null,
-          start_month: MESES.find((mes) => mes.value === formulario.start_month)?.label,
-          start_year: Number(formulario.start_year),
-          end_month: formulario.is_current_job
-            ? null
-            : MESES.find((mes) => mes.value === formulario.end_month)?.label,
-          end_year: formulario.is_current_job ? null : Number(formulario.end_year),
-          is_current_job: formulario.is_current_job,
-        });
+        ? await crearJob(payloadTrabajo)
+        : await actualizarJob(formulario.id, payloadTrabajo);
 
       const trabajoRespuesta = respuesta?.data?.job;
 
