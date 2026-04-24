@@ -35,12 +35,46 @@ function transformarFechaAMes(valorFecha) {
   return String(valorFecha).slice(0, 7);
 }
 
+function obtenerTimestampFecha(valorFecha) {
+  if (!valorFecha) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const marcaTiempo = Date.parse(`${String(valorFecha).slice(0, 10)}T00:00:00Z`);
+  return Number.isNaN(marcaTiempo) ? Number.NEGATIVE_INFINITY : marcaTiempo;
+}
+
+function ordenarEstudiosPorPeriodo(estudios) {
+  return [...estudios].sort((estudioA, estudioB) => {
+    const estudioAActual = !estudioA.end_date;
+    const estudioBActual = !estudioB.end_date;
+
+    if (estudioAActual !== estudioBActual) {
+      return estudioAActual ? -1 : 1;
+    }
+
+    const finA = obtenerTimestampFecha(estudioA.end_date);
+    const finB = obtenerTimestampFecha(estudioB.end_date);
+    if (finA !== finB) {
+      return finB - finA;
+    }
+
+    const inicioA = obtenerTimestampFecha(estudioA.start_date);
+    const inicioB = obtenerTimestampFecha(estudioB.start_date);
+    if (inicioA !== inicioB) {
+      return inicioB - inicioA;
+    }
+
+    return String(estudioB.id).localeCompare(String(estudioA.id));
+  });
+}
+
 function normalizarEstudios(estudios) {
   if (!Array.isArray(estudios)) {
     return [];
   }
 
-  return estudios.map((estudio) => ({
+  const estudiosNormalizados = estudios.map((estudio) => ({
     ...estudio,
     id: estudio.id,
     academic_institution: estudio.academic_institution || '',
@@ -49,6 +83,8 @@ function normalizarEstudios(estudios) {
     end_date: estudio.end_date ? String(estudio.end_date).slice(0, 10) : null,
     achievements: estudio.achievements || '',
   }));
+
+  return ordenarEstudiosPorPeriodo(estudiosNormalizados);
 }
 
 function formatearPeriodo(fechaInicio, fechaFin) {
@@ -231,7 +267,7 @@ function AcademicExperienceSection({
 
       setEstudios((estadoActual) => {
         const sinDuplicados = estadoActual.filter((item) => item.id !== estudioActualizado.id);
-        return [estudioActualizado, ...sinDuplicados];
+        return ordenarEstudiosPorPeriodo([estudioActualizado, ...sinDuplicados]);
       });
 
       setMensajeAcademicoExito(
