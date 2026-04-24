@@ -129,7 +129,8 @@ function normalizarTrabajos(trabajos) {
     return [];
   }
 
-  return trabajos.map((trabajo, indice) => ({
+  const trabajosNormalizados = trabajos.map((trabajo, indice) => ({
+    // Prioriza fechas ya normalizadas (start_date/end_date), útil al reconstruir desde caché local.
     ...trabajo,
     id: trabajo.id || `local-job-${indice}`,
     company_name: trabajo.company_name || '',
@@ -137,12 +138,49 @@ function normalizarTrabajos(trabajos) {
     start_date: trabajo.start_year && trabajo.start_month
       ? `${trabajo.start_year}-${mesNombreANumero(trabajo.start_month)}-01`
       : (trabajo.start_date ? String(trabajo.start_date).slice(0, 10) : ''),
-    end_date: trabajo.is_current_job || !trabajo.end_year
+    end_date: trabajo.is_current_job
       ? null
-      : `${trabajo.end_year}-${mesNombreANumero(trabajo.end_month)}-01`,
+      : (trabajo.end_date
+        ? String(trabajo.end_date).slice(0, 10)
+        : (trabajo.end_year && trabajo.end_month
+          ? `${trabajo.end_year}-${mesNombreANumero(trabajo.end_month)}-01`
+          : null)),
     is_current_job: Boolean(trabajo.is_current_job),
     description: trabajo.achievements ?? trabajo.description ?? '',
   }));
+
+  return ordenarTrabajosPorPeriodo(trabajosNormalizados);
+}
+
+function obtenerTimestampFecha(valorFecha) {
+  if (!valorFecha) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const marcaTiempo = Date.parse(`${String(valorFecha).slice(0, 10)}T00:00:00Z`);
+  return Number.isNaN(marcaTiempo) ? Number.NEGATIVE_INFINITY : marcaTiempo;
+}
+
+function ordenarTrabajosPorPeriodo(trabajos) {
+  return [...trabajos].sort((trabajoA, trabajoB) => {
+    if (trabajoA.is_current_job !== trabajoB.is_current_job) {
+      return trabajoA.is_current_job ? -1 : 1;
+    }
+
+    const finA = obtenerTimestampFecha(trabajoA.end_date);
+    const finB = obtenerTimestampFecha(trabajoB.end_date);
+    if (finA !== finB) {
+      return finB - finA;
+    }
+
+    const inicioA = obtenerTimestampFecha(trabajoA.start_date);
+    const inicioB = obtenerTimestampFecha(trabajoB.start_date);
+    if (inicioA !== inicioB) {
+      return inicioB - inicioA;
+    }
+
+    return String(trabajoB.id).localeCompare(String(trabajoA.id));
+  });
 }
 
 function construirFormularioTrabajo(trabajo) {
@@ -391,7 +429,7 @@ function PortfolioWorkExperienceSection() {
 
       setTrabajos((actual) => {
         const sinDuplicados = actual.filter((item) => String(item.id) !== String(trabajoActualizado.id));
-        const trabajosActualizados = [trabajoActualizado, ...sinDuplicados];
+        const trabajosActualizados = ordenarTrabajosPorPeriodo([trabajoActualizado, ...sinDuplicados]);
         setPortfolioCache(jobsCacheKey, trabajosActualizados);
         return trabajosActualizados;
       });
