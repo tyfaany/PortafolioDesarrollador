@@ -1,5 +1,5 @@
 .softsave-portafolio-shell {
-  padding: 40px 20px 48px;
+  padding: 20px 20px 40px;
   width: 100%;
   color: var(--color-texto);
 }
@@ -55,15 +55,15 @@
 }
 
 .softsave-portafolio-shell--portfolio .softsave-portafolio-header {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .softsave-portafolio-tabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: end;
-  gap: 24px;
-  margin-bottom: 14px;
+  gap: 18px;
+  margin-bottom: 10px;
 }
 
 .softsave-portafolio-tab {
@@ -71,9 +71,9 @@
   border-bottom: 3px solid transparent;
   background: transparent;
   color: var(--color-texto);
-  padding: 0 0 8px;
+  padding: 0 0 6px;
   font-family: var(--font-titulos);
-  font-size: 1.15rem;
+  font-size: 1.08rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -84,14 +84,14 @@
 
 .softsave-portafolio-stack {
   display: grid;
-  gap: 22px;
+  gap: 18px;
 }
 
 .softsave-portafolio-module-card {
   background-color: var(--color-blanco);
   border: 1px solid var(--color-borde-tarjeta);
   border-radius: 16px;
-  padding: 18px 20px 20px;
+  padding: 16px 18px 18px;
   box-shadow: 0 14px 28px rgba(var(--color-texto-rgb), 0.08);
 }
 
@@ -115,7 +115,7 @@
 .softsave-portafolio-module-card__title {
   margin: 0;
   font-family: var(--font-titulos);
-  font-size: 1.6rem;
+  font-size: 1.45rem;
   font-weight: 700;
 }
 

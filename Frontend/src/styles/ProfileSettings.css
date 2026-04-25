@@ -1,7 +1,7 @@
 .softsave-profile {
   min-height: 100vh;
   background-color: var(--color-fondo);
-  padding: 32px 20px 48px;
+  padding: 20px 20px 40px;
   color: var(--color-texto);
   width: 100%;
 }
@@ -21,7 +21,7 @@
 
 .softsave-profile__banner {
   position: relative;
-  height: 138px;
+  height: 124px;
   background: linear-gradient(
     120deg,
     rgba(var(--color-texto-rgb), 0.2),
@@ -31,14 +31,14 @@
 
 .softsave-profile__avatar-wrap {
   position: absolute;
-  left: 28px;
-  transform: none;
-  bottom: -56px;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -62px;
 }
 
 .softsave-profile__avatar {
-  width: 112px;
-  height: 112px;
+  width: 132px;
+  height: 132px;
   border-radius: 999px;
   background-color: var(--color-primario);
   display: grid;
@@ -79,10 +79,10 @@
 
 .softsave-profile__avatar-button {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 34px;
-  height: 34px;
+  top: -2px;
+  right: -2px;
+  width: 36px;
+  height: 36px;
   border-radius: 999px;
   border: 2px solid var(--color-borde-input);
   background-color: var(--color-blanco);
@@ -94,15 +94,15 @@
 }
 
 .softsave-profile__header {
-  padding: 44px 28px 22px;
+  padding: 78px 24px 18px;
 }
 
 .softsave-profile__tabs {
   display: flex;
   justify-content: center;
-  gap: 20px;
+  gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 }
 
 .softsave-profile__tab {
@@ -121,32 +121,6 @@
   border-bottom: 2px solid var(--color-primario);
 }
 
-.softsave-profile__header-row {
-  display: grid;
-  grid-template-columns: minmax(180px, 230px) minmax(0, 1fr);
-  gap: 18px;
-  align-items: start;
-}
-
-.softsave-profile__name {
-  font-family: var(--font-titulos);
-  font-size: 1.7rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.softsave-profile__role {
-  margin: 6px 0 10px;
-  color: var(--color-texto-suave);
-  font-weight: 500;
-}
-
-.softsave-profile__completeness-hint {
-  margin: 0 0 12px;
-  font-size: 0.85rem;
-  color: var(--color-texto-suave);
-}
-
 .softsave-profile__link {
   color: var(--color-primario);
   font-size: 0.82rem;
@@ -162,25 +136,11 @@
   background-color: rgba(var(--color-primario-rgb), 0.1);
 }
 
-.softsave-profile__header-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.softsave-profile__bio {
-  margin: 12px 0 0;
-  color: var(--color-texto-suave);
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
 .softsave-profile__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 28px;
-  padding: 0 28px 28px;
+  gap: 24px;
+  padding: 0 24px 24px;
   align-items: start;
 }
 
@@ -192,7 +152,7 @@
   background-color: var(--color-blanco);
   border-radius: 16px;
   box-shadow: 0 14px 28px rgba(var(--color-texto-rgb), 0.08);
-  padding: 28px;
+  padding: 24px;
 }
 
 .softsave-profile__form-title {
@@ -241,6 +201,100 @@
   flex-direction: column;
   gap: 18px;
   margin-top: 22px;
+}
+
+.softsave-profile__contact-card {
+  display: grid;
+  gap: 18px;
+}
+
+.softsave-profile__contact-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  padding: 18px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(var(--color-primario-rgb), 0.18), transparent 46%),
+    linear-gradient(125deg, rgba(var(--color-primario-rgb), 0.08), rgba(var(--color-texto-rgb), 0.04));
+  border: 1px solid rgba(var(--color-texto-rgb), 0.08);
+}
+
+.softsave-profile__contact-intro {
+  min-width: 0;
+}
+
+.softsave-profile__contact-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: rgba(var(--color-texto-rgb), 0.08);
+  color: var(--color-texto);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.softsave-profile__contact-title {
+  margin: 10px 0 0;
+  font-family: var(--font-titulos);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-texto);
+}
+
+.softsave-profile__contact-text {
+  margin: 8px 0 0;
+  color: var(--color-texto-suave);
+  font-size: 0.93rem;
+  line-height: 1.55;
+  max-width: 56ch;
+}
+
+.softsave-profile__contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.softsave-profile__contact-actions .softsave-button {
+  min-width: 190px;
+}
+
+.softsave-profile__contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.softsave-profile__contact-item {
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--color-borde-tarjeta);
+  background-color: rgba(var(--color-primario-rgb), 0.04);
+  min-height: 106px;
+}
+
+.softsave-profile__contact-item--bio,
+.softsave-profile__contact-item--links {
+  grid-column: 1 / -1;
+}
+
+.softsave-profile__contact-value {
+  margin: 6px 0 0;
+  font-size: 1rem;
+  color: var(--color-texto);
+  line-height: 1.45;
+}
+
+.softsave-profile__contact-value--bio {
+  color: var(--color-texto-suave);
 }
 
 .softsave-profile__field {
@@ -330,6 +384,7 @@
   min-width: 180px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
@@ -344,6 +399,10 @@
   background: transparent;
   color: var(--color-texto);
   padding: 10px 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   font-weight: 700;
   cursor: pointer;
 }
@@ -904,13 +963,14 @@
   }
 
   .softsave-profile__avatar-wrap {
-    left: 20px;
-    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -46px;
   }
 
   .softsave-profile__avatar {
-    width: 96px;
-    height: 96px;
+    width: 104px;
+    height: 104px;
   }
 
   .softsave-profile__avatar-initials {
@@ -918,11 +978,7 @@
   }
 
   .softsave-profile__header {
-    padding: 56px 20px 20px;
-  }
-
-  .softsave-profile__header-row {
-    grid-template-columns: 1fr;
+    padding: 64px 20px 20px;
   }
 
   .softsave-profile__grid {
@@ -939,6 +995,25 @@
   }
 
   .softsave-profile__study-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .softsave-profile__contact-hero {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .softsave-profile__contact-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .softsave-profile__contact-actions .softsave-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .softsave-profile__contact-grid {
     grid-template-columns: 1fr;
   }
 
