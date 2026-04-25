@@ -136,6 +136,8 @@ function PortfolioSkillsSection() {
   const [nombresTecnicosEditando, setNombresTecnicosEditando] = useState({});
   const [errores, setErrores] = useState({});
   const [mensajeExito, setMensajeExito] = useState('');
+  const [eliminandoTecnica, setEliminandoTecnica] = useState(false);
+  const [tecnicaPendienteEliminar, setTecnicaPendienteEliminar] = useState(null);
 
   const tieneSkills = useMemo(() => tecnicas.length > 0 || blandas.length > 0, [tecnicas, blandas]);
   const actualizarCacheSkills = useCallback((tecnicasActuales, blandasActuales) => {
@@ -191,6 +193,19 @@ function PortfolioSkillsSection() {
       sigueMontado = false;
     };
   }, [actualizarCacheSkills, blandasDesdeContexto, skillsCacheKey, softSkillsUsuario, tecnicasDesdeContexto, user?.skills]);
+
+  useEffect(() => {
+    if (!tecnicaPendienteEliminar) {
+      return undefined;
+    }
+
+    const overflowPrevio = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = overflowPrevio;
+    };
+  }, [tecnicaPendienteEliminar]);
 
   const limpiarMensajes = () => {
     setErrores({});
@@ -338,7 +353,7 @@ function PortfolioSkillsSection() {
       if (!persistido) {
         setTecnicas(tecnicasPrevias);
         actualizarCacheSkills(tecnicasPrevias, blandas);
-        return;
+        return false;
       }
       setNombresTecnicosEditando((actual) => {
         const siguiente = { ...actual };
@@ -347,11 +362,38 @@ function PortfolioSkillsSection() {
       });
       setErrores((actual) => ({ ...actual, tecnica: '' }));
       setMensajeExito('Habilidad técnica eliminada correctamente.');
+      return true;
     } catch {
       setTecnicas(tecnicasPrevias);
       actualizarCacheSkills(tecnicasPrevias, blandas);
       setErrores({ tecnica: 'No se pudo eliminar la habilidad técnica.' });
+      return false;
     }
+  };
+
+  const solicitarEliminarHabilidadTecnica = (skill) => {
+    setTecnicaPendienteEliminar(skill);
+  };
+
+  const cerrarModalEliminarTecnica = () => {
+    if (eliminandoTecnica) {
+      return;
+    }
+
+    setTecnicaPendienteEliminar(null);
+  };
+
+  const confirmarEliminarHabilidadTecnica = async () => {
+    if (!tecnicaPendienteEliminar?.id) {
+      return;
+    }
+
+    setEliminandoTecnica(true);
+    const eliminado = await eliminarHabilidadTecnica(tecnicaPendienteEliminar.id);
+    if (eliminado) {
+      setTecnicaPendienteEliminar(null);
+    }
+    setEliminandoTecnica(false);
   };
 
   const confirmarEdicionNombreTecnico = async (id) => {
@@ -516,7 +558,8 @@ function PortfolioSkillsSection() {
   };
 
   return (
-    <section className="softsave-portafolio-module-card">
+    <>
+      <section className="softsave-portafolio-module-card">
       <div className="softsave-portafolio-module-card__header">
         <div className="softsave-portafolio-module-card__title-wrap">
           <Icon path={mdiViewGridOutline} size={ICON_SIZES.section} className="softsave-portafolio-module-card__icon" />
@@ -617,7 +660,7 @@ function PortfolioSkillsSection() {
                           type="button"
                           className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary softsave-portafolio-skills__tech-remove"
                           aria-label={`Eliminar habilidad técnica ${skill.name}`}
-                          onClick={() => eliminarHabilidadTecnica(skill.id)}
+                          onClick={() => solicitarEliminarHabilidadTecnica(skill)}
                         >
                           <Icon path={mdiDeleteOutline} size={ICON_SIZES.action} />
                         </button>
@@ -805,7 +848,42 @@ function PortfolioSkillsSection() {
           ) : null}
         </section>
       </div>
-    </section>
+      </section>
+
+      {tecnicaPendienteEliminar ? (
+        <div className="softsave-profile__modal-overlay softsave-profile__modal-overlay--centered" role="dialog" aria-modal="true" onClick={cerrarModalEliminarTecnica}>
+          <div className="softsave-profile__modal softsave-profile__modal--confirm" onClick={(evento) => evento.stopPropagation()}>
+            <header className="softsave-profile__modal-header">
+              <div className="softsave-profile__modal-content">
+                <h3 className="softsave-profile__modal-title">Eliminar habilidad técnica</h3>
+                <p className="softsave-profile__modal-text">
+                  Esta acción eliminará "{tecnicaPendienteEliminar.name}" de tu portafolio.
+                </p>
+              </div>
+            </header>
+
+            <div className="softsave-profile__modal-actions">
+              <button
+                type="button"
+                className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
+                onClick={cerrarModalEliminarTecnica}
+                disabled={eliminandoTecnica}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="softsave-profile__danger-button"
+                onClick={confirmarEliminarHabilidadTecnica}
+                disabled={eliminandoTecnica}
+              >
+                {eliminandoTecnica ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
 

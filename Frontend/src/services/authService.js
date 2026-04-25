@@ -51,11 +51,15 @@ export const crearEstudio = (datos) => api.post('/studies', datos);
 
 export const actualizarEstudio = (id, datos) => api.put(`/studies/${id}`, datos);
 
+export const eliminarEstudio = (id) => api.delete(`/studies/${id}`);
+
 export const obtenerJobs = () => api.get('/user/jobs');
 
 export const crearJob = (datos) => api.post('/user/jobs', datos);
 
 export const actualizarJob = (id, datos) => api.put(`/user/jobs/${id}`, datos);
+
+export const eliminarJob = (id) => api.delete(`/user/jobs/${id}`);
 
 export const obtenerSkillsTecnicas = () => api.get('/user/technical-skills');
 

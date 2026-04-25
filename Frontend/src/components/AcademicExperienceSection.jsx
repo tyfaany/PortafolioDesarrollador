@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
-import { mdiClose, mdiContentSaveOutline, mdiPencilOutline, mdiPlus, mdiSchoolOutline } from '@mdi/js';
+import { mdiClose, mdiContentSaveOutline, mdiDeleteOutline, mdiPencilOutline, mdiPlus, mdiSchoolOutline } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
-import { actualizarEstudio, crearEstudio } from '../services/authService';
+import { actualizarEstudio, crearEstudio, eliminarEstudio } from '../services/authService';
 
 const FORMULARIO_ESTUDIO_INICIAL = {
   id: null,
@@ -130,6 +130,8 @@ function AcademicExperienceSection({
   const [mensajeAcademicoError, setMensajeAcademicoError] = useState('');
   const [mensajeAcademicoExito, setMensajeAcademicoExito] = useState('');
   const [guardandoEstudio, setGuardandoEstudio] = useState(false);
+  const [eliminandoEstudio, setEliminandoEstudio] = useState(false);
+  const [estudioPendienteEliminar, setEstudioPendienteEliminar] = useState(null);
   const [formularioEstudio, setFormularioEstudio] = useState(FORMULARIO_ESTUDIO_INICIAL);
 
   const tituloModalEstudio = formularioEstudio.id
@@ -142,7 +144,7 @@ function AcademicExperienceSection({
   }, [user?.studies]);
 
   useEffect(() => {
-    if (!estaModalEstudioAbierto) {
+    if (!estaModalEstudioAbierto && !estudioPendienteEliminar) {
       return undefined;
     }
 
@@ -152,7 +154,7 @@ function AcademicExperienceSection({
     return () => {
       document.body.style.overflow = overflowPrevio;
     };
-  }, [estaModalEstudioAbierto]);
+  }, [estaModalEstudioAbierto, estudioPendienteEliminar]);
 
   const abrirModalCrearEstudio = () => {
     setFormularioEstudio(FORMULARIO_ESTUDIO_INICIAL);
@@ -285,6 +287,43 @@ function AcademicExperienceSection({
     }
   };
 
+  const solicitarEliminarEstudio = (estudio) => {
+    if (!estudio?.id) {
+      return;
+    }
+
+    setEstudioPendienteEliminar(estudio);
+  };
+
+  const cerrarModalEliminarEstudio = () => {
+    if (eliminandoEstudio) {
+      return;
+    }
+
+    setEstudioPendienteEliminar(null);
+  };
+
+  const eliminarEstudioRegistrado = async () => {
+    if (!estudioPendienteEliminar?.id) {
+      return;
+    }
+
+    setEliminandoEstudio(true);
+
+    try {
+      await eliminarEstudio(estudioPendienteEliminar.id);
+      setEstudios((estadoActual) => estadoActual.filter((item) => item.id !== estudioPendienteEliminar.id));
+      setMensajeAcademicoError('');
+      setMensajeAcademicoExito('Experiencia académica eliminada correctamente.');
+      setEstudioPendienteEliminar(null);
+      await refreshUser();
+    } catch {
+      setMensajeAcademicoError('No se pudo eliminar la experiencia académica.');
+    } finally {
+      setEliminandoEstudio(false);
+    }
+  };
+
   return (
     <>
       <section className={esPortafolio ? 'softsave-portafolio-module-card' : 'softsave-profile__form-card'}>
@@ -349,14 +388,24 @@ function AcademicExperienceSection({
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  className={esPortafolio ? 'softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary' : 'softsave-profile__icon-button softsave-profile__icon-button--inline'}
-                  aria-label={`Editar ${estudio.academic_institution}`}
-                  onClick={() => abrirModalEditarEstudio(estudio)}
-                >
-                  <Icon path={mdiPencilOutline} size={0.85} />
-                </button>
+                <div className={esPortafolio ? 'softsave-portafolio-study-card__actions' : 'softsave-profile__study-actions'}>
+                  <button
+                    type="button"
+                    className={esPortafolio ? 'softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary' : 'softsave-profile__icon-button softsave-profile__icon-button--inline'}
+                    aria-label={`Editar ${estudio.academic_institution}`}
+                    onClick={() => abrirModalEditarEstudio(estudio)}
+                  >
+                    <Icon path={mdiPencilOutline} size={0.85} />
+                  </button>
+                  <button
+                    type="button"
+                    className={esPortafolio ? 'softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary softsave-portafolio-module-card__action--danger' : 'softsave-profile__icon-button softsave-profile__icon-button--inline'}
+                    aria-label={`Eliminar ${estudio.academic_institution}`}
+                    onClick={() => solicitarEliminarEstudio(estudio)}
+                  >
+                    <Icon path={mdiDeleteOutline} size={0.85} />
+                  </button>
+                </div>
               </article>
             ))}
           </div>
@@ -512,6 +561,40 @@ function AcademicExperienceSection({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {estudioPendienteEliminar ? (
+        <div className="softsave-profile__modal-overlay softsave-profile__modal-overlay--centered" role="dialog" aria-modal="true" onClick={cerrarModalEliminarEstudio}>
+          <div className="softsave-profile__modal softsave-profile__modal--confirm" onClick={(evento) => evento.stopPropagation()}>
+            <header className="softsave-profile__modal-header">
+              <div className="softsave-profile__modal-content">
+                <h3 className="softsave-profile__modal-title">Eliminar experiencia académica</h3>
+                <p className="softsave-profile__modal-text">
+                  Esta acción eliminará "{estudioPendienteEliminar.academic_institution}" de tu portafolio.
+                </p>
+              </div>
+            </header>
+
+            <div className="softsave-profile__modal-actions">
+              <button
+                type="button"
+                className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
+                onClick={cerrarModalEliminarEstudio}
+                disabled={eliminandoEstudio}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="softsave-profile__danger-button"
+                onClick={eliminarEstudioRegistrado}
+                disabled={eliminandoEstudio}
+              >
+                {eliminandoEstudio ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

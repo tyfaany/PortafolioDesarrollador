@@ -4,11 +4,12 @@ import {
   mdiBriefcaseOutline,
   mdiClose,
   mdiContentSaveOutline,
+  mdiDeleteOutline,
   mdiPencilOutline,
   mdiPlus,
 } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
-import { actualizarJob, crearJob, obtenerJobs } from '../services/authService';
+import { actualizarJob, crearJob, eliminarJob, obtenerJobs } from '../services/authService';
 import { getPortfolioCache, setPortfolioCache } from '../services/portfolioCache';
 
 const FORMULARIO_LABORAL_INICIAL = {
@@ -277,6 +278,8 @@ function PortfolioWorkExperienceSection() {
   const [trabajos, setTrabajos] = useState(() => trabajosDesdeContexto);
   const [estaModalAbierto, setEstaModalAbierto] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [eliminandoTrabajo, setEliminandoTrabajo] = useState(false);
+  const [trabajoPendienteEliminar, setTrabajoPendienteEliminar] = useState(null);
   const [errores, setErrores] = useState({});
   const [mensajeError, setMensajeError] = useState('');
   const [mensajeExito, setMensajeExito] = useState('');
@@ -323,7 +326,7 @@ function PortfolioWorkExperienceSection() {
   }, [jobsCacheKey, trabajosDesdeContexto]);
 
   useEffect(() => {
-    if (!estaModalAbierto) {
+    if (!estaModalAbierto && !trabajoPendienteEliminar) {
       return undefined;
     }
 
@@ -333,7 +336,7 @@ function PortfolioWorkExperienceSection() {
     return () => {
       document.body.style.overflow = overflowPrevio;
     };
-  }, [estaModalAbierto]);
+  }, [estaModalAbierto, trabajoPendienteEliminar]);
 
   const abrirModalCrear = () => {
     setFormulario(FORMULARIO_LABORAL_INICIAL);
@@ -515,6 +518,51 @@ function PortfolioWorkExperienceSection() {
     }
   };
 
+  const solicitarEliminarTrabajo = (trabajo) => {
+    if (!trabajo?.id) {
+      return;
+    }
+
+    setTrabajoPendienteEliminar(trabajo);
+  };
+
+  const cerrarModalEliminarTrabajo = () => {
+    if (eliminandoTrabajo) {
+      return;
+    }
+
+    setTrabajoPendienteEliminar(null);
+  };
+
+  const eliminarTrabajo = async () => {
+    if (!trabajoPendienteEliminar?.id) {
+      return;
+    }
+
+    const idTrabajo = String(trabajoPendienteEliminar.id);
+    const esLocal = idTrabajo.startsWith('local-job-');
+    setEliminandoTrabajo(true);
+
+    try {
+      if (!esLocal) {
+        await eliminarJob(trabajoPendienteEliminar.id);
+      }
+
+      setTrabajos((actual) => {
+        const trabajosActualizados = actual.filter((item) => String(item.id) !== idTrabajo);
+        setPortfolioCache(jobsCacheKey, trabajosActualizados);
+        return trabajosActualizados;
+      });
+      setMensajeError('');
+      setMensajeExito('Experiencia laboral eliminada correctamente.');
+      setTrabajoPendienteEliminar(null);
+    } catch {
+      setMensajeError('No se pudo eliminar la experiencia laboral.');
+    } finally {
+      setEliminandoTrabajo(false);
+    }
+  };
+
   return (
     <>
       <section className="softsave-portafolio-module-card">
@@ -557,14 +605,24 @@ function PortfolioWorkExperienceSection() {
                   ) : null}
                 </div>
 
-                <button
-                  type="button"
-                  className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary"
-                  aria-label={`Editar ${trabajo.company_name}`}
-                  onClick={() => abrirModalEditar(trabajo)}
-                >
-                  <Icon path={mdiPencilOutline} size={0.85} />
-                </button>
+                <div className="softsave-portafolio-study-card__actions">
+                  <button
+                    type="button"
+                    className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary"
+                    aria-label={`Editar ${trabajo.company_name}`}
+                    onClick={() => abrirModalEditar(trabajo)}
+                  >
+                    <Icon path={mdiPencilOutline} size={0.85} />
+                  </button>
+                  <button
+                    type="button"
+                    className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary softsave-portafolio-module-card__action--danger"
+                    aria-label={`Eliminar ${trabajo.company_name}`}
+                    onClick={() => solicitarEliminarTrabajo(trabajo)}
+                  >
+                    <Icon path={mdiDeleteOutline} size={0.85} />
+                  </button>
+                </div>
               </article>
             ))}
           </div>
@@ -728,6 +786,40 @@ function PortfolioWorkExperienceSection() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {trabajoPendienteEliminar ? (
+        <div className="softsave-profile__modal-overlay softsave-profile__modal-overlay--centered" role="dialog" aria-modal="true" onClick={cerrarModalEliminarTrabajo}>
+          <div className="softsave-profile__modal softsave-profile__modal--confirm" onClick={(evento) => evento.stopPropagation()}>
+            <header className="softsave-profile__modal-header">
+              <div className="softsave-profile__modal-content">
+                <h3 className="softsave-profile__modal-title">Eliminar experiencia laboral</h3>
+                <p className="softsave-profile__modal-text">
+                  Esta acción eliminará "{trabajoPendienteEliminar.company_name}" de tu portafolio.
+                </p>
+              </div>
+            </header>
+
+            <div className="softsave-profile__modal-actions">
+              <button
+                type="button"
+                className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
+                onClick={cerrarModalEliminarTrabajo}
+                disabled={eliminandoTrabajo}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="softsave-profile__danger-button"
+                onClick={eliminarTrabajo}
+                disabled={eliminandoTrabajo}
+              >
+                {eliminandoTrabajo ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

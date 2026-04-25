@@ -26,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/jobs', [JobController::class, 'index']);
     Route::post('/user/jobs', [JobController::class, 'store']);
     Route::put('/user/jobs/{id}', [JobController::class, 'update']);
+    Route::delete('/user/jobs/{id}', [JobController::class, 'destroy']);
     Route::get('/user/technical-skills', [TechnicalSkillController::class, 'index']);
     Route::post('/user/technical-skills/sync', [TechnicalSkillController::class, 'sync']);
     Route::get('/user/soft-skills', [SoftSkillController::class, 'index']);

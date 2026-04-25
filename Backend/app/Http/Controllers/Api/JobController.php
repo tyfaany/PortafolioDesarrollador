@@ -71,6 +71,22 @@ class JobController extends Controller
         ], 200);
     }
 
+    /**
+     * Eliminar experiencia laboral.
+     */
+    public function destroy(Request $request, $id)
+    {
+        $job = $request->user()->jobs()->find($id);
+
+        if (!$job) {
+            return response()->json(['message' => 'Experiencia laboral no encontrada.'], 404);
+        }
+
+        $job->delete();
+
+        return response()->json(['message' => 'Experiencia laboral eliminada correctamente.'], 200);
+    }
+
     // --- MÉTODOS AUXILIARES (Para no repetir código) ---
 
     private function validateJob(Request $request)

@@ -156,6 +156,12 @@
   color: var(--color-texto);
 }
 
+.softsave-portafolio-module-card__action--danger {
+  color: var(--color-error);
+  border-color: var(--color-borde-tarjeta);
+  background-color: var(--color-blanco);
+}
+
 .softsave-portafolio-module-card__action--primary:hover,
 .softsave-portafolio-module-card__action--primary:focus-visible {
   background-color: var(--color-secundario);
@@ -170,6 +176,13 @@
   color: var(--color-primario);
   box-shadow: 0 8px 14px rgba(var(--color-texto-rgb), 0.12);
   transform: translateY(-1px);
+}
+
+.softsave-portafolio-module-card__action--danger:hover,
+.softsave-portafolio-module-card__action--danger:focus-visible {
+  border-color: rgba(var(--color-error-rgb), 0.35);
+  background-color: rgba(var(--color-error-rgb), 0.08);
+  color: var(--color-error);
 }
 
 .softsave-portafolio-module-card__action:focus-visible {
@@ -241,6 +254,13 @@
 
 .softsave-portafolio-study-card__body {
   min-width: 0;
+}
+
+.softsave-portafolio-study-card__actions {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .softsave-portafolio-study-card__title {
@@ -647,7 +667,7 @@
     align-items: flex-start;
   }
 
-  .softsave-portafolio-study-card > .softsave-portafolio-module-card__action {
+  .softsave-portafolio-study-card__actions {
     align-self: flex-end;
   }
 }

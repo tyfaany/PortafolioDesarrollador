@@ -517,6 +517,11 @@
   z-index: 1200;
 }
 
+.softsave-profile__modal-overlay--centered {
+  align-items: center;
+  padding: var(--softsave-modal-gap);
+}
+
 .softsave-profile__modal {
   width: min(100%, 560px);
   background-color: var(--color-blanco);
@@ -532,6 +537,10 @@
 
 .softsave-profile__modal--portfolio {
   width: min(100%, 780px);
+}
+
+.softsave-profile__modal--confirm {
+  width: min(100%, 460px);
 }
 
 .softsave-profile__modal--editor {
@@ -740,6 +749,32 @@
   font-size: 0.95rem;
 }
 
+.softsave-profile__danger-button {
+  border: none;
+  border-radius: 12px;
+  min-width: 150px;
+  padding: 12px 18px;
+  background: linear-gradient(180deg, #e95f53 0%, #d94438 100%);
+  color: var(--color-blanco);
+  font-family: var(--font-titulos);
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: 0 10px 20px rgba(var(--color-error-rgb), 0.22);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.softsave-profile__danger-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px rgba(var(--color-error-rgb), 0.28);
+  filter: saturate(1.05);
+}
+
+.softsave-profile__danger-button:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
 .softsave-profile__error-text {
   display: inline-block;
 }
@@ -768,6 +803,13 @@
 
 .softsave-profile__study-body {
   min-width: 0;
+}
+
+.softsave-profile__study-actions {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .softsave-profile__study-title {
