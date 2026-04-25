@@ -23,7 +23,7 @@ class SoftSkillController extends Controller
     {
         // Validamos que sea un arreglo de textos (strings)
         $request->validate([
-            'skills' => 'required|array',
+            'skills' => 'present|array',
             'skills.*' => 'required|string|max:50',
         ]);
 

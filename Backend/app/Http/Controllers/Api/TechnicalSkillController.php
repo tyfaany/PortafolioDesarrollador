@@ -25,7 +25,7 @@ class TechnicalSkillController extends Controller
         // Validamos que envíen el arreglo y que el nivel sea correcto
         // Fíjate que YA NO validamos 'exists:technical_skills,id'
         $request->validate([
-            'skills' => 'required|array',
+            'skills' => 'present|array',
             'skills.*.name' => 'required|string|max:100', // Ahora pedimos el NOMBRE, no el ID
             'skills.*.level' => 'required|in:Basico,Intermedio,Avanzado',
         ]);

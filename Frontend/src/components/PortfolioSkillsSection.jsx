@@ -276,19 +276,27 @@ function PortfolioSkillsSection() {
         level: nivelNuevo,
       },
     ];
+    const tecnicasPrevias = tecnicas;
+
+    setTecnicas(nuevasTecnicas);
+    actualizarCacheSkills(nuevasTecnicas, blandas);
+    setErrores((actual) => ({ ...actual, tecnica: '' }));
+    setMensajeExito('');
 
     try {
       const persistido = await persistirSkillsTecnicas(nuevasTecnicas);
       if (!persistido) {
+        setTecnicas(tecnicasPrevias);
+        actualizarCacheSkills(tecnicasPrevias, blandas);
         return;
       }
-      setTecnicas(nuevasTecnicas);
-      actualizarCacheSkills(nuevasTecnicas, blandas);
       setSkillTecnicaNueva('');
       setNivelNuevo('Intermedio');
       setErrores({});
       setMensajeExito('Habilidad técnica registrada correctamente.');
     } catch {
+      setTecnicas(tecnicasPrevias);
+      actualizarCacheSkills(tecnicasPrevias, blandas);
       setErrores({ tecnica: 'No se pudo guardar la habilidad técnica.' });
     }
   };
@@ -311,17 +319,25 @@ function PortfolioSkillsSection() {
 
   const eliminarHabilidadTecnica = async (id) => {
     const tecnicasActualizadas = tecnicas.filter((skill) => String(skill.id) !== String(id));
+    const tecnicasPrevias = tecnicas;
+
+    setTecnicas(tecnicasActualizadas);
+    actualizarCacheSkills(tecnicasActualizadas, blandas);
+    setErrores((actual) => ({ ...actual, tecnica: '' }));
+    setMensajeExito('');
 
     try {
       const persistido = await persistirSkillsTecnicas(tecnicasActualizadas);
       if (!persistido) {
+        setTecnicas(tecnicasPrevias);
+        actualizarCacheSkills(tecnicasPrevias, blandas);
         return;
       }
-      setTecnicas(tecnicasActualizadas);
-      actualizarCacheSkills(tecnicasActualizadas, blandas);
       setErrores((actual) => ({ ...actual, tecnica: '' }));
       setMensajeExito('Habilidad técnica eliminada correctamente.');
     } catch {
+      setTecnicas(tecnicasPrevias);
+      actualizarCacheSkills(tecnicasPrevias, blandas);
       setErrores({ tecnica: 'No se pudo eliminar la habilidad técnica.' });
     }
   };
@@ -345,11 +361,15 @@ function PortfolioSkillsSection() {
     const nuevasBlandas = indiceBlandaEditando !== null
       ? blandas.map((skill, indice) => (indice === indiceBlandaEditando ? nombre : skill))
       : [...blandas, nombre];
+    const blandasPrevias = blandas;
+
+    setBlandas(nuevasBlandas);
+    actualizarCacheSkills(tecnicas, nuevasBlandas);
+    setErrores((actual) => ({ ...actual, blanda: '' }));
+    setMensajeExito('');
 
     try {
       await persistirSoftSkills(nuevasBlandas);
-      setBlandas(nuevasBlandas);
-      actualizarCacheSkills(tecnicas, nuevasBlandas);
       setSkillBlandaNueva('');
       setIndiceBlandaEditando(null);
       setMostrandoAgregarBlanda(false);
@@ -360,6 +380,8 @@ function PortfolioSkillsSection() {
           : 'Habilidad blanda agregada correctamente.',
       );
     } catch {
+      setBlandas(blandasPrevias);
+      actualizarCacheSkills(tecnicas, blandasPrevias);
       setErrores({ blanda: 'No se pudo guardar la habilidad blanda.' });
     }
   };
@@ -374,13 +396,19 @@ function PortfolioSkillsSection() {
 
   const eliminarBlanda = async (indice) => {
     const nuevasBlandas = blandas.filter((_, itemIndice) => itemIndice !== indice);
+    const blandasPrevias = blandas;
+
+    setBlandas(nuevasBlandas);
+    actualizarCacheSkills(tecnicas, nuevasBlandas);
+    setErrores((actual) => ({ ...actual, blanda: '' }));
+    setMensajeExito('');
 
     try {
       await persistirSoftSkills(nuevasBlandas);
-      setBlandas(nuevasBlandas);
-      actualizarCacheSkills(tecnicas, nuevasBlandas);
       setMensajeExito('Habilidad blanda eliminada correctamente.');
     } catch {
+      setBlandas(blandasPrevias);
+      actualizarCacheSkills(tecnicas, blandasPrevias);
       setErrores({ blanda: 'No se pudo eliminar la habilidad blanda.' });
     }
   };
@@ -391,13 +419,19 @@ function PortfolioSkillsSection() {
     }
 
     const nuevasBlandas = [...blandas, skill];
+    const blandasPrevias = blandas;
+
+    setBlandas(nuevasBlandas);
+    actualizarCacheSkills(tecnicas, nuevasBlandas);
+    setErrores((actual) => ({ ...actual, blanda: '' }));
+    setMensajeExito('');
 
     try {
       await persistirSoftSkills(nuevasBlandas);
-      setBlandas(nuevasBlandas);
-      actualizarCacheSkills(tecnicas, nuevasBlandas);
       setMensajeExito('Habilidad sugerida agregada correctamente.');
     } catch {
+      setBlandas(blandasPrevias);
+      actualizarCacheSkills(tecnicas, blandasPrevias);
       setErrores({ blanda: 'No se pudo agregar la habilidad sugerida.' });
     }
   };
