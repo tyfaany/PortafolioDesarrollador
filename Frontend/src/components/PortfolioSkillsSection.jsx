@@ -425,6 +425,18 @@ function PortfolioSkillsSection() {
       return;
     }
 
+    if (
+      indiceBlandaEditando !== null
+      && sanitizarTexto(blandas[indiceBlandaEditando]).toLowerCase() === nombre.toLowerCase()
+    ) {
+      setErrores((actual) => ({ ...actual, blanda: '' }));
+      setMensajeExito('');
+      setSkillBlandaNueva('');
+      setIndiceBlandaEditando(null);
+      setMostrandoAgregarBlanda(false);
+      return;
+    }
+
     const nuevasBlandas = indiceBlandaEditando !== null
       ? blandas.map((skill, indice) => (indice === indiceBlandaEditando ? nombre : skill))
       : [...blandas, nombre];
@@ -730,7 +742,7 @@ function PortfolioSkillsSection() {
             ) : null}
           </div>
 
-          {isAdding && mostrandoAgregarBlanda ? (
+          {(isAdding || isEditing) && mostrandoAgregarBlanda ? (
             <div className="softsave-portafolio-skills__soft-form">
               <input
                 type="text"
