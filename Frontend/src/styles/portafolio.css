@@ -569,11 +569,11 @@
 
 @media (max-width: 768px) {
   .softsave-portafolio-shell {
-    padding: 24px 16px 32px;
+    padding: 18px 12px 24px;
   }
 
   .softsave-portafolio-header {
-    margin-bottom: 32px;
+    margin-bottom: 20px;
   }
 
   .softsave-portafolio-grid {
@@ -590,33 +590,123 @@
   }
 
   .softsave-portafolio-tabs {
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 0;
   }
 
   .softsave-portafolio-tab {
-    font-size: 1rem;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+    font-size: 0.95rem;
+    padding: 0 4px 7px;
+  }
+
+  .softsave-portafolio-module-card {
+    border-radius: 18px;
+    padding: 14px 14px 16px;
+    box-shadow: 0 10px 20px rgba(var(--color-texto-rgb), 0.07);
   }
 
   .softsave-portafolio-module-card__header {
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(var(--color-texto-rgb), 0.08);
+  }
+
+  .softsave-portafolio-module-card__title-wrap {
+    gap: 9px;
+  }
+
+  .softsave-portafolio-module-card__title {
+    font-size: 1.05rem;
   }
 
   .softsave-portafolio-module-card__actions {
-    width: 100%;
+    width: auto;
+    margin-left: auto;
     justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .softsave-portafolio-module-card__action {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
   }
 
   .softsave-portafolio-module-card__subtitle {
     margin-left: 0;
   }
 
+  .softsave-portafolio-module-card__content {
+    margin-top: 12px;
+    gap: 10px;
+  }
+
   .softsave-portafolio-module-card__row {
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 5px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background-color: rgba(var(--color-texto-rgb), 0.03);
+    border: 1px solid rgba(var(--color-texto-rgb), 0.07);
+  }
+
+  .softsave-portafolio-module-card__label {
+    font-size: 0.75rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--color-texto-suave);
+  }
+
+  .softsave-portafolio-module-card__value {
+    font-size: 1rem;
+    color: var(--color-texto);
   }
 
   .softsave-portafolio-module-card__empty {
-    margin-left: 0;
+    margin: 14px 0 4px;
+  }
+
+  .softsave-portafolio-study-list {
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .softsave-portafolio-study-card {
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(var(--color-texto-rgb), 0.08);
+    background-color: rgba(var(--color-texto-rgb), 0.03);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .softsave-portafolio-study-card__title {
+    font-size: 1rem;
+  }
+
+  .softsave-portafolio-study-card__degree,
+  .softsave-portafolio-study-card__period {
+    font-size: 0.95rem;
+  }
+
+  .softsave-portafolio-study-card__description {
+    margin-top: 8px;
+    font-size: 0.92rem;
+  }
+
+  .softsave-portafolio-study-card__actions {
+    justify-content: flex-end;
+    width: 100%;
   }
 
   .softsave-portafolio-job-form__dates,
@@ -630,6 +720,33 @@
 
   .softsave-portafolio-skills__level-wrap {
     flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .softsave-portafolio-skills__table {
+    gap: 8px;
+  }
+
+  .softsave-portafolio-skills__table-head {
+    display: none;
+  }
+
+  .softsave-portafolio-skills__row {
+    padding: 10px 12px;
+    border: 1px solid rgba(var(--color-texto-rgb), 0.08);
+    border-radius: 12px;
+    background-color: rgba(var(--color-texto-rgb), 0.03);
+  }
+
+  .softsave-portafolio-skills__chips {
+    gap: 8px;
+  }
+
+  .softsave-portafolio-skills__chip {
+    min-height: 36px;
+    font-size: 0.88rem;
+    padding: 8px 12px;
   }
 
   .softsave-portafolio-job-form__end-header {
@@ -649,25 +766,47 @@
 }
 
 @media (max-width: 576px) {
-  .softsave-portafolio-module-card {
-    padding: 16px;
-  }
-
-  .softsave-portafolio-module-card__title {
-    font-size: 1.35rem;
-  }
-
-  .softsave-portafolio-module-card__action {
-    width: 40px;
-    height: 40px;
+  .softsave-portafolio-shell {
+    padding-inline: 10px;
   }
 
   .softsave-portafolio-study-card {
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 10px;
   }
 
   .softsave-portafolio-study-card__actions {
     align-self: flex-end;
+  }
+
+  .softsave-portafolio-study-card__title {
+    font-size: 0.94rem;
+  }
+
+  .softsave-portafolio-study-card__degree,
+  .softsave-portafolio-study-card__period,
+  .softsave-portafolio-study-card__description {
+    font-size: 0.86rem;
+  }
+
+  .softsave-portafolio-module-card__title {
+    font-size: 1rem;
+  }
+
+  .softsave-portafolio-module-card__action {
+    width: 38px;
+    height: 38px;
+  }
+
+  .softsave-portafolio-tab {
+    font-size: 0.9rem;
+  }
+
+  .softsave-portafolio-skills {
+    gap: 20px;
+    margin-top: 14px;
+  }
+
+  .softsave-portafolio-skills__heading {
+    font-size: 1rem;
   }
 }

@@ -959,7 +959,7 @@
 
 @media (max-width: 768px) {
   .softsave-profile {
-    padding: 24px 16px 36px;
+    padding: 20px 12px 30px;
   }
 
   .softsave-profile__avatar-wrap {
@@ -978,16 +978,52 @@
   }
 
   .softsave-profile__header {
-    padding: 64px 20px 20px;
+    padding: 58px 16px 14px;
+  }
+
+  .softsave-profile__tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 2px;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .softsave-profile__tab {
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.22;
+    font-size: 0.82rem;
+    padding: 0 2px 8px;
   }
 
   .softsave-profile__grid {
     grid-template-columns: 1fr;
-    padding: 0 20px 24px;
+    padding: 0 16px 20px;
+  }
+
+  .softsave-profile__form-card {
+    padding: 18px;
   }
 
   .softsave-profile__section-head {
     flex-direction: column;
+  }
+
+  .softsave-profile__title-with-icon {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .softsave-profile__form-title {
+    font-size: 1.72rem;
+    line-height: 1.15;
+  }
+
+  .softsave-profile__form-subtitle {
+    font-size: 0.95rem;
   }
 
   .softsave-profile__section-button {
@@ -1000,7 +1036,20 @@
 
   .softsave-profile__contact-hero {
     grid-template-columns: 1fr;
-    padding: 16px;
+    padding: 14px;
+  }
+
+  .softsave-profile__contact-title {
+    font-size: 1.35rem;
+    margin-top: 0;
+  }
+
+  .softsave-profile__contact-text {
+    font-size: 0.9rem;
+  }
+
+  .softsave-profile__contact-item {
+    min-height: 92px;
   }
 
   .softsave-profile__contact-actions {
@@ -1071,5 +1120,45 @@
   .softsave-profile__modal-actions .softsave-button,
   .softsave-profile__file-button {
     width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .softsave-profile__banner {
+    height: 116px;
+  }
+
+  .softsave-profile__avatar {
+    width: 96px;
+    height: 96px;
+  }
+
+  .softsave-profile__avatar-wrap {
+    bottom: -42px;
+  }
+
+  .softsave-profile__header {
+    padding-top: 54px;
+  }
+
+  .softsave-profile__form-title {
+    font-size: 1.12rem;
+  }
+
+  .softsave-profile__form-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  .softsave-profile__actions {
+    width: 100%;
+  }
+
+  .softsave-profile__actions .softsave-button {
+    width: 100%;
+  }
+
+  .softsave-profile__contact-actions .softsave-button {
+    min-height: 42px;
   }
 }

@@ -78,6 +78,10 @@
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
+.softsave-navbar__nav-item span:last-child {
+  white-space: nowrap;
+}
+
 .softsave-navbar__nav-item:hover {
   text-decoration: none;
   transform: translateY(-1px);
@@ -97,30 +101,71 @@
 
 @media (max-width: 768px) {
   .softsave-navbar__container {
-    justify-content: center;
-    text-align: center;
-    padding: 12px 14px;
-    gap: 12px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    padding: 8px 12px;
+    gap: 10px;
+    flex-wrap: nowrap;
   }
 
   .softsave-navbar__brand {
-    gap: 2px;
+    align-self: auto;
+    gap: 1px;
+    flex-shrink: 0;
   }
 
   .softsave-navbar__logo {
-    font-size: 1.6rem;
+    font-size: 1.3rem;
   }
 
   .softsave-navbar__brand-title {
-    font-size: 1rem;
+    font-size: 0.82rem;
   }
 
   .softsave-navbar__nav {
-    justify-content: center;
-    gap: 14px;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-wrap: nowrap;
   }
 
   .softsave-navbar__nav-item {
-    font-size: 0.72rem;
+    min-width: 72px;
+    min-height: 42px;
+    justify-content: center;
+    font-size: 0.68rem;
+    padding-bottom: 4px;
+  }
+}
+
+@media (max-width: 576px) {
+  .softsave-navbar__container {
+    padding: 7px 8px;
+    gap: 8px;
+  }
+
+  .softsave-navbar__logo {
+    font-size: 1.2rem;
+  }
+
+  .softsave-navbar__brand-title {
+    display: none;
+  }
+
+  .softsave-navbar__nav {
+    gap: 4px;
+  }
+
+  .softsave-navbar__nav-item {
+    min-width: 64px;
+    min-height: 40px;
+    font-size: 0.62rem;
+  }
+
+  .softsave-navbar__nav-icon {
+    transform: scale(0.86);
+    transform-origin: center;
   }
 }
