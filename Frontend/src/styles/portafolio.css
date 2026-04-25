@@ -750,6 +750,11 @@
   }
 
   .softsave-portafolio-job-form__end-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 12px;
     padding-right: 0;
     min-height: auto;
   }
@@ -757,7 +762,13 @@
   .softsave-portafolio-job-form__checkbox {
     position: static;
     transform: none;
-    margin-top: 6px;
+    margin-top: 0;
+    font-size: 0.86rem;
+    line-height: 1.2;
+  }
+
+  .softsave-portafolio-job-form__checkbox input {
+    margin: 0;
   }
 
   .softsave-portafolio-skills__footer .softsave-button {
