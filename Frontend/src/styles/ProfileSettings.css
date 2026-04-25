@@ -502,23 +502,36 @@
 }
 
 .softsave-profile__modal-overlay {
+  --softsave-modal-gap: clamp(14px, 2.8vh, 24px);
+  --softsave-navbar-offset: 82px;
   position: fixed;
   inset: 0;
   background-color: rgba(var(--color-negro-rgb), 0.45);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 20px;
-  z-index: 50;
+  padding: calc(var(--softsave-navbar-offset) + var(--softsave-modal-gap))
+    var(--softsave-modal-gap)
+    var(--softsave-modal-gap);
+  overflow-y: auto;
+  z-index: 1200;
 }
 
 .softsave-profile__modal {
-  width: min(100%, 520px);
+  width: min(100%, 560px);
   background-color: var(--color-blanco);
   border-radius: 20px;
   box-shadow: 0 18px 40px rgba(var(--color-negro-rgb), 0.25);
   padding: 28px;
   position: relative;
+  max-height: calc(
+    100dvh - var(--softsave-navbar-offset) - 2 * var(--softsave-modal-gap)
+  );
+  overflow-y: auto;
+}
+
+.softsave-profile__modal--portfolio {
+  width: min(100%, 780px);
 }
 
 .softsave-profile__modal--editor {
@@ -532,6 +545,9 @@
   display: block;
   margin-bottom: 18px;
   position: relative;
+  top: 0;
+  background-color: var(--color-blanco);
+  z-index: 1;
 }
 
 .softsave-profile__modal-header--editor {
@@ -792,6 +808,24 @@
   gap: 16px;
 }
 
+.softsave-profile__study-end-header {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: nowrap;
+  min-height: 0;
+  padding-right: 250px;
+}
+
+.softsave-profile__checkbox--study-end {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin-left: 0;
+}
+
 .softsave-profile__checkbox {
   display: inline-flex;
   align-items: center;
@@ -866,16 +900,38 @@
     grid-template-columns: 1fr;
   }
 
+  .softsave-profile__checkbox--study-end {
+    position: static;
+    margin-left: 0;
+  }
+
+  .softsave-profile__study-end-header {
+    flex-wrap: wrap;
+    min-height: auto;
+    padding-right: 0;
+  }
+
   .softsave-profile__side-link {
     min-height: auto;
   }
 
   .softsave-profile__modal {
     padding: 24px;
+    max-height: calc(
+      100dvh - var(--softsave-navbar-offset) - 2 * var(--softsave-modal-gap)
+    );
+  }
+
+  .softsave-profile__modal-overlay {
+    --softsave-navbar-offset: 112px;
   }
 
   .softsave-profile__modal--editor {
     padding: 0;
+  }
+
+  .softsave-profile__modal--portfolio {
+    width: min(100%, 640px);
   }
 
   .softsave-profile__editor {

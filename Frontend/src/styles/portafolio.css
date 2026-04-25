@@ -270,10 +270,17 @@
   gap: 18px;
 }
 
+.softsave-portafolio-job-form__basic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
 .softsave-portafolio-job-form__dates {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+  align-items: start;
 }
 
 .softsave-portafolio-job-form__date-grid {
@@ -289,15 +296,19 @@
 }
 
 .softsave-portafolio-job-form__end-header {
+  position: relative;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
+  align-items: flex-start;
+  min-height: 0;
+  padding-right: 170px;
+  margin-bottom: 0;
 }
 
 .softsave-portafolio-job-form__checkbox {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: none;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -589,6 +600,7 @@
   }
 
   .softsave-portafolio-job-form__dates,
+  .softsave-portafolio-job-form__basic-grid,
   .softsave-portafolio-job-form__date-grid,
   .softsave-portafolio-skills__table-head,
   .softsave-portafolio-skills__row,
@@ -598,6 +610,17 @@
 
   .softsave-portafolio-skills__level-wrap {
     flex-wrap: wrap;
+  }
+
+  .softsave-portafolio-job-form__end-header {
+    padding-right: 0;
+    min-height: auto;
+  }
+
+  .softsave-portafolio-job-form__checkbox {
+    position: static;
+    transform: none;
+    margin-top: 6px;
   }
 
   .softsave-portafolio-skills__footer .softsave-button {

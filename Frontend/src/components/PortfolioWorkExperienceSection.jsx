@@ -15,10 +15,10 @@ const FORMULARIO_LABORAL_INICIAL = {
   id: null,
   company_name: '',
   position: '',
-  start_month: '01',
-  start_year: String(new Date().getFullYear()),
-  end_month: '12',
-  end_year: String(new Date().getFullYear()),
+  start_month: '',
+  start_year: '',
+  end_month: '',
+  end_year: '',
   is_current_job: false,
   description: '',
 };
@@ -64,6 +64,26 @@ function extraerPartesFecha(fecha) {
   return {
     month: fechaTexto.slice(5, 7),
     year: fechaTexto.slice(0, 4),
+  };
+}
+
+function construirValorMesInput(anio, mes) {
+  if (!anio || !mes) {
+    return '';
+  }
+
+  return `${String(anio).slice(0, 4)}-${String(mes).slice(0, 2)}`;
+}
+
+function descomponerValorMesInput(valor) {
+  const valorNormalizado = String(valor || '');
+  if (!/^\d{4}-\d{2}$/.test(valorNormalizado)) {
+    return { year: '', month: '' };
+  }
+
+  return {
+    year: valorNormalizado.slice(0, 4),
+    month: valorNormalizado.slice(5, 7),
   };
 }
 
@@ -245,6 +265,7 @@ function formatearPeriodo(fechaInicio, fechaFin) {
 function PortfolioWorkExperienceSection() {
   const { user } = useAuth();
   const aniosDisponibles = useMemo(() => obtenerAniosDisponibles(), []);
+  const mesActual = useMemo(() => new Date().toISOString().slice(0, 7), []);
   const trabajosDesdeContexto = useMemo(
     () => normalizarTrabajos(user?.jobs),
     [user?.jobs],
@@ -315,11 +336,7 @@ function PortfolioWorkExperienceSection() {
   }, [estaModalAbierto]);
 
   const abrirModalCrear = () => {
-    setFormulario({
-      ...FORMULARIO_LABORAL_INICIAL,
-      start_year: aniosDisponibles[0],
-      end_year: aniosDisponibles[0],
-    });
+    setFormulario(FORMULARIO_LABORAL_INICIAL);
     setErrores({});
     setMensajeError('');
     setMensajeExito('');
@@ -367,6 +384,32 @@ function PortfolioWorkExperienceSection() {
     setErrores((actual) => ({
       ...actual,
       [name]: '',
+      start_month: '',
+      start_year: '',
+      end_month: '',
+      end_year: '',
+    }));
+
+    setMensajeError('');
+    setMensajeExito('');
+  };
+
+  const manejarCambioMes = (campo, valor) => {
+    const { year, month } = descomponerValorMesInput(valor);
+    if (!year || !month) {
+      return;
+    }
+
+    setFormulario((actual) => ({
+      ...actual,
+      [`${campo}_year`]: year,
+      [`${campo}_month`]: month,
+    }));
+
+    setErrores((actual) => ({
+      ...actual,
+      [`${campo}_month`]: '',
+      [`${campo}_year`]: '',
       start_month: '',
       start_year: '',
       end_month: '',
@@ -541,7 +584,7 @@ function PortfolioWorkExperienceSection() {
           aria-describedby={modalDescripcionId}
           onClick={cerrarModal}
         >
-          <div className="softsave-profile__modal" onClick={(evento) => evento.stopPropagation()}>
+          <div className="softsave-profile__modal softsave-profile__modal--portfolio" onClick={(evento) => evento.stopPropagation()}>
             <header className="softsave-profile__modal-header">
               <div className="softsave-profile__modal-content">
                 <h3 id={modalTituloId} className="softsave-profile__modal-title">
@@ -563,70 +606,51 @@ function PortfolioWorkExperienceSection() {
             </header>
 
             <form className="softsave-portafolio-job-form" onSubmit={guardarTrabajo}>
-              <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Nombre de la Empresa</span>
-                <input
-                  type="text"
-                  name="company_name"
-                  value={formulario.company_name}
-                  onChange={manejarCambio}
-                  className="softsave-input softsave-profile__input"
-                />
-                {errores.company_name ? (
-                  <span className="error-text softsave-profile__error-text" role="alert">
-                    {errores.company_name}
-                  </span>
-                ) : null}
-              </label>
+              <div className="softsave-portafolio-job-form__basic-grid">
+                <label className="softsave-profile__field">
+                  <span className="softsave-profile__label">Nombre de la Empresa</span>
+                  <input
+                    type="text"
+                    name="company_name"
+                    value={formulario.company_name}
+                    onChange={manejarCambio}
+                    className="softsave-input softsave-profile__input"
+                  />
+                  {errores.company_name ? (
+                    <span className="error-text softsave-profile__error-text" role="alert">
+                      {errores.company_name}
+                    </span>
+                  ) : null}
+                </label>
 
-              <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Puesto o Cargo</span>
-                <input
-                  type="text"
-                  name="position"
-                  value={formulario.position}
-                  onChange={manejarCambio}
-                  className="softsave-input softsave-profile__input"
-                />
-                {errores.position ? (
-                  <span className="error-text softsave-profile__error-text" role="alert">
-                    {errores.position}
-                  </span>
-                ) : null}
-              </label>
+                <label className="softsave-profile__field">
+                  <span className="softsave-profile__label">Puesto o Cargo</span>
+                  <input
+                    type="text"
+                    name="position"
+                    value={formulario.position}
+                    onChange={manejarCambio}
+                    className="softsave-input softsave-profile__input"
+                  />
+                  {errores.position ? (
+                    <span className="error-text softsave-profile__error-text" role="alert">
+                      {errores.position}
+                    </span>
+                  ) : null}
+                </label>
+              </div>
 
               <div className="softsave-portafolio-job-form__dates">
                 <div className="softsave-profile__field">
                   <span className="softsave-profile__label">Fecha de Inicio</span>
-                  <div className="softsave-portafolio-job-form__date-grid">
-                    <label className="softsave-profile__field">
-                      <span className="softsave-portafolio-job-form__sub-label">Mes:</span>
-                      <select
-                        name="start_month"
-                        value={formulario.start_month}
-                        onChange={manejarCambio}
-                        className="softsave-input softsave-profile__input"
-                      >
-                        {MESES.map((mes) => (
-                          <option key={mes.value} value={mes.value}>{mes.label}</option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="softsave-profile__field">
-                      <span className="softsave-portafolio-job-form__sub-label">Año:</span>
-                      <select
-                        name="start_year"
-                        value={formulario.start_year}
-                        onChange={manejarCambio}
-                        className="softsave-input softsave-profile__input"
-                      >
-                        {aniosDisponibles.map((anio) => (
-                          <option key={anio} value={anio}>{anio}</option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
+                  <input
+                    type="month"
+                    value={construirValorMesInput(formulario.start_year, formulario.start_month)}
+                    onChange={(evento) => manejarCambioMes('start', evento.target.value)}
+                    className="softsave-input softsave-profile__input"
+                    max={mesActual}
+                    min={`${aniosDisponibles[aniosDisponibles.length - 1]}-01`}
+                  />
                   {errores.start_month ? (
                     <span className="error-text softsave-profile__error-text" role="alert">
                       {errores.start_month}
@@ -649,37 +673,22 @@ function PortfolioWorkExperienceSection() {
                   </div>
 
                   {formulario.is_current_job ? (
-                    <p className="softsave-profile__help">Se mostrará como Presente.</p>
+                    <input
+                      type="text"
+                      value="Presente"
+                      className="softsave-input softsave-profile__input"
+                      readOnly
+                      aria-label="Fecha de fin: Presente"
+                    />
                   ) : (
-                    <div className="softsave-portafolio-job-form__date-grid">
-                      <label className="softsave-profile__field">
-                        <span className="softsave-portafolio-job-form__sub-label">Mes:</span>
-                        <select
-                          name="end_month"
-                          value={formulario.end_month}
-                          onChange={manejarCambio}
-                          className="softsave-input softsave-profile__input"
-                        >
-                          {MESES.map((mes) => (
-                            <option key={mes.value} value={mes.value}>{mes.label}</option>
-                          ))}
-                        </select>
-                      </label>
-
-                      <label className="softsave-profile__field">
-                        <span className="softsave-portafolio-job-form__sub-label">Año:</span>
-                        <select
-                          name="end_year"
-                          value={formulario.end_year}
-                          onChange={manejarCambio}
-                          className="softsave-input softsave-profile__input"
-                        >
-                          {aniosDisponibles.map((anio) => (
-                            <option key={anio} value={anio}>{anio}</option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
+                    <input
+                      type="month"
+                      value={construirValorMesInput(formulario.end_year, formulario.end_month)}
+                      onChange={(evento) => manejarCambioMes('end', evento.target.value)}
+                      className="softsave-input softsave-profile__input"
+                      max={mesActual}
+                      min={`${aniosDisponibles[aniosDisponibles.length - 1]}-01`}
+                    />
                   )}
                   {errores.end_month ? (
                     <span className="error-text softsave-profile__error-text" role="alert">

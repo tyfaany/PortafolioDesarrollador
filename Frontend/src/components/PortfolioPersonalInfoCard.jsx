@@ -202,7 +202,7 @@ function PortfolioPersonalInfoCard() {
 
       {estaModalAbierto ? (
         <div className="softsave-profile__modal-overlay" role="dialog" aria-modal="true">
-          <div className="softsave-profile__modal">
+          <div className="softsave-profile__modal softsave-profile__modal--portfolio">
             <header className="softsave-profile__modal-header">
               <div className="softsave-profile__modal-content">
                 <h3 className="softsave-profile__modal-title">
@@ -290,7 +290,7 @@ function PortfolioPersonalInfoCard() {
                 </button>
                 <button type="submit" className="softsave-button softsave-button--compact" disabled={guardando}>
                   <Icon path={mdiContentSaveOutline} size={0.8} />
-                  {guardando ? 'Guardando...' : 'Guardar cambios'}
+                  {guardando ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
             </form>

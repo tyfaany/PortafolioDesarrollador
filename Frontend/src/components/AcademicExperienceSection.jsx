@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
-import { mdiClose, mdiPencilOutline, mdiPlus, mdiSchoolOutline } from '@mdi/js';
+import { mdiClose, mdiContentSaveOutline, mdiPencilOutline, mdiPlus, mdiSchoolOutline } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
 import { actualizarEstudio, crearEstudio } from '../services/authService';
 
@@ -371,7 +371,7 @@ function AcademicExperienceSection({
 
       {estaModalEstudioAbierto ? (
         <div className="softsave-profile__modal-overlay" role="dialog" aria-modal="true">
-          <div className="softsave-profile__modal">
+          <div className="softsave-profile__modal softsave-profile__modal--portfolio">
             <header className="softsave-profile__modal-header">
               <div className="softsave-profile__modal-content">
                 <h3 className="softsave-profile__modal-title">{tituloModalEstudio}</h3>
@@ -427,7 +427,7 @@ function AcademicExperienceSection({
                 </label>
 
                 <label className="softsave-profile__field">
-                  <span className="softsave-profile__label">Fecha de Inicio (Mes/Año)</span>
+                  <span className="softsave-profile__label">Fecha de Inicio</span>
                   <input
                     type="month"
                     name="start_month"
@@ -444,18 +444,35 @@ function AcademicExperienceSection({
                 </label>
 
                 <label className="softsave-profile__field">
-                  <span className="softsave-profile__label">Fecha de Fin (Mes/Año)</span>
-                  <input
-                    type="month"
-                    name="end_month"
-                    value={formularioEstudio.currentlyStudying ? '' : formularioEstudio.end_month}
-                    onChange={manejarCambioEstudio}
-                    className="softsave-input softsave-profile__input"
-                    disabled={formularioEstudio.currentlyStudying}
-                  />
+                  <div className="softsave-profile__study-end-header">
+                    <span className="softsave-profile__label">Fecha de Fin</span>
+                    <label className="softsave-profile__checkbox softsave-profile__checkbox--study-end">
+                      <input
+                        type="checkbox"
+                        name="currentlyStudying"
+                        checked={formularioEstudio.currentlyStudying}
+                        onChange={manejarCambioEstudio}
+                      />
+                      <span>Actualmente cursando</span>
+                    </label>
+                  </div>
                   {formularioEstudio.currentlyStudying ? (
-                    <span className="softsave-profile__help">Presente</span>
-                  ) : null}
+                    <input
+                      type="text"
+                      value="Presente"
+                      className="softsave-input softsave-profile__input"
+                      readOnly
+                      aria-label="Fecha de fin: Presente"
+                    />
+                  ) : (
+                    <input
+                      type="month"
+                      name="end_month"
+                      value={formularioEstudio.end_month}
+                      onChange={manejarCambioEstudio}
+                      className="softsave-input softsave-profile__input"
+                    />
+                  )}
                   {erroresEstudio.end_month ? (
                     <span className="error-text softsave-profile__error-text" role="alert">
                       {erroresEstudio.end_month}
@@ -475,16 +492,6 @@ function AcademicExperienceSection({
                 />
               </label>
 
-              <label className="softsave-profile__checkbox">
-                <input
-                  type="checkbox"
-                  name="currentlyStudying"
-                  checked={formularioEstudio.currentlyStudying}
-                  onChange={manejarCambioEstudio}
-                />
-                <span>Actualmente cursando</span>
-              </label>
-
               {mensajeAcademicoError ? (
                 <span className="error-text softsave-profile__error-text" role="alert">
                   {mensajeAcademicoError}
@@ -500,7 +507,8 @@ function AcademicExperienceSection({
                   Cancelar
                 </button>
                 <button type="submit" className="softsave-button softsave-button--compact" disabled={guardandoEstudio}>
-                  {guardandoEstudio ? 'Guardando...' : 'Guardar Cambios'}
+                  <Icon path={mdiContentSaveOutline} size={0.8} />
+                  {guardandoEstudio ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
             </form>
