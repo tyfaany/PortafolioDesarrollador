@@ -107,3 +107,65 @@ select.softsave-input::-ms-expand {
   font-size: 0.85rem;
   margin-top: -8px;
 }
+
+.softsave-feedback-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1300;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(92vw, 440px);
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  box-shadow: 0 12px 28px rgba(var(--color-texto-rgb), 0.16);
+  background-color: var(--color-blanco);
+}
+
+.softsave-feedback-toast--success {
+  border-color: rgba(var(--color-exito-rgb), 0.22);
+  background-color: #f3fbf6;
+  color: #208a4f;
+}
+
+.softsave-feedback-toast--error {
+  border-color: rgba(var(--color-error-rgb), 0.26);
+  background-color: #fff4f3;
+  color: var(--color-error);
+}
+
+.softsave-feedback-toast__icon {
+  flex: 0 0 auto;
+}
+
+.softsave-feedback-toast__text {
+  min-width: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.softsave-feedback-toast__close {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: currentColor;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .softsave-feedback-toast {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    max-width: none;
+  }
+}

@@ -9,6 +9,7 @@ import {
   mdiPlus,
 } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
+import useFeedback from '../hooks/useFeedback';
 import { actualizarJob, crearJob, eliminarJob, obtenerJobs } from '../services/authService';
 import { getPortfolioCache, setPortfolioCache } from '../services/portfolioCache';
 
@@ -265,6 +266,7 @@ function formatearPeriodo(fechaInicio, fechaFin) {
 
 function PortfolioWorkExperienceSection() {
   const { user } = useAuth();
+  const { showFeedback } = useFeedback();
   const aniosDisponibles = useMemo(() => obtenerAniosDisponibles(), []);
   const mesActual = useMemo(() => new Date().toISOString().slice(0, 7), []);
   const trabajosDesdeContexto = useMemo(
@@ -337,6 +339,15 @@ function PortfolioWorkExperienceSection() {
       document.body.style.overflow = overflowPrevio;
     };
   }, [estaModalAbierto, trabajoPendienteEliminar]);
+
+  useEffect(() => {
+    if (!mensajeExito) {
+      return;
+    }
+
+    showFeedback(mensajeExito, 'success');
+    setMensajeExito('');
+  }, [mensajeExito, showFeedback]);
 
   const abrirModalCrear = () => {
     setFormulario(FORMULARIO_LABORAL_INICIAL);
@@ -584,12 +595,6 @@ function PortfolioWorkExperienceSection() {
           </div>
         </div>
 
-        {mensajeExito ? (
-          <div className="success-alert softsave-portafolio-module-card__alert" role="status">
-            {mensajeExito}
-          </div>
-        ) : null}
-
         {trabajos.length > 0 ? (
           <div className="softsave-portafolio-study-list">
             {trabajos.map((trabajo) => (
@@ -823,6 +828,7 @@ function PortfolioWorkExperienceSection() {
           </div>
         </div>
       ) : null}
+
     </>
   );
 }

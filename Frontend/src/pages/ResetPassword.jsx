@@ -3,11 +3,13 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Icon from '@mdi/react';
 import { mdiEyeOffOutline, mdiEyeOutline, mdiLockOutline } from '@mdi/js';
 import Field from '../components/Field';
+import useFeedback from '../hooks/useFeedback';
 import resetPasswordSchema from '../schemas/resetPasswordSchema';
 import { restablecerPassword } from '../services/authService';
 
 // Pagina para establecer la nueva contraseña con el token del email
 const ResetPassword = () => {
+  const { showFeedback } = useFeedback();
   const { token } = useParams();
   const [paramsUrl] = useSearchParams();
   const email = paramsUrl.get('email');
@@ -48,6 +50,7 @@ const ResetPassword = () => {
           passwordConfirmacion: formData.passwordConfirmacion,
         });
         setMensajeExito('Contraseña restablecida correctamente');
+        showFeedback('Contraseña restablecida correctamente', 'success');
         setTimeout(() => navigate('/login'), 2000);
       } catch {
         setErrorServidor('El enlace es inválido o ha expirado');
@@ -79,9 +82,9 @@ const ResetPassword = () => {
           </div>
         )}
         {mensajeExito && (
-          <div className="success-alert" role="status">
-            {mensajeExito}
-          </div>
+          <p className="auth-helper" role="status">
+            Contraseña actualizada. Redirigiendo al inicio de sesión...
+          </p>
         )}
 
         <form className="auth-form" onSubmit={handleSubmit}>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@mdi/react';
 import { mdiClose, mdiContentSaveOutline, mdiDeleteOutline, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
+import useFeedback from '../hooks/useFeedback';
 import {
   obtenerSkillsTecnicas,
   obtenerSoftSkills,
@@ -107,6 +108,7 @@ function obtenerClaseNivel(nivel) {
 
 function PortfolioSkillsSection() {
   const { user } = useAuth();
+  const { showFeedback } = useFeedback();
   const skillInputRef = useRef(null);
   const softSkillsUsuario = useMemo(
     () => user?.softSkills ?? user?.soft_skills ?? [],
@@ -193,6 +195,15 @@ function PortfolioSkillsSection() {
       sigueMontado = false;
     };
   }, [actualizarCacheSkills, blandasDesdeContexto, skillsCacheKey, softSkillsUsuario, tecnicasDesdeContexto, user?.skills]);
+
+  useEffect(() => {
+    if (!mensajeExito) {
+      return;
+    }
+
+    showFeedback(mensajeExito, 'success');
+    setMensajeExito('');
+  }, [mensajeExito, showFeedback]);
 
   useEffect(() => {
     if (!tecnicaPendienteEliminar) {
@@ -586,12 +597,6 @@ function PortfolioSkillsSection() {
         </div>
       </div>
 
-      {mensajeExito ? (
-        <div className="success-alert softsave-portafolio-module-card__alert" role="status">
-          {mensajeExito}
-        </div>
-      ) : null}
-
       {!tieneSkills ? (
         <p className="softsave-portafolio-module-card__empty">
           Añade aquí tus habilidades técnicas y blandas
@@ -883,6 +888,7 @@ function PortfolioSkillsSection() {
           </div>
         </div>
       ) : null}
+
     </>
   );
 }

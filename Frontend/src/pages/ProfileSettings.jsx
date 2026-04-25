@@ -14,6 +14,7 @@ import {
   mdiSchoolOutline,
 } from "@mdi/js";
 import useAuth from "../hooks/useAuth";
+import useFeedback from "../hooks/useFeedback";
 import { actualizarPerfil, subirFoto } from "../services/authService";
 import "../styles/ProfileSettings.css";
 
@@ -106,6 +107,7 @@ function validarUrlProfesional(valor, plataforma) {
 
 function ProfileSettings() {
   const { user, refreshUser } = useAuth();
+  const { showFeedback } = useFeedback();
   const location = useLocation();
   const navigate = useNavigate();
   const { pathname } = location;
@@ -188,6 +190,15 @@ function ProfileSettings() {
       setMensajeGuardadoError("");
     }
   }, [completarPerfil]);
+
+  useEffect(() => {
+    if (!mensajeGuardadoExito) {
+      return;
+    }
+
+    showFeedback(mensajeGuardadoExito, "success");
+    setMensajeGuardadoExito("");
+  }, [mensajeGuardadoExito, showFeedback]);
 
   useEffect(() => {
     if (user?.profile_photo_url) {
@@ -577,15 +588,6 @@ function ProfileSettings() {
           Enlaces profesionales
         </button>
       </div>
-
-      {mensajeGuardadoExito ? (
-        <div
-          className="success-alert softsave-profile__section-alert"
-          role="status"
-        >
-          {mensajeGuardadoExito}
-        </div>
-      ) : null}
 
       {estaModoEdicion ? (
         <form

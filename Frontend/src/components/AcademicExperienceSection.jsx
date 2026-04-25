@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
 import { mdiClose, mdiContentSaveOutline, mdiDeleteOutline, mdiPencilOutline, mdiPlus, mdiSchoolOutline } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
+import useFeedback from '../hooks/useFeedback';
 import { actualizarEstudio, crearEstudio, eliminarEstudio } from '../services/authService';
 
 const FORMULARIO_ESTUDIO_INICIAL = {
@@ -124,6 +125,7 @@ function AcademicExperienceSection({
   variant = 'default',
 }) {
   const { user, refreshUser } = useAuth();
+  const { showFeedback } = useFeedback();
   const [estudios, setEstudios] = useState(() => normalizarEstudios(user?.studies));
   const [estaModalEstudioAbierto, setEstaModalEstudioAbierto] = useState(false);
   const [erroresEstudio, setErroresEstudio] = useState({});
@@ -155,6 +157,15 @@ function AcademicExperienceSection({
       document.body.style.overflow = overflowPrevio;
     };
   }, [estaModalEstudioAbierto, estudioPendienteEliminar]);
+
+  useEffect(() => {
+    if (!mensajeAcademicoExito) {
+      return;
+    }
+
+    showFeedback(mensajeAcademicoExito, 'success');
+    setMensajeAcademicoExito('');
+  }, [mensajeAcademicoExito, showFeedback]);
 
   const abrirModalCrearEstudio = () => {
     setFormularioEstudio(FORMULARIO_ESTUDIO_INICIAL);
@@ -361,12 +372,6 @@ function AcademicExperienceSection({
             </button>
           </div>
         </div>
-
-        {mensajeAcademicoExito ? (
-          <div className={`success-alert ${esPortafolio ? 'softsave-portafolio-module-card__alert' : 'softsave-profile__section-alert'}`} role="status">
-            {mensajeAcademicoExito}
-          </div>
-        ) : null}
 
         {estudios.length === 0 ? (
           <p className={esPortafolio ? 'softsave-portafolio-module-card__empty' : 'softsave-profile__empty softsave-profile__academic-empty'}>
@@ -598,6 +603,7 @@ function AcademicExperienceSection({
           </div>
         </div>
       ) : null}
+
     </>
   );
 }

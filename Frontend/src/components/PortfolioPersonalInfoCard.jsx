@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Icon from '@mdi/react';
 import { mdiAccount, mdiClose, mdiContentSaveOutline, mdiPencilOutline } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
+import useFeedback from '../hooks/useFeedback';
 import { actualizarPerfil } from '../services/authService';
 
 function sanitizarTexto(valor) {
@@ -18,6 +19,7 @@ function esProfesionValida(valor) {
 
 function PortfolioPersonalInfoCard() {
   const { user, refreshUser } = useAuth();
+  const { showFeedback } = useFeedback();
   const [estaModalAbierto, setEstaModalAbierto] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [errores, setErrores] = useState({});
@@ -56,6 +58,15 @@ function PortfolioPersonalInfoCard() {
       document.body.style.overflow = overflowPrevio;
     };
   }, [estaModalAbierto]);
+
+  useEffect(() => {
+    if (!mensajeExito) {
+      return;
+    }
+
+    showFeedback(mensajeExito, 'success');
+    setMensajeExito('');
+  }, [mensajeExito, showFeedback]);
 
   const abrirModal = () => {
     setFormulario({
@@ -169,12 +180,6 @@ function PortfolioPersonalInfoCard() {
             </button>
           </div>
         </div>
-
-        {mensajeExito ? (
-          <div className="success-alert softsave-portafolio-module-card__alert" role="status">
-            {mensajeExito}
-          </div>
-        ) : null}
 
         {hayDatos ? (
           <div className="softsave-portafolio-module-card__content">

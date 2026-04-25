@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import Icon from '@mdi/react';
 import { mdiEmailOutline } from '@mdi/js';
 import Field from '../components/Field';
+import useFeedback from '../hooks/useFeedback';
 import forgotPasswordSchema from '../schemas/forgotPasswordSchema';
 import { solicitarRecuperacion } from '../services/authService';
 
 // Pagina para solicitar el enlace de recuperacion de contraseña
 const ForgotPassword = () => {
+  const { showFeedback } = useFeedback();
   const [formData, setFormData] = useState({ email: '' });
   const [errores, setErrores] = useState({});
   const [errorServidor, setErrorServidor] = useState('');
@@ -41,6 +43,7 @@ const ForgotPassword = () => {
       try {
         await solicitarRecuperacion(formData.email);
         setMensajeExito('Enlace de recuperación enviado al correo');
+        showFeedback('Enlace de recuperación enviado al correo. Revisa tu buzón.', 'success');
         setMensajeEstado('');
       } catch {
         setErrorServidor('No pudimos procesar la solicitud. Intenta de nuevo.');
@@ -75,9 +78,9 @@ const ForgotPassword = () => {
         )}
 
         {mensajeExito ? (
-          <div className="success-alert" role="status">
-            {mensajeExito}. Revisa tu buzón
-          </div>
+          <p className="auth-helper" role="status">
+            Revisa tu buzón de correo para continuar.
+          </p>
         ) : (
           <form className="auth-form" onSubmit={handleSubmit}>
             <Field
