@@ -68,6 +68,11 @@ function extraerPartesFecha(fecha) {
 }
 
 function mesNombreANumero(nombreMes) {
+  const mesComoNumero = Number.parseInt(String(nombreMes || '').trim(), 10);
+  if (!Number.isNaN(mesComoNumero) && mesComoNumero >= 1 && mesComoNumero <= 12) {
+    return String(mesComoNumero).padStart(2, '0');
+  }
+
   const mapaMeses = {
     Enero: '01',
     Febrero: '02',
@@ -83,7 +88,12 @@ function mesNombreANumero(nombreMes) {
     Diciembre: '12',
   };
 
-  return mapaMeses[nombreMes] || '01';
+  const nombreNormalizado = String(nombreMes || '').trim();
+  const nombreConFormato = nombreNormalizado
+    ? `${nombreNormalizado.charAt(0).toUpperCase()}${nombreNormalizado.slice(1).toLowerCase()}`
+    : '';
+
+  return mapaMeses[nombreConFormato] || '01';
 }
 
 function obtenerNombreMes(valorMes) {
@@ -129,25 +139,38 @@ function normalizarTrabajos(trabajos) {
     return [];
   }
 
-  const trabajosNormalizados = trabajos.map((trabajo, indice) => ({
+  const trabajosNormalizados = trabajos.map((trabajo, indice) => {
+    const startYear = trabajo.start_year ?? trabajo.startYear;
+    const endYear = trabajo.end_year ?? trabajo.endYear;
+    const startMonth = trabajo.start_month ?? trabajo.startMonth;
+    const endMonth = trabajo.end_month ?? trabajo.endMonth;
+    const startDateRaw = trabajo.start_date ?? trabajo.startDate;
+    const endDateRaw = trabajo.end_date ?? trabajo.endDate;
+    const isCurrentRaw = trabajo.is_current_job ?? trabajo.isCurrentJob;
+    const isCurrent = Boolean(isCurrentRaw === true || isCurrentRaw === 1 || isCurrentRaw === '1');
+
+    return {
     // Prioriza fechas ya normalizadas (start_date/end_date), útil al reconstruir desde caché local.
     ...trabajo,
     id: trabajo.id || `local-job-${indice}`,
     company_name: trabajo.company_name || '',
     position: trabajo.position || '',
-    start_date: trabajo.start_year && trabajo.start_month
-      ? `${trabajo.start_year}-${mesNombreANumero(trabajo.start_month)}-01`
-      : (trabajo.start_date ? String(trabajo.start_date).slice(0, 10) : ''),
-    end_date: trabajo.is_current_job
+    start_date: startDateRaw
+      ? String(startDateRaw).slice(0, 10)
+      : (startYear && startMonth
+        ? `${startYear}-${mesNombreANumero(startMonth)}-01`
+        : ''),
+    end_date: isCurrent
       ? null
-      : (trabajo.end_date
-        ? String(trabajo.end_date).slice(0, 10)
-        : (trabajo.end_year && trabajo.end_month
-          ? `${trabajo.end_year}-${mesNombreANumero(trabajo.end_month)}-01`
+      : (endDateRaw
+        ? String(endDateRaw).slice(0, 10)
+        : (endYear && endMonth
+          ? `${endYear}-${mesNombreANumero(endMonth)}-01`
           : null)),
-    is_current_job: Boolean(trabajo.is_current_job),
+    is_current_job: isCurrent,
     description: trabajo.achievements ?? trabajo.description ?? '',
-  }));
+    };
+  });
 
   return ordenarTrabajosPorPeriodo(trabajosNormalizados);
 }
@@ -207,16 +230,16 @@ function formatearPeriodo(fechaInicio, fechaFin) {
     timeZone: 'UTC',
   });
 
-  const formatear = (valor) => {
+  const formatear = (valor, esFechaInicio = false) => {
     if (!valor) {
-      return 'Presente';
+      return esFechaInicio ? 'Sin fecha de inicio' : 'Presente';
     }
 
     const fecha = new Date(`${String(valor).slice(0, 10)}T00:00:00Z`);
     return formateador.format(fecha);
   };
 
-  return `${formatear(fechaInicio)} - ${formatear(fechaFin)}`;
+  return `${formatear(fechaInicio, true)} - ${formatear(fechaFin)}`;
 }
 
 function PortfolioWorkExperienceSection() {
@@ -255,9 +278,6 @@ function PortfolioWorkExperienceSection() {
     if (trabajosDesdeContexto.length > 0) {
       setTrabajos(trabajosDesdeContexto);
       setPortfolioCache(jobsCacheKey, trabajosDesdeContexto);
-      return () => {
-        sigueMontado = false;
-      };
     }
 
     obtenerJobs()
@@ -269,7 +289,7 @@ function PortfolioWorkExperienceSection() {
         }
       })
       .catch(() => {
-        if (sigueMontado) {
+        if (sigueMontado && trabajosDesdeContexto.length === 0) {
           const trabajosNormalizados = trabajosDesdeContexto;
           setTrabajos(trabajosNormalizados);
           setPortfolioCache(jobsCacheKey, trabajosNormalizados);
