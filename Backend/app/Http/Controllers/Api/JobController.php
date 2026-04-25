@@ -99,7 +99,8 @@ class JobController extends Controller
             'is_current_job' => 'boolean',
             'end_month' => 'required_if:is_current_job,false',
             'end_year' => 'required_if:is_current_job,false',
-            'achievements' => 'nullable|string'
+            'achievements' => 'nullable|string',
+            'evidence_url' => 'nullable|url|max:255'
         ]);
     }
 
@@ -117,6 +118,7 @@ class JobController extends Controller
             'end_month',
             'end_year',
             'is_current_job',
+            'evidence_url',
         ]);
 
         // Si es trabajo actual, forzamos que las fechas de fin sean nulas para no guardar basura en la BD

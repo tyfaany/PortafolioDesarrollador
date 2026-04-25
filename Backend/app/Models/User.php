@@ -78,7 +78,8 @@ class User extends Authenticatable
     public function skills()
     {
         return $this->belongsToMany(TechnicalSkill::class, 'user_skills')
-                    ->withPivot('level'); // Agregamos esto para que traiga el nivel
+                ->withPivot('level', 'evidence_url') // <-- Añadir aquí
+                ->withTimestamps();
     }
     /**
      * Un usuario tiene muchas habilidades blandas (Muchos a Muchos).
@@ -86,7 +87,9 @@ class User extends Authenticatable
      */
     public function softSkills()
     {
-        return $this->belongsToMany(SoftSkill::class);
+        return $this->belongsToMany(SoftSkill::class, 'soft_skill_user')
+                ->withPivot('evidence_url') // <-- Añadir aquí
+                ->withTimestamps();
     }
 
     // --- NUEVO: Agregamos la función del Accessor al final ---
