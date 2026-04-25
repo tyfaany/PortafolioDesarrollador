@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@mdi/react';
-import { mdiClose, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
+import { mdiClose, mdiDeleteOutline, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
 import {
   obtenerSkillsTecnicas,
@@ -309,6 +309,23 @@ function PortfolioSkillsSection() {
     }
   };
 
+  const eliminarHabilidadTecnica = async (id) => {
+    const tecnicasActualizadas = tecnicas.filter((skill) => String(skill.id) !== String(id));
+
+    try {
+      const persistido = await persistirSkillsTecnicas(tecnicasActualizadas);
+      if (!persistido) {
+        return;
+      }
+      setTecnicas(tecnicasActualizadas);
+      actualizarCacheSkills(tecnicasActualizadas, blandas);
+      setErrores((actual) => ({ ...actual, tecnica: '' }));
+      setMensajeExito('Habilidad técnica eliminada correctamente.');
+    } catch {
+      setErrores({ tecnica: 'No se pudo eliminar la habilidad técnica.' });
+    }
+  };
+
   const guardarBlanda = async () => {
     const nombre = sanitizarTexto(skillBlandaNueva);
 
@@ -441,15 +458,25 @@ function PortfolioSkillsSection() {
                   <span className="softsave-portafolio-skills__name">{skill.name}</span>
                   <div className="softsave-portafolio-skills__level-wrap">
                     {isEditing ? (
-                      <select
-                        value={skill.level}
-                        onChange={(evento) => cambiarNivel(skill.id, evento.target.value)}
-                        className="softsave-input softsave-portafolio-skills__select"
-                      >
-                        {NIVELES_TECNICOS.map((nivel) => (
-                          <option key={nivel} value={nivel}>{nivel}</option>
-                        ))}
-                      </select>
+                      <>
+                        <select
+                          value={skill.level}
+                          onChange={(evento) => cambiarNivel(skill.id, evento.target.value)}
+                          className="softsave-input softsave-portafolio-skills__select"
+                        >
+                          {NIVELES_TECNICOS.map((nivel) => (
+                            <option key={nivel} value={nivel}>{nivel}</option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary softsave-portafolio-skills__tech-remove"
+                          aria-label={`Eliminar habilidad técnica ${skill.name}`}
+                          onClick={() => eliminarHabilidadTecnica(skill.id)}
+                        >
+                          <Icon path={mdiDeleteOutline} size={ICON_SIZES.action} />
+                        </button>
+                      </>
                     ) : (
                       <>
                         <span className={`softsave-portafolio-skills__badge ${obtenerClaseNivel(skill.level)}`}>
