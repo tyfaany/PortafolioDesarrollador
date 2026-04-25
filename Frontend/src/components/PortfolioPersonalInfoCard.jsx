@@ -8,6 +8,14 @@ function sanitizarTexto(valor) {
   return String(valor || '').replace(/\s+/g, ' ').trim();
 }
 
+function normalizarProfesion(valor) {
+  return String(valor || '').replace(/[^\p{L}\p{N}\s.,\-\/()&]/gu, '');
+}
+
+function esProfesionValida(valor) {
+  return /^(?=.*\p{L})[\p{L}\p{N}]+(?:[ .,&()\/-][\p{L}\p{N}]+)*$/u.test(valor);
+}
+
 function PortfolioPersonalInfoCard() {
   const { user, refreshUser } = useAuth();
   const [estaModalAbierto, setEstaModalAbierto] = useState(false);
@@ -68,10 +76,11 @@ function PortfolioPersonalInfoCard() {
 
   const manejarCambio = (evento) => {
     const { name, value } = evento.target;
+    const valorProcesado = name === 'profesion' ? normalizarProfesion(value) : value;
 
     setFormulario((actual) => ({
       ...actual,
-      [name]: value,
+      [name]: valorProcesado,
     }));
 
     setErrores((actual) => ({
@@ -98,6 +107,8 @@ function PortfolioPersonalInfoCard() {
       nuevosErrores.profesion = 'El título es obligatorio.';
     } else if (profesionLimpia.length > 100) {
       nuevosErrores.profesion = 'El título debe tener máximo 100 caracteres.';
+    } else if (!esProfesionValida(profesionLimpia)) {
+      nuevosErrores.profesion = 'El título debe tener palabras válidas y no secuencias de símbolos.';
     }
 
     if (biografiaLimpia.length > 1000) {

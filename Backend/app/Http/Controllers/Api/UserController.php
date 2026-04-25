@@ -29,7 +29,7 @@ class UserController extends Controller
 
     $validated = $request->validate([
         'name'         => 'required|string|max:255',
-        'profession'   => 'nullable|string|max:100',
+        'profession'   => 'nullable|string|max:100|regex:/^(?=.*\pL)[\pL\pN]+(?:[ .,&()\/-][\pL\pN]+)*$/u',
         'biography'    => 'nullable|string|max:1000',
         'github_url'   => [
             'nullable', 'url', 'max:200',
