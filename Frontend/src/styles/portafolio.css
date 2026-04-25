@@ -361,7 +361,11 @@
 }
 
 .softsave-portafolio-skills__select {
-  max-width: 220px;
+  max-width: 160px;
+}
+
+.softsave-portafolio-skills__name-input {
+  min-width: 0;
 }
 
 .softsave-portafolio-skills__tech-remove {

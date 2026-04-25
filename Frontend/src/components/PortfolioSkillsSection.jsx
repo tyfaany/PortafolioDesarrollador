@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@mdi/react';
-import { mdiClose, mdiDeleteOutline, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
+import { mdiClose, mdiContentSaveOutline, mdiDeleteOutline, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
 import {
   obtenerSkillsTecnicas,
@@ -133,6 +133,7 @@ function PortfolioSkillsSection() {
   const [nivelNuevo, setNivelNuevo] = useState('Intermedio');
   const [skillBlandaNueva, setSkillBlandaNueva] = useState('');
   const [indiceBlandaEditando, setIndiceBlandaEditando] = useState(null);
+  const [nombresTecnicosEditando, setNombresTecnicosEditando] = useState({});
   const [errores, setErrores] = useState({});
   const [mensajeExito, setMensajeExito] = useState('');
 
@@ -201,10 +202,14 @@ function PortfolioSkillsSection() {
       const siguiente = !actual;
       if (siguiente) {
         setIsAdding(false);
+        setNombresTecnicosEditando(
+          tecnicas.reduce((acumulado, skill) => ({ ...acumulado, [skill.id]: skill.name }), {}),
+        );
       } else {
         setMostrandoAgregarBlanda(false);
         setSkillBlandaNueva('');
         setIndiceBlandaEditando(null);
+        setNombresTecnicosEditando({});
       }
       return siguiente;
     });
@@ -220,10 +225,12 @@ function PortfolioSkillsSection() {
         setNivelNuevo('Intermedio');
         setSkillBlandaNueva('');
         setIndiceBlandaEditando(null);
+        setNombresTecnicosEditando({});
       } else {
         setIsEditing(false);
         setMostrandoAgregarBlanda(false);
         setIndiceBlandaEditando(null);
+        setNombresTecnicosEditando({});
         setTimeout(() => skillInputRef.current?.focus(), 0);
       }
       return siguiente;
@@ -333,12 +340,72 @@ function PortfolioSkillsSection() {
         actualizarCacheSkills(tecnicasPrevias, blandas);
         return;
       }
+      setNombresTecnicosEditando((actual) => {
+        const siguiente = { ...actual };
+        delete siguiente[id];
+        return siguiente;
+      });
       setErrores((actual) => ({ ...actual, tecnica: '' }));
       setMensajeExito('Habilidad técnica eliminada correctamente.');
     } catch {
       setTecnicas(tecnicasPrevias);
       actualizarCacheSkills(tecnicasPrevias, blandas);
       setErrores({ tecnica: 'No se pudo eliminar la habilidad técnica.' });
+    }
+  };
+
+  const confirmarEdicionNombreTecnico = async (id) => {
+    const skillActual = tecnicas.find((skill) => String(skill.id) === String(id));
+    if (!skillActual) {
+      return;
+    }
+
+    const nombreEditado = sanitizarTexto(nombresTecnicosEditando[id] ?? skillActual.name);
+    if (!nombreEditado) {
+      setErrores({ tecnica: 'El nombre de la habilidad técnica es obligatorio.' });
+      setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
+      return;
+    }
+
+    const nombreDuplicado = tecnicas.some(
+      (skill) => String(skill.id) !== String(id) && skill.name.toLowerCase() === nombreEditado.toLowerCase(),
+    );
+    if (nombreDuplicado) {
+      setErrores({ tecnica: 'Esa habilidad técnica ya existe.' });
+      setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
+      return;
+    }
+
+    if (nombreEditado === skillActual.name) {
+      setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
+      return;
+    }
+
+    const tecnicasPrevias = tecnicas;
+    const tecnicasActualizadas = tecnicas.map(
+      (skill) => (String(skill.id) === String(id) ? { ...skill, name: nombreEditado } : skill),
+    );
+
+    setTecnicas(tecnicasActualizadas);
+    actualizarCacheSkills(tecnicasActualizadas, blandas);
+    setErrores((actual) => ({ ...actual, tecnica: '' }));
+    setMensajeExito('');
+    setNombresTecnicosEditando((actual) => ({ ...actual, [id]: nombreEditado }));
+
+    try {
+      const persistido = await persistirSkillsTecnicas(tecnicasActualizadas);
+      if (!persistido) {
+        setTecnicas(tecnicasPrevias);
+        actualizarCacheSkills(tecnicasPrevias, blandas);
+        setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
+        return;
+      }
+      setMensajeExito('Habilidad técnica actualizada correctamente.');
+    } catch {
+      setTecnicas(tecnicasPrevias);
+      actualizarCacheSkills(tecnicasPrevias, blandas);
+      setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
+      setErrores({ tecnica: 'No se pudo actualizar la habilidad técnica.' });
     }
   };
 
@@ -489,7 +556,31 @@ function PortfolioSkillsSection() {
 
               {tecnicas.map((skill) => (
                 <div key={skill.id} className="softsave-portafolio-skills__row">
-                  <span className="softsave-portafolio-skills__name">{skill.name}</span>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={nombresTecnicosEditando[skill.id] ?? skill.name}
+                      onChange={(evento) => {
+                        setNombresTecnicosEditando((actual) => ({
+                          ...actual,
+                          [skill.id]: evento.target.value,
+                        }));
+                        setErrores((actual) => ({ ...actual, tecnica: '' }));
+                        setMensajeExito('');
+                      }}
+                      onBlur={() => confirmarEdicionNombreTecnico(skill.id)}
+                      onKeyDown={(evento) => {
+                        if (evento.key === 'Enter') {
+                          evento.preventDefault();
+                          evento.currentTarget.blur();
+                        }
+                      }}
+                      className="softsave-input softsave-profile__input softsave-portafolio-skills__name-input"
+                      aria-label={`Nombre de la habilidad técnica ${skill.name}`}
+                    />
+                  ) : (
+                    <span className="softsave-portafolio-skills__name">{skill.name}</span>
+                  )}
                   <div className="softsave-portafolio-skills__level-wrap">
                     {isEditing ? (
                       <>
@@ -502,6 +593,14 @@ function PortfolioSkillsSection() {
                             <option key={nivel} value={nivel}>{nivel}</option>
                           ))}
                         </select>
+                        <button
+                          type="button"
+                          className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary softsave-portafolio-skills__tech-remove"
+                          aria-label={`Guardar habilidad técnica ${skill.name}`}
+                          onClick={() => confirmarEdicionNombreTecnico(skill.id)}
+                        >
+                          <Icon path={mdiContentSaveOutline} size={ICON_SIZES.action} />
+                        </button>
                         <button
                           type="button"
                           className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary softsave-portafolio-skills__tech-remove"
@@ -677,17 +776,18 @@ function PortfolioSkillsSection() {
               </div>
 
               <div className="softsave-portafolio-skills__suggestions">
-                {SUGERENCIAS_BLANDAS.map((skill) => (
+                {SUGERENCIAS_BLANDAS
+                  .filter((skill) => !blandas.some((actual) => actual.toLowerCase() === skill.toLowerCase()))
+                  .map((skill) => (
                   <button
                     key={skill}
                     type="button"
                     className="softsave-portafolio-skills__suggestion"
                     onClick={() => agregarDesdeSugerencia(skill)}
-                    disabled={blandas.some((actual) => actual.toLowerCase() === skill.toLowerCase())}
                   >
                     {skill}
                   </button>
-                ))}
+                  ))}
               </div>
             </>
           ) : null}
