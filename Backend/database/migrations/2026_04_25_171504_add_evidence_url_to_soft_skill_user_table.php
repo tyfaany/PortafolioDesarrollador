@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('soft_skill_user', function (Blueprint $table) {
-            //
+            $table->dropColumn('evidence_url');
         });
     }
 };

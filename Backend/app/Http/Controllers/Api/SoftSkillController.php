@@ -21,27 +21,47 @@ class SoftSkillController extends Controller
      */
     public function sync(Request $request)
     {
-        // Validamos que sea un arreglo de textos (strings)
+        // Validamos que sea un arreglo de strings (legacy) u objetos {name, evidence_url}
         $request->validate([
             'skills' => 'present|array',
-            'skills.*' => 'required|string|max:50',
+            'skills.*' => 'required',
+            'skills.*.name' => 'sometimes|required|string|max:50',
+            'skills.*.evidence_url' => 'nullable|url|max:255',
         ]);
 
         $user = $request->user();
-        $syncIds = [];
+        $syncData = [];
 
-        foreach ($request->skills as $skillName) {
-            // Buscamos o creamos la habilidad en el catálogo global
+        foreach ($request->skills as $skillItem) {
+            $isObject = is_array($skillItem);
+            $skillName = $isObject ? ($skillItem['name'] ?? null) : $skillItem;
+            $evidenceUrl = $isObject ? ($skillItem['evidence_url'] ?? null) : null;
+
+            if (!is_string($skillName) || trim($skillName) === '') {
+                return response()->json([
+                    'message' => 'Cada habilidad debe ser un texto o un objeto con el campo name.'
+                ], 422);
+            }
+
+            $skillName = trim($skillName);
+            if (mb_strlen($skillName, 'UTF-8') > 50) {
+                return response()->json([
+                    'message' => 'El nombre de la habilidad no puede superar los 50 caracteres.'
+                ], 422);
+            }
+
+            // Buscamos o creamos la habilidad en el catálogo global.
             $softSkill = SoftSkill::firstOrCreate([
-                'name' => mb_strtolower(trim($skillName), 'UTF-8')
+                'name' => mb_strtolower($skillName, 'UTF-8')
             ]);
 
-            // Solo guardamos los IDs para sincronizar
-            $syncIds[] = $softSkill->id;
+            $syncData[$softSkill->id] = [
+                'evidence_url' => $evidenceUrl
+            ];
         }
 
-        // Sincronizamos los IDs con el usuario (asigna, actualiza o elimina)
-        $user->softSkills()->sync($syncIds);
+        // Sincronizamos los IDs con su metadata de pivot (asigna, actualiza o elimina)
+        $user->softSkills()->sync($syncData);
 
         return response()->json([
             'message' => 'Habilidades blandas actualizadas correctamente',

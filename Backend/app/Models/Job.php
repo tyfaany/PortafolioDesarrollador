@@ -34,6 +34,7 @@ class Job extends Model
         'end_month',
         'end_year',
         'is_current_job',
+        'evidence_url',
     ];
 
     /**
