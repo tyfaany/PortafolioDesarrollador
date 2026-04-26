@@ -43,7 +43,8 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Usuario registrado correctamente',
+            'status' => 'success',
+            'message' => 'Usuario registrado correctamente.',
             'user' => $user,
             'token' => $token,
         ], 201);
@@ -74,7 +75,8 @@ class AuthController extends Controller
         // Pasamos el $remember al intento de autenticación
         if (!Auth::attempt($credentials, $remember)) {
             return response()->json([
-                'message' => 'Credenciales incorrectas'
+                'status' => 'error',
+                'message' => 'Credenciales incorrectas.'
             ], 401);
         }
 
@@ -83,14 +85,15 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Login exitoso',
+            'status' => 'success',
+            'message' => 'Inicio de sesión exitoso.',
             'token' => $token,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
             ]
-        ]);
+        ], 200);
     }
 
     /**
@@ -101,8 +104,9 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Sesión cerrada correctamente'
-        ]);
+            'status' => 'success',
+            'message' => 'Sesión cerrada correctamente.'
+        ], 200);
     }
 
     /**
@@ -118,10 +122,16 @@ class AuthController extends Controller
         $status = Password::sendResetLink($request->only('email'));
 
         if ($status === Password::RESET_LINK_SENT) {
-            return response()->json(['message' => 'Enlace de recuperación enviado al correo']);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Enlace de recuperación enviado al correo.'
+            ], 200);
         }
 
-        return response()->json(['message' => 'No pudimos encontrar un usuario con ese correo'], 400);
+        return response()->json([
+            'status' => 'error',
+            'message' => 'No pudimos encontrar un usuario con ese correo.'
+        ], 400);
     }
 
     public function resetPassword(Request $request)
@@ -145,12 +155,14 @@ class AuthController extends Controller
         // 3. Respondemos según el resultado
         if ($status === Password::PASSWORD_RESET) {
             return response()->json([
-                'message' => 'Contraseña restablecida correctamente'
+                'status' => 'success',
+                'message' => 'Contraseña restablecida correctamente.'
             ], 200);
         }
 
         return response()->json([
-            'message' => 'El token es inválido o el correo no coincide'
+            'status' => 'error',
+            'message' => 'El token es inválido o el correo no coincide.'
         ], 400);
     }
 
@@ -171,7 +183,8 @@ class AuthController extends Controller
     
         if (!Hash::check($request->current_password, $user->password)) {
             return response()->json([
-                'message' => 'La contraseña actual es incorrecta'
+                'status' => 'error',
+                'message' => 'La contraseña actual es incorrecta.'
             ], 422);
         }
 
@@ -179,7 +192,8 @@ class AuthController extends Controller
         $user->save();
 
         return response()->json([
-            'message' => 'actualizacion exitosa'
+            'status' => 'success',
+            'message' => 'Actualización exitosa.'
         ], 200);
     }
     public function uploadPhoto(Request $request)
@@ -205,7 +219,8 @@ class AuthController extends Controller
 
         // 5. Devolvemos una respuesta exitosa con la URL completa de la imagen para que React la muestre
         return response()->json([
-            'message' => 'Foto de perfil actualizada correctamente',
+            'status' => 'success',
+            'message' => 'Foto de perfil actualizada correctamente.',
             'photo_url' => $user->profile_photo_url
         ], 200);
     }

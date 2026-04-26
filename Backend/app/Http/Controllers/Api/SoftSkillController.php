@@ -39,6 +39,7 @@ class SoftSkillController extends Controller
 
             if (!is_string($skillName) || trim($skillName) === '') {
                 return response()->json([
+                    'status' => 'error',
                     'message' => 'Cada habilidad debe ser un texto o un objeto con el campo name.'
                 ], 422);
             }
@@ -46,6 +47,7 @@ class SoftSkillController extends Controller
             $skillName = trim($skillName);
             if (mb_strlen($skillName, 'UTF-8') > 50) {
                 return response()->json([
+                    'status' => 'error',
                     'message' => 'El nombre de la habilidad no puede superar los 50 caracteres.'
                 ], 422);
             }
@@ -64,7 +66,8 @@ class SoftSkillController extends Controller
         $user->softSkills()->sync($syncData);
 
         return response()->json([
-            'message' => 'Habilidades blandas actualizadas correctamente',
+            'status' => 'success',
+            'message' => 'Habilidades blandas actualizadas correctamente.',
             'soft_skills' => $user->softSkills()->get()
         ], 200);
     }

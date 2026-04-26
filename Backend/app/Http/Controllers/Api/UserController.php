@@ -18,7 +18,7 @@ class UserController extends Controller
         'softSkills',
     ]);
 
-    return response()->json($user);
+    return response()->json($user, 200);
 }
     /**
      * Actualizar datos del usuario autenticado
@@ -56,10 +56,11 @@ class UserController extends Controller
     $user->save();
 
     return response()->json([
-        'message' => 'Información actualizada',
+        'status' => 'success',
+        'message' => 'Información actualizada.',
         
         'user' => $user->fresh() 
-    ]);
+    ], 200);
 }
 private function checkIfProfileIsComplete(User $user, array $newData): bool
     {

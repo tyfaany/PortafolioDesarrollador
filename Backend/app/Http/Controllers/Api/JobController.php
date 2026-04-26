@@ -34,14 +34,18 @@ class JobController extends Controller
         $this->validateJob($request);
 
         if (!$this->checkDateLogic($request)) {
-            return response()->json(['message' => 'La fecha de inicio no puede ser posterior a la fecha de fin.'], 422);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'La fecha de inicio no puede ser posterior a la fecha de fin.'
+            ], 422);
         }
 
         // Creamos el trabajo enlazado automáticamente al usuario actual
         $job = $request->user()->jobs()->create($this->prepareData($request));
 
         return response()->json([
-            'message' => 'Datos guardados correctamente',
+            'status' => 'success',
+            'message' => 'Datos guardados correctamente.',
             'job' => $job
         ], 201);
     }
@@ -54,19 +58,26 @@ class JobController extends Controller
         $job = $request->user()->jobs()->find($id);
 
         if (!$job) {
-            return response()->json(['message' => 'Experiencia laboral no encontrada.'], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Experiencia laboral no encontrada.'
+            ], 404);
         }
 
         $this->validateJob($request);
 
         if (!$this->checkDateLogic($request)) {
-            return response()->json(['message' => 'La fecha de inicio no puede ser posterior a la fecha de fin.'], 422);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'La fecha de inicio no puede ser posterior a la fecha de fin.'
+            ], 422);
         }
 
         $job->update($this->prepareData($request));
 
         return response()->json([
-            'message' => 'Datos actualizados correctamente',
+            'status' => 'success',
+            'message' => 'Datos actualizados correctamente.',
             'job' => $job
         ], 200);
     }
@@ -79,12 +90,18 @@ class JobController extends Controller
         $job = $request->user()->jobs()->find($id);
 
         if (!$job) {
-            return response()->json(['message' => 'Experiencia laboral no encontrada.'], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Experiencia laboral no encontrada.'
+            ], 404);
         }
 
         $job->delete();
 
-        return response()->json(['message' => 'Experiencia laboral eliminada correctamente.'], 200);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Experiencia laboral eliminada correctamente.'
+        ], 200);
     }
 
     // --- MÉTODOS AUXILIARES (Para no repetir código) ---

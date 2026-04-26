@@ -52,7 +52,8 @@ class TechnicalSkillController extends Controller
         $user->skills()->sync($syncData);
 
         return response()->json([
-            'message' => 'Habilidades actualizadas correctamente',
+            'status' => 'success',
+            'message' => 'Habilidades actualizadas correctamente.',
             'skills' => $user->skills()->get() // Devolvemos la lista fresca
         ], 200);
     }

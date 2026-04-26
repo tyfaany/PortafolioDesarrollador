@@ -19,14 +19,14 @@ class StudyController extends Controller
         // Obtenemos todos los estudios de ese usuario ordenados por fecha
         $studies = $user->studies()->orderBy('start_date', 'desc')->get();
         
-        return response()->json($studies);
+        return response()->json($studies, 200);
     }
 
     
     public function index()
     {
         $studies = Auth::user()->studies()->orderBy('start_date', 'desc')->get();
-        return response()->json($studies);
+        return response()->json($studies, 200);
     }
 
     /**
@@ -55,7 +55,10 @@ class StudyController extends Controller
     {
         // Verificamos que el estudio sea del usuario que intenta editar
         if ($study->user_id !== Auth::id()) {
-            return response()->json(['message' => 'No autorizado'], 403);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No autorizado.'
+            ], 403);
         }
 
         $validated = $request->validate([
@@ -68,7 +71,7 @@ class StudyController extends Controller
 
         $study->update($validated);
 
-        return response()->json($study);
+        return response()->json($study, 200);
     }
 
     /**
@@ -77,11 +80,17 @@ class StudyController extends Controller
     public function destroy(Study $study)
     {
         if ($study->user_id !== Auth::id()) {
-            return response()->json(['message' => 'No autorizado'], 403);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No autorizado.'
+            ], 403);
         }
 
         $study->delete();
 
-        return response()->json(['message' => 'Estudio eliminado correctamente']);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Estudio eliminado correctamente.'
+        ], 200);
     }
 }
