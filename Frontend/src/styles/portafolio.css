@@ -284,6 +284,22 @@
   line-height: 1.55;
 }
 
+.softsave-portafolio-evidence-link {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-primario);
+  text-decoration: none;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.softsave-portafolio-evidence-link:hover,
+.softsave-portafolio-evidence-link:focus-visible {
+  text-decoration: underline;
+}
+
 .softsave-portafolio-job-form {
   display: flex;
   flex-direction: column;
@@ -385,6 +401,15 @@
   font-weight: 600;
 }
 
+.softsave-portafolio-skills__name-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
 .softsave-portafolio-skills__level-wrap {
   display: flex;
   align-items: center;
@@ -396,6 +421,15 @@
 }
 
 .softsave-portafolio-skills__name-input {
+  min-width: 0;
+}
+
+.softsave-portafolio-skills__name-edit-wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.softsave-portafolio-skills__evidence-input {
   min-width: 0;
 }
 
@@ -428,6 +462,25 @@
 .softsave-portafolio-skills__badge.is-basic {
   color: #b85b00;
   background-color: #ffe0c7;
+}
+
+.softsave-portafolio-skills__evidence-link {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--color-borde-tarjeta);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primario);
+  background-color: var(--color-blanco);
+  text-decoration: none;
+}
+
+.softsave-portafolio-skills__evidence-link:hover,
+.softsave-portafolio-skills__evidence-link:focus-visible {
+  border-color: rgba(var(--color-primario-rgb), 0.4);
+  background-color: rgba(var(--color-primario-rgb), 0.08);
 }
 
 .softsave-portafolio-skills__bar {
@@ -504,6 +557,19 @@
 
 .softsave-portafolio-skills__chip.is-editing {
   cursor: pointer;
+}
+
+.softsave-portafolio-skills__chip-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--color-primario-rgb), 0.25);
+  color: var(--color-primario);
+  background-color: rgba(var(--color-primario-rgb), 0.1);
+  text-decoration: none;
 }
 
 .softsave-portafolio-skills__chip--add {

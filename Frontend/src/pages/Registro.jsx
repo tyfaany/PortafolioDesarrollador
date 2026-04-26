@@ -33,20 +33,6 @@ const Registro = () => {
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
 
-  const normalizarMensajeBackend = (mensaje = '') => {
-    const mensajeNormalizado = String(mensaje).toLowerCase();
-
-    if (mensajeNormalizado.includes('has already been taken')) {
-      return 'Este correo ya está registrado.';
-    }
-
-    if (mensajeNormalizado.includes('must not be greater than 255 characters')) {
-      return 'El nombre no debe superar 50 caracteres';
-    }
-
-    return mensaje;
-  };
-
   useEffect(() => {
     if (!isAuthenticated) {
       return;
@@ -104,9 +90,9 @@ const Registro = () => {
           }
 
           setErrores({
-            nombre: normalizarMensajeBackend(erroresBackend.name?.[0] || ''),
-            email: normalizarMensajeBackend(erroresBackend.email?.[0] || ''),
-            password: normalizarMensajeBackend(erroresBackend.password?.[0] || ''),
+            nombre: erroresBackend.name?.[0] || '',
+            email: erroresBackend.email?.[0] || '',
+            password: erroresBackend.password?.[0] || '',
           });
           if (!erroresBackend?.name && !erroresBackend?.email && !erroresBackend?.password) {
             setErrorServidor(extractApiMessageByStatus(error, 'Ocurrió un error. Intenta de nuevo.'));

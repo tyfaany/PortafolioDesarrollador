@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@mdi/react';
-import { mdiClose, mdiContentSaveOutline, mdiDeleteOutline, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
+import { mdiClose, mdiContentSaveOutline, mdiDeleteOutline, mdiOpenInNew, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import {
@@ -32,6 +32,23 @@ function sanitizarTexto(valor) {
   return String(valor || '').replace(/\s+/g, ' ').trim();
 }
 
+function sanitizarUrl(valor) {
+  return String(valor || '').trim();
+}
+
+function esUrlValida(valor) {
+  if (!valor) {
+    return true;
+  }
+
+  try {
+    const url = new URL(valor);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 function normalizarNivel(nivel) {
   const limpio = sanitizarTexto(nivel);
   if (limpio === 'Basico') {
@@ -55,6 +72,7 @@ function normalizarSkillsTecnicas(skills) {
           id: `tech-${indice}-${skill}`,
           name: sanitizarTexto(skill),
           level: 'Intermedio',
+          evidence_url: '',
         };
       }
 
@@ -63,6 +81,7 @@ function normalizarSkillsTecnicas(skills) {
           id: skill.id || `tech-${indice}-${skill.name || skill.label || 'skill'}`,
           name: sanitizarTexto(skill.name || skill.label || ''),
           level: normalizarNivel(skill.level || skill.pivot?.level || 'Intermedio'),
+          evidence_url: sanitizarUrl(skill.evidence_url || skill.pivot?.evidence_url || ''),
         };
       }
 
@@ -76,11 +95,47 @@ function normalizarHabilidadesBlandas(skills) {
     return [];
   }
 
-  return [...new Set(
-    skills
-      .map((skill) => (typeof skill === 'string' ? sanitizarTexto(skill) : sanitizarTexto(skill?.name || skill?.label || '')))
-      .filter(Boolean),
-  )];
+  const blandasNormalizadas = skills
+    .map((skill, indice) => {
+      if (typeof skill === 'string') {
+        const name = sanitizarTexto(skill);
+        if (!name) {
+          return null;
+        }
+
+        return {
+          id: `soft-${indice}-${name}`,
+          name,
+          evidence_url: '',
+        };
+      }
+
+      if (skill && typeof skill === 'object') {
+        const name = sanitizarTexto(skill.name || skill.label || '');
+        if (!name) {
+          return null;
+        }
+
+        return {
+          id: skill.id || `soft-${indice}-${name}`,
+          name,
+          evidence_url: sanitizarUrl(skill.evidence_url || skill.pivot?.evidence_url || ''),
+        };
+      }
+
+      return null;
+    })
+    .filter(Boolean);
+
+  const unicas = new Map();
+  blandasNormalizadas.forEach((skill) => {
+    const key = skill.name.toLowerCase();
+    if (!unicas.has(key)) {
+      unicas.set(key, skill);
+    }
+  });
+
+  return [...unicas.values()];
 }
 
 function obtenerAnchoNivel(nivel) {
@@ -134,9 +189,12 @@ function PortfolioSkillsSection() {
   const [mostrandoAgregarBlanda, setMostrandoAgregarBlanda] = useState(false);
   const [skillTecnicaNueva, setSkillTecnicaNueva] = useState('');
   const [nivelNuevo, setNivelNuevo] = useState('Intermedio');
+  const [evidenciaTecnicaNueva, setEvidenciaTecnicaNueva] = useState('');
   const [skillBlandaNueva, setSkillBlandaNueva] = useState('');
+  const [evidenciaBlandaNueva, setEvidenciaBlandaNueva] = useState('');
   const [indiceBlandaEditando, setIndiceBlandaEditando] = useState(null);
   const [nombresTecnicosEditando, setNombresTecnicosEditando] = useState({});
+  const [evidenciasTecnicasEditando, setEvidenciasTecnicasEditando] = useState({});
   const [errores, setErrores] = useState({});
   const [mensajeExito, setMensajeExito] = useState('');
   const [eliminandoTecnica, setEliminandoTecnica] = useState(false);
@@ -232,11 +290,16 @@ function PortfolioSkillsSection() {
         setNombresTecnicosEditando(
           tecnicas.reduce((acumulado, skill) => ({ ...acumulado, [skill.id]: skill.name }), {}),
         );
+        setEvidenciasTecnicasEditando(
+          tecnicas.reduce((acumulado, skill) => ({ ...acumulado, [skill.id]: skill.evidence_url || '' }), {}),
+        );
       } else {
         setMostrandoAgregarBlanda(false);
         setSkillBlandaNueva('');
+        setEvidenciaBlandaNueva('');
         setIndiceBlandaEditando(null);
         setNombresTecnicosEditando({});
+        setEvidenciasTecnicasEditando({});
       }
       return siguiente;
     });
@@ -250,14 +313,18 @@ function PortfolioSkillsSection() {
         setMostrandoAgregarBlanda(false);
         setSkillTecnicaNueva('');
         setNivelNuevo('Intermedio');
+        setEvidenciaTecnicaNueva('');
         setSkillBlandaNueva('');
+        setEvidenciaBlandaNueva('');
         setIndiceBlandaEditando(null);
         setNombresTecnicosEditando({});
+        setEvidenciasTecnicasEditando({});
       } else {
         setIsEditing(false);
         setMostrandoAgregarBlanda(false);
         setIndiceBlandaEditando(null);
         setNombresTecnicosEditando({});
+        setEvidenciasTecnicasEditando({});
         setTimeout(() => skillInputRef.current?.focus(), 0);
       }
       return siguiente;
@@ -275,13 +342,18 @@ function PortfolioSkillsSection() {
     const payload = skillsActuales.map((skill) => ({
       name: skill.name,
       level: normalizarNivel(skill.level).normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+      evidence_url: sanitizarUrl(skill.evidence_url) || null,
     }));
     await sincronizarSkillsTecnicas(payload);
     return true;
   };
 
   const persistirSoftSkills = async (blandasActuales) => {
-    await sincronizarSoftSkills(blandasActuales);
+    const payload = blandasActuales.map((skill) => ({
+      name: skill.name,
+      evidence_url: sanitizarUrl(skill.evidence_url) || null,
+    }));
+    await sincronizarSoftSkills(payload);
   };
 
   const agregarHabilidadTecnica = async () => {
@@ -297,6 +369,11 @@ function PortfolioSkillsSection() {
       return;
     }
 
+    if (!esUrlValida(evidenciaTecnicaNueva)) {
+      setErrores({ tecnica: 'Ingresa una URL válida para la evidencia técnica.' });
+      return;
+    }
+
     if (tecnicas.some((skill) => skill.name.toLowerCase() === nombre.toLowerCase())) {
       setErrores({ tecnica: 'Esa habilidad técnica ya existe.' });
       return;
@@ -308,6 +385,7 @@ function PortfolioSkillsSection() {
         id: `tech-${Date.now()}-${nombre}`,
         name: nombre,
         level: nivelNuevo,
+        evidence_url: sanitizarUrl(evidenciaTecnicaNueva),
       },
     ];
     const tecnicasPrevias = tecnicas;
@@ -326,6 +404,7 @@ function PortfolioSkillsSection() {
       }
       setSkillTecnicaNueva('');
       setNivelNuevo('Intermedio');
+      setEvidenciaTecnicaNueva('');
       setErrores({});
       setMensajeExito('Habilidad técnica registrada correctamente.');
     } catch (error) {
@@ -368,6 +447,11 @@ function PortfolioSkillsSection() {
         return false;
       }
       setNombresTecnicosEditando((actual) => {
+        const siguiente = { ...actual };
+        delete siguiente[id];
+        return siguiente;
+      });
+      setEvidenciasTecnicasEditando((actual) => {
         const siguiente = { ...actual };
         delete siguiente[id];
         return siguiente;
@@ -415,9 +499,16 @@ function PortfolioSkillsSection() {
     }
 
     const nombreEditado = sanitizarTexto(nombresTecnicosEditando[id] ?? skillActual.name);
+    const evidenciaEditada = sanitizarUrl(evidenciasTecnicasEditando[id] ?? (skillActual.evidence_url || ''));
     if (!nombreEditado) {
       setErrores({ tecnica: 'El nombre de la habilidad técnica es obligatorio.' });
       setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
+      return;
+    }
+
+    if (!esUrlValida(evidenciaEditada)) {
+      setErrores({ tecnica: 'Ingresa una URL válida para la evidencia técnica.' });
+      setEvidenciasTecnicasEditando((actual) => ({ ...actual, [id]: skillActual.evidence_url || '' }));
       return;
     }
 
@@ -430,14 +521,17 @@ function PortfolioSkillsSection() {
       return;
     }
 
-    if (nombreEditado === skillActual.name) {
+    if (nombreEditado === skillActual.name && evidenciaEditada === sanitizarUrl(skillActual.evidence_url)) {
       setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
+      setEvidenciasTecnicasEditando((actual) => ({ ...actual, [id]: skillActual.evidence_url || '' }));
       return;
     }
 
     const tecnicasPrevias = tecnicas;
     const tecnicasActualizadas = tecnicas.map(
-      (skill) => (String(skill.id) === String(id) ? { ...skill, name: nombreEditado } : skill),
+      (skill) => (String(skill.id) === String(id)
+        ? { ...skill, name: nombreEditado, evidence_url: evidenciaEditada }
+        : skill),
     );
 
     setTecnicas(tecnicasActualizadas);
@@ -445,6 +539,7 @@ function PortfolioSkillsSection() {
     setErrores((actual) => ({ ...actual, tecnica: '' }));
     setMensajeExito('');
     setNombresTecnicosEditando((actual) => ({ ...actual, [id]: nombreEditado }));
+    setEvidenciasTecnicasEditando((actual) => ({ ...actual, [id]: evidenciaEditada }));
 
     try {
       const persistido = await persistirSkillsTecnicas(tecnicasActualizadas);
@@ -452,6 +547,7 @@ function PortfolioSkillsSection() {
         setTecnicas(tecnicasPrevias);
         actualizarCacheSkills(tecnicasPrevias, blandas);
         setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
+        setEvidenciasTecnicasEditando((actual) => ({ ...actual, [id]: skillActual.evidence_url || '' }));
         return;
       }
       setMensajeExito('Habilidad técnica actualizada correctamente.');
@@ -459,6 +555,7 @@ function PortfolioSkillsSection() {
       setTecnicas(tecnicasPrevias);
       actualizarCacheSkills(tecnicasPrevias, blandas);
       setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
+      setEvidenciasTecnicasEditando((actual) => ({ ...actual, [id]: skillActual.evidence_url || '' }));
       setErrores({ tecnica: extractApiMessageByStatus(error, 'No se pudo actualizar la habilidad técnica.') });
     }
   };
@@ -471,8 +568,14 @@ function PortfolioSkillsSection() {
       return;
     }
 
+    const evidencia = sanitizarUrl(evidenciaBlandaNueva);
+    if (!esUrlValida(evidencia)) {
+      setErrores({ blanda: 'Ingresa una URL válida para la evidencia blanda.' });
+      return;
+    }
+
     const duplicada = blandas.some((skill, indice) =>
-      skill.toLowerCase() === nombre.toLowerCase() && indice !== indiceBlandaEditando);
+      skill.name.toLowerCase() === nombre.toLowerCase() && indice !== indiceBlandaEditando);
 
     if (duplicada) {
       setErrores({ blanda: 'Esa habilidad blanda ya existe.' });
@@ -481,19 +584,23 @@ function PortfolioSkillsSection() {
 
     if (
       indiceBlandaEditando !== null
-      && sanitizarTexto(blandas[indiceBlandaEditando]).toLowerCase() === nombre.toLowerCase()
+      && sanitizarTexto(blandas[indiceBlandaEditando]?.name).toLowerCase() === nombre.toLowerCase()
+      && sanitizarUrl(blandas[indiceBlandaEditando]?.evidence_url) === evidencia
     ) {
       setErrores((actual) => ({ ...actual, blanda: '' }));
       setMensajeExito('');
       setSkillBlandaNueva('');
+      setEvidenciaBlandaNueva('');
       setIndiceBlandaEditando(null);
       setMostrandoAgregarBlanda(false);
       return;
     }
 
     const nuevasBlandas = indiceBlandaEditando !== null
-      ? blandas.map((skill, indice) => (indice === indiceBlandaEditando ? nombre : skill))
-      : [...blandas, nombre];
+      ? blandas.map((skill, indice) => (indice === indiceBlandaEditando
+        ? { ...skill, name: nombre, evidence_url: evidencia }
+        : skill))
+      : [...blandas, { id: `soft-${Date.now()}-${nombre}`, name: nombre, evidence_url: evidencia }];
     const blandasPrevias = blandas;
 
     setBlandas(nuevasBlandas);
@@ -504,6 +611,7 @@ function PortfolioSkillsSection() {
     try {
       await persistirSoftSkills(nuevasBlandas);
       setSkillBlandaNueva('');
+      setEvidenciaBlandaNueva('');
       setIndiceBlandaEditando(null);
       setMostrandoAgregarBlanda(false);
       setErrores({});
@@ -520,7 +628,8 @@ function PortfolioSkillsSection() {
   };
 
   const editarBlanda = (skill, indice) => {
-    setSkillBlandaNueva(skill);
+    setSkillBlandaNueva(skill.name);
+    setEvidenciaBlandaNueva(skill.evidence_url || '');
     setIndiceBlandaEditando(indice);
     setMostrandoAgregarBlanda(true);
     setErrores({});
@@ -547,11 +656,11 @@ function PortfolioSkillsSection() {
   };
 
   const agregarDesdeSugerencia = async (skill) => {
-    if (blandas.some((actual) => actual.toLowerCase() === skill.toLowerCase())) {
+    if (blandas.some((actual) => actual.name.toLowerCase() === skill.toLowerCase())) {
       return;
     }
 
-    const nuevasBlandas = [...blandas, skill];
+    const nuevasBlandas = [...blandas, { id: `soft-${Date.now()}-${skill}`, name: skill, evidence_url: '' }];
     const blandasPrevias = blandas;
 
     setBlandas(nuevasBlandas);
@@ -618,29 +727,60 @@ function PortfolioSkillsSection() {
               {tecnicas.map((skill) => (
                 <div key={skill.id} className="softsave-portafolio-skills__row">
                   {isEditing ? (
-                    <input
-                      type="text"
-                      value={nombresTecnicosEditando[skill.id] ?? skill.name}
-                      onChange={(evento) => {
-                        setNombresTecnicosEditando((actual) => ({
-                          ...actual,
-                          [skill.id]: evento.target.value,
-                        }));
-                        setErrores((actual) => ({ ...actual, tecnica: '' }));
-                        setMensajeExito('');
-                      }}
-                      onBlur={() => confirmarEdicionNombreTecnico(skill.id)}
-                      onKeyDown={(evento) => {
-                        if (evento.key === 'Enter') {
-                          evento.preventDefault();
-                          evento.currentTarget.blur();
-                        }
-                      }}
-                      className="softsave-input softsave-profile__input softsave-portafolio-skills__name-input"
-                      aria-label={`Nombre de la habilidad técnica ${skill.name}`}
-                    />
+                    <div className="softsave-portafolio-skills__name-edit-wrap">
+                      <input
+                        type="text"
+                        value={nombresTecnicosEditando[skill.id] ?? skill.name}
+                        onChange={(evento) => {
+                          setNombresTecnicosEditando((actual) => ({
+                            ...actual,
+                            [skill.id]: evento.target.value,
+                          }));
+                          setErrores((actual) => ({ ...actual, tecnica: '' }));
+                          setMensajeExito('');
+                        }}
+                        onBlur={() => confirmarEdicionNombreTecnico(skill.id)}
+                        onKeyDown={(evento) => {
+                          if (evento.key === 'Enter') {
+                            evento.preventDefault();
+                            evento.currentTarget.blur();
+                          }
+                        }}
+                        className="softsave-input softsave-profile__input softsave-portafolio-skills__name-input"
+                        aria-label={`Nombre de la habilidad técnica ${skill.name}`}
+                      />
+                      <input
+                        type="url"
+                        value={evidenciasTecnicasEditando[skill.id] ?? (skill.evidence_url || '')}
+                        onChange={(evento) => {
+                          setEvidenciasTecnicasEditando((actual) => ({
+                            ...actual,
+                            [skill.id]: evento.target.value,
+                          }));
+                          setErrores((actual) => ({ ...actual, tecnica: '' }));
+                          setMensajeExito('');
+                        }}
+                        onBlur={() => confirmarEdicionNombreTecnico(skill.id)}
+                        className="softsave-input softsave-profile__input softsave-portafolio-skills__evidence-input"
+                        placeholder="URL de evidencia (opcional)"
+                        aria-label={`Enlace de evidencia para ${skill.name}`}
+                      />
+                    </div>
                   ) : (
-                    <span className="softsave-portafolio-skills__name">{skill.name}</span>
+                    <div className="softsave-portafolio-skills__name-wrap">
+                      <span className="softsave-portafolio-skills__name">{skill.name}</span>
+                      {skill.evidence_url ? (
+                        <a
+                          href={skill.evidence_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="softsave-portafolio-skills__evidence-link"
+                          aria-label={`Ver evidencia de ${skill.name}`}
+                        >
+                          <Icon path={mdiOpenInNew} size={0.72} />
+                        </a>
+                      ) : null}
+                    </div>
                   )}
                   <div className="softsave-portafolio-skills__level-wrap">
                     {isEditing ? (
@@ -725,6 +865,20 @@ function PortfolioSkillsSection() {
                     ))}
                   </select>
                 </label>
+
+                <label className="softsave-profile__field softsave-portafolio-skills__evidence-field">
+                  <span className="softsave-portafolio-job-form__sub-label">Enlace de evidencia (opcional)</span>
+                  <input
+                    type="url"
+                    value={evidenciaTecnicaNueva}
+                    onChange={(evento) => {
+                      setEvidenciaTecnicaNueva(evento.target.value);
+                      setErrores((actual) => ({ ...actual, tecnica: '' }));
+                    }}
+                    className="softsave-input softsave-profile__input"
+                    placeholder="https://ejemplo.com/certificado"
+                  />
+                </label>
               </div>
 
               {errores.tecnica ? (
@@ -752,17 +906,29 @@ function PortfolioSkillsSection() {
           <div className="softsave-portafolio-skills__chips">
             {blandas.map((skill, indice) => (
               <button
-                key={`${skill}-${indice}`}
+                key={`${skill.name}-${indice}`}
                 type="button"
                 className={`softsave-portafolio-skills__chip ${isEditing ? 'is-editing' : ''}`}
                 onClick={() => (isEditing ? editarBlanda(skill, indice) : undefined)}
               >
-                <span>{skill}</span>
+                <span>{skill.name}</span>
+                {!isEditing && skill.evidence_url ? (
+                  <a
+                    href={skill.evidence_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="softsave-portafolio-skills__chip-link"
+                    aria-label={`Ver evidencia de ${skill.name}`}
+                    onClick={(evento) => evento.stopPropagation()}
+                  >
+                    <Icon path={mdiOpenInNew} size={ICON_SIZES.chipRemove} />
+                  </a>
+                ) : null}
                 {isEditing ? (
                   <button
                     type="button"
                     className="softsave-portafolio-skills__chip-remove"
-                    aria-label={`Eliminar habilidad blanda ${skill}`}
+                    aria-label={`Eliminar habilidad blanda ${skill.name}`}
                     onClick={(evento) => {
                       evento.stopPropagation();
                       eliminarBlanda(indice);
@@ -782,6 +948,7 @@ function PortfolioSkillsSection() {
                   setMostrandoAgregarBlanda(true);
                   setIndiceBlandaEditando(null);
                   setSkillBlandaNueva('');
+                  setEvidenciaBlandaNueva('');
                   setErrores((actual) => ({ ...actual, blanda: '' }));
                   setMensajeExito('');
                 }}
@@ -804,6 +971,17 @@ function PortfolioSkillsSection() {
                 className="softsave-input softsave-profile__input"
                 placeholder="Escribe una habilidad blanda"
               />
+              <input
+                type="url"
+                value={evidenciaBlandaNueva}
+                onChange={(evento) => {
+                  setEvidenciaBlandaNueva(evento.target.value);
+                  setErrores((actual) => ({ ...actual, blanda: '' }));
+                  setMensajeExito('');
+                }}
+                className="softsave-input softsave-profile__input"
+                placeholder="URL de evidencia (opcional)"
+              />
               <div className="softsave-profile__modal-actions">
                 <button
                   type="button"
@@ -811,6 +989,7 @@ function PortfolioSkillsSection() {
                   onClick={() => {
                     setMostrandoAgregarBlanda(false);
                     setSkillBlandaNueva('');
+                    setEvidenciaBlandaNueva('');
                     setIndiceBlandaEditando(null);
                     setErrores((actual) => ({ ...actual, blanda: '' }));
                   }}
@@ -838,7 +1017,7 @@ function PortfolioSkillsSection() {
 
               <div className="softsave-portafolio-skills__suggestions">
                 {SUGERENCIAS_BLANDAS
-                  .filter((skill) => !blandas.some((actual) => actual.toLowerCase() === skill.toLowerCase()))
+                  .filter((skill) => !blandas.some((actual) => actual.name.toLowerCase() === skill.toLowerCase()))
                   .map((skill) => (
                   <button
                     key={skill}

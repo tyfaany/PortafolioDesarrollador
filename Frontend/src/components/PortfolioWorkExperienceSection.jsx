@@ -5,6 +5,7 @@ import {
   mdiClose,
   mdiContentSaveOutline,
   mdiDeleteOutline,
+  mdiOpenInNew,
   mdiPencilOutline,
   mdiPlus,
 } from '@mdi/js';
@@ -24,6 +25,7 @@ const FORMULARIO_LABORAL_INICIAL = {
   end_year: '',
   is_current_job: false,
   description: '',
+  evidence_url: '',
 };
 
 const MESES = [
@@ -43,6 +45,23 @@ const MESES = [
 
 function sanitizarTexto(valor) {
   return String(valor || '').replace(/\s+/g, ' ').trim();
+}
+
+function sanitizarUrl(valor) {
+  return String(valor || '').trim();
+}
+
+function esUrlValida(valor) {
+  if (!valor) {
+    return true;
+  }
+
+  try {
+    const url = new URL(valor);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
 
 function obtenerAniosDisponibles() {
@@ -133,6 +152,7 @@ function construirPayloadTrabajo(formulario) {
     end_month: formulario.is_current_job ? null : obtenerNombreMes(formulario.end_month),
     end_year: formulario.is_current_job ? null : Number(formulario.end_year),
     is_current_job: formulario.is_current_job,
+    evidence_url: sanitizarUrl(formulario.evidence_url) || null,
   };
 }
 
@@ -175,6 +195,7 @@ function normalizarTrabajos(trabajos) {
           : null)),
     is_current_job: isCurrent,
     description: trabajo.achievements ?? trabajo.description ?? '',
+    evidence_url: trabajo.evidence_url ?? '',
     };
   });
 
@@ -226,6 +247,7 @@ function construirFormularioTrabajo(trabajo) {
     end_year: fin.year,
     is_current_job: Boolean(trabajo?.is_current_job || !trabajo?.end_date),
     description: trabajo?.description || '',
+    evidence_url: trabajo?.evidence_url || '',
   };
 }
 
@@ -447,6 +469,10 @@ function PortfolioWorkExperienceSection() {
       nuevosErrores.end_month = 'La fecha de inicio no puede ser posterior a la fecha de fin.';
     }
 
+    if (!esUrlValida(formulario.evidence_url)) {
+      nuevosErrores.evidence_url = 'Ingresa una URL válida (http:// o https://).';
+    }
+
     setErrores(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
   };
@@ -486,6 +512,7 @@ function PortfolioWorkExperienceSection() {
           : construirFechaDesdePartes(formulario.end_year, formulario.end_month)),
         is_current_job: trabajoRespuesta?.is_current_job ?? formulario.is_current_job,
         description: trabajoRespuesta?.description ?? sanitizarTexto(formulario.description),
+        evidence_url: trabajoRespuesta?.evidence_url ?? sanitizarUrl(formulario.evidence_url),
       };
 
       setTrabajos((actual) => {
@@ -627,6 +654,17 @@ function PortfolioWorkExperienceSection() {
                   </p>
                   {trabajo.description ? (
                     <p className="softsave-portafolio-study-card__description">{trabajo.description}</p>
+                  ) : null}
+                  {trabajo.evidence_url ? (
+                    <a
+                      href={trabajo.evidence_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="softsave-portafolio-evidence-link"
+                    >
+                      <Icon path={mdiOpenInNew} size={0.75} />
+                      Ver evidencia
+                    </a>
                   ) : null}
                 </div>
 
@@ -789,6 +827,23 @@ function PortfolioWorkExperienceSection() {
                   onChange={manejarCambio}
                   className="softsave-input softsave-profile__textarea"
                 />
+              </label>
+
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">Enlace de evidencia (opcional)</span>
+                <input
+                  type="url"
+                  name="evidence_url"
+                  value={formulario.evidence_url}
+                  onChange={manejarCambio}
+                  className="softsave-input softsave-profile__input"
+                  placeholder="https://ejemplo.com/evidencia"
+                />
+                {errores.evidence_url ? (
+                  <span className="error-text softsave-profile__error-text" role="alert">
+                    {errores.evidence_url}
+                  </span>
+                ) : null}
               </label>
 
               {mensajeError ? (
