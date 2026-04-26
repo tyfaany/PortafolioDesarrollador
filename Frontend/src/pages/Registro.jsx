@@ -15,6 +15,7 @@ import {
 } from '@mdi/js';
 import Field from '../components/Field';
 import registerSchema from '../schemas/registerSchema';
+import { extractApiMessage } from '../utils/apiError';
 
 // Formulario de registro de nuevo usuario
 const Registro = () => {
@@ -102,8 +103,11 @@ const Registro = () => {
             email: normalizarMensajeBackend(erroresBackend.email?.[0] || ''),
             password: normalizarMensajeBackend(erroresBackend.password?.[0] || ''),
           });
+          if (!erroresBackend?.name && !erroresBackend?.email && !erroresBackend?.password) {
+            setErrorServidor(extractApiMessage(error, 'Ocurrió un error. Intenta de nuevo.'));
+          }
         } else {
-          setErrorServidor('Ocurrió un error. Intenta de nuevo.');
+          setErrorServidor(extractApiMessage(error, 'Ocurrió un error. Intenta de nuevo.'));
         }
       } finally {
         setCargando(false);

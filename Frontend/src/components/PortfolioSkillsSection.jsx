@@ -10,6 +10,7 @@ import {
   sincronizarSoftSkills,
 } from '../services/authService';
 import { getPortfolioCache, setPortfolioCache } from '../services/portfolioCache';
+import { extractApiMessage } from '../utils/apiError';
 
 const NIVELES_TECNICOS = ['Básico', 'Intermedio', 'Avanzado'];
 const ICON_SIZES = {
@@ -327,10 +328,10 @@ function PortfolioSkillsSection() {
       setNivelNuevo('Intermedio');
       setErrores({});
       setMensajeExito('Habilidad técnica registrada correctamente.');
-    } catch {
+    } catch (error) {
       setTecnicas(tecnicasPrevias);
       actualizarCacheSkills(tecnicasPrevias, blandas);
-      setErrores({ tecnica: 'No se pudo guardar la habilidad técnica.' });
+      setErrores({ tecnica: extractApiMessage(error, 'No se pudo guardar la habilidad técnica.') });
     }
   };
 
@@ -345,8 +346,8 @@ function PortfolioSkillsSection() {
       setTecnicas(tecnicasActualizadas);
       actualizarCacheSkills(tecnicasActualizadas, blandas);
       setMensajeExito('Nivel actualizado correctamente.');
-    } catch {
-      setErrores({ tecnica: 'No se pudo actualizar el nivel.' });
+    } catch (error) {
+      setErrores({ tecnica: extractApiMessage(error, 'No se pudo actualizar el nivel.') });
     }
   };
 
@@ -374,10 +375,10 @@ function PortfolioSkillsSection() {
       setErrores((actual) => ({ ...actual, tecnica: '' }));
       setMensajeExito('Habilidad técnica eliminada correctamente.');
       return true;
-    } catch {
+    } catch (error) {
       setTecnicas(tecnicasPrevias);
       actualizarCacheSkills(tecnicasPrevias, blandas);
-      setErrores({ tecnica: 'No se pudo eliminar la habilidad técnica.' });
+      setErrores({ tecnica: extractApiMessage(error, 'No se pudo eliminar la habilidad técnica.') });
       return false;
     }
   };
@@ -454,11 +455,11 @@ function PortfolioSkillsSection() {
         return;
       }
       setMensajeExito('Habilidad técnica actualizada correctamente.');
-    } catch {
+    } catch (error) {
       setTecnicas(tecnicasPrevias);
       actualizarCacheSkills(tecnicasPrevias, blandas);
       setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
-      setErrores({ tecnica: 'No se pudo actualizar la habilidad técnica.' });
+      setErrores({ tecnica: extractApiMessage(error, 'No se pudo actualizar la habilidad técnica.') });
     }
   };
 
@@ -511,10 +512,10 @@ function PortfolioSkillsSection() {
           ? 'Habilidad blanda actualizada correctamente.'
           : 'Habilidad blanda agregada correctamente.',
       );
-    } catch {
+    } catch (error) {
       setBlandas(blandasPrevias);
       actualizarCacheSkills(tecnicas, blandasPrevias);
-      setErrores({ blanda: 'No se pudo guardar la habilidad blanda.' });
+      setErrores({ blanda: extractApiMessage(error, 'No se pudo guardar la habilidad blanda.') });
     }
   };
 
@@ -538,10 +539,10 @@ function PortfolioSkillsSection() {
     try {
       await persistirSoftSkills(nuevasBlandas);
       setMensajeExito('Habilidad blanda eliminada correctamente.');
-    } catch {
+    } catch (error) {
       setBlandas(blandasPrevias);
       actualizarCacheSkills(tecnicas, blandasPrevias);
-      setErrores({ blanda: 'No se pudo eliminar la habilidad blanda.' });
+      setErrores({ blanda: extractApiMessage(error, 'No se pudo eliminar la habilidad blanda.') });
     }
   };
 
@@ -561,10 +562,10 @@ function PortfolioSkillsSection() {
     try {
       await persistirSoftSkills(nuevasBlandas);
       setMensajeExito('Habilidad sugerida agregada correctamente.');
-    } catch {
+    } catch (error) {
       setBlandas(blandasPrevias);
       actualizarCacheSkills(tecnicas, blandasPrevias);
-      setErrores({ blanda: 'No se pudo agregar la habilidad sugerida.' });
+      setErrores({ blanda: extractApiMessage(error, 'No se pudo agregar la habilidad sugerida.') });
     }
   };
 

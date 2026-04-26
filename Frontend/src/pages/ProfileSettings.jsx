@@ -16,6 +16,7 @@ import {
 import useAuth from "../hooks/useAuth";
 import useFeedback from "../hooks/useFeedback";
 import { actualizarPerfil, subirFoto } from "../services/authService";
+import { extractApiMessage } from "../utils/apiError";
 import "../styles/ProfileSettings.css";
 
 const SECCIONES_PERFIL = [
@@ -315,9 +316,9 @@ function ProfileSettings() {
       if (location.state?.completarPerfil) {
         navigate("/perfil", { replace: true });
       }
-    } catch {
+    } catch (error) {
       setMensajeGuardadoError(
-        "No se pudieron guardar los cambios. Intenta de nuevo.",
+        extractApiMessage(error, "No se pudieron guardar los cambios. Intenta de nuevo."),
       );
     } finally {
       setGuardandoPerfil(false);
@@ -436,8 +437,8 @@ function ProfileSettings() {
       setImagenTemporal("");
       setEstaModalAbierto(false);
       setMensajeImagenError("");
-    } catch {
-      setMensajeImagenError("No se pudo subir la imagen. Intenta de nuevo.");
+    } catch (error) {
+      setMensajeImagenError(extractApiMessage(error, "No se pudo subir la imagen. Intenta de nuevo."));
     }
   };
 
@@ -543,9 +544,9 @@ function ProfileSettings() {
       await actualizarPerfil(payload);
       await refreshUser();
       setEstaModalEnlacesAbierto(false);
-    } catch {
+    } catch (error) {
       setMensajeEnlacesError(
-        "No se pudieron guardar los enlaces profesionales.",
+        extractApiMessage(error, "No se pudieron guardar los enlaces profesionales."),
       );
     } finally {
       setGuardandoEnlaces(false);

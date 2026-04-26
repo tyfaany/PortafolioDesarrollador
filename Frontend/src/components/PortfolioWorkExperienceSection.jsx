@@ -12,6 +12,7 @@ import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import { actualizarJob, crearJob, eliminarJob, obtenerJobs } from '../services/authService';
 import { getPortfolioCache, setPortfolioCache } from '../services/portfolioCache';
+import { extractApiMessage } from '../utils/apiError';
 
 const FORMULARIO_LABORAL_INICIAL = {
   id: null,
@@ -136,24 +137,7 @@ function construirPayloadTrabajo(formulario) {
 }
 
 function extraerMensajeErrorTrabajo(error) {
-  const mensajeRespuesta = error?.response?.data?.message;
-  if (mensajeRespuesta) {
-    return String(mensajeRespuesta);
-  }
-
-  const erroresValidacion = error?.response?.data?.errors;
-  if (erroresValidacion && typeof erroresValidacion === 'object') {
-    const primerCampo = Object.keys(erroresValidacion)[0];
-    const primerMensaje = Array.isArray(erroresValidacion[primerCampo])
-      ? erroresValidacion[primerCampo][0]
-      : erroresValidacion[primerCampo];
-
-    if (primerMensaje) {
-      return String(primerMensaje);
-    }
-  }
-
-  return 'No se pudo guardar la experiencia laboral.';
+  return extractApiMessage(error, 'No se pudo guardar la experiencia laboral.');
 }
 
 function normalizarTrabajos(trabajos) {
@@ -567,8 +551,8 @@ function PortfolioWorkExperienceSection() {
       setMensajeError('');
       setMensajeExito('Experiencia laboral eliminada correctamente.');
       setTrabajoPendienteEliminar(null);
-    } catch {
-      setMensajeError('No se pudo eliminar la experiencia laboral.');
+    } catch (error) {
+      setMensajeError(extractApiMessage(error, 'No se pudo eliminar la experiencia laboral.'));
     } finally {
       setEliminandoTrabajo(false);
     }

@@ -5,6 +5,7 @@ import Icon from '@mdi/react';
 import { mdiEmailOutline, mdiEyeOffOutline, mdiEyeOutline, mdiLockOutline } from '@mdi/js';
 import Field from '../components/Field';
 import loginSchema from '../schemas/loginSchema';
+import { extractApiMessage } from '../utils/apiError';
 
 // Formulario de inicio de sesion
 const Login = () => {
@@ -62,8 +63,13 @@ const Login = () => {
       try {
         await login(formData.email, formData.password, formData.recordarme);
         navigate('/inicio');
-      } catch {
-        setErrorServidor('Credenciales no coinciden con nuestros registros');
+      } catch (error) {
+        setErrorServidor(
+          extractApiMessage(
+            error,
+            "Credenciales no coinciden con nuestros registros. Intenta de nuevo.",
+          ),
+        );
       } finally {
         setCargando(false);
       }

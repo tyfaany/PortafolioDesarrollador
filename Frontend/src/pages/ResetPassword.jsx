@@ -6,6 +6,7 @@ import Field from '../components/Field';
 import useFeedback from '../hooks/useFeedback';
 import resetPasswordSchema from '../schemas/resetPasswordSchema';
 import { restablecerPassword } from '../services/authService';
+import { extractApiMessage } from '../utils/apiError';
 
 // Pagina para establecer la nueva contraseña con el token del email
 const ResetPassword = () => {
@@ -52,8 +53,8 @@ const ResetPassword = () => {
         setMensajeExito('Contraseña restablecida correctamente');
         showFeedback('Contraseña restablecida correctamente', 'success');
         setTimeout(() => navigate('/login'), 2000);
-      } catch {
-        setErrorServidor('El enlace es inválido o ha expirado');
+      } catch (error) {
+        setErrorServidor(extractApiMessage(error, 'El enlace es inválido o ha expirado.'));
       } finally {
         setCargando(false);
       }

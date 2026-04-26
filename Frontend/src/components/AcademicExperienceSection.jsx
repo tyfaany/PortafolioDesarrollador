@@ -5,6 +5,7 @@ import { mdiClose, mdiContentSaveOutline, mdiDeleteOutline, mdiPencilOutline, md
 import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import { actualizarEstudio, crearEstudio, eliminarEstudio } from '../services/authService';
+import { extractApiMessage } from '../utils/apiError';
 
 const FORMULARIO_ESTUDIO_INICIAL = {
   id: null,
@@ -291,8 +292,8 @@ function AcademicExperienceSection({
       setEstaModalEstudioAbierto(false);
       setFormularioEstudio(FORMULARIO_ESTUDIO_INICIAL);
       await refreshUser();
-    } catch {
-      setMensajeAcademicoError('No se pudo guardar la información académica.');
+    } catch (error) {
+      setMensajeAcademicoError(extractApiMessage(error, 'No se pudo guardar la información académica.'));
     } finally {
       setGuardandoEstudio(false);
     }
@@ -328,8 +329,8 @@ function AcademicExperienceSection({
       setMensajeAcademicoExito('Experiencia académica eliminada correctamente.');
       setEstudioPendienteEliminar(null);
       await refreshUser();
-    } catch {
-      setMensajeAcademicoError('No se pudo eliminar la experiencia académica.');
+    } catch (error) {
+      setMensajeAcademicoError(extractApiMessage(error, 'No se pudo eliminar la experiencia académica.'));
     } finally {
       setEliminandoEstudio(false);
     }
