@@ -6,7 +6,7 @@ import Field from '../components/Field';
 import useFeedback from '../hooks/useFeedback';
 import forgotPasswordSchema from '../schemas/forgotPasswordSchema';
 import { solicitarRecuperacion } from '../services/authService';
-import { extractApiMessage } from '../utils/apiError';
+import { extractApiMessageByStatus } from '../utils/apiError';
 
 // Pagina para solicitar el enlace de recuperacion de contraseña
 const ForgotPassword = () => {
@@ -47,7 +47,7 @@ const ForgotPassword = () => {
         showFeedback('Enlace de recuperación enviado al correo. Revisa tu buzón.', 'success');
         setMensajeEstado('');
       } catch (error) {
-        setErrorServidor(extractApiMessage(error, 'No pudimos procesar la solicitud. Intenta de nuevo.'));
+        setErrorServidor(extractApiMessageByStatus(error, 'No pudimos procesar la solicitud. Intenta de nuevo.'));
         setMensajeEstado('');
       } finally {
         setCargando(false);

@@ -12,7 +12,7 @@ import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import { actualizarJob, crearJob, eliminarJob, obtenerJobs } from '../services/authService';
 import { getPortfolioCache, setPortfolioCache } from '../services/portfolioCache';
-import { extractApiMessage } from '../utils/apiError';
+import { extractApiMessageByStatus, getApiStatus } from '../utils/apiError';
 
 const FORMULARIO_LABORAL_INICIAL = {
   id: null,
@@ -137,7 +137,7 @@ function construirPayloadTrabajo(formulario) {
 }
 
 function extraerMensajeErrorTrabajo(error) {
-  return extractApiMessage(error, 'No se pudo guardar la experiencia laboral.');
+  return extractApiMessageByStatus(error, 'No se pudo guardar la experiencia laboral.');
 }
 
 function normalizarTrabajos(trabajos) {
@@ -507,6 +507,24 @@ function PortfolioWorkExperienceSection() {
       setEstaModalAbierto(false);
       setFormulario(FORMULARIO_LABORAL_INICIAL);
     } catch (error) {
+      const status = getApiStatus(error);
+      if (status === 403) {
+        setMensajeError('No tienes permisos para realizar esta acción.');
+        return;
+      }
+
+      if (status === 404 && formulario.id) {
+        setTrabajos((actual) => {
+          const trabajosActualizados = actual.filter((item) => String(item.id) !== String(formulario.id));
+          setPortfolioCache(jobsCacheKey, trabajosActualizados);
+          return trabajosActualizados;
+        });
+        setMensajeError('La experiencia laboral ya no existe. Se actualizó la lista.');
+        setEstaModalAbierto(false);
+        setFormulario(FORMULARIO_LABORAL_INICIAL);
+        return;
+      }
+
       setMensajeError(extraerMensajeErrorTrabajo(error));
     } finally {
       setGuardando(false);
@@ -552,7 +570,25 @@ function PortfolioWorkExperienceSection() {
       setMensajeExito('Experiencia laboral eliminada correctamente.');
       setTrabajoPendienteEliminar(null);
     } catch (error) {
-      setMensajeError(extractApiMessage(error, 'No se pudo eliminar la experiencia laboral.'));
+      const status = getApiStatus(error);
+      if (status === 403) {
+        setMensajeError('No tienes permisos para eliminar esta experiencia laboral.');
+        return;
+      }
+
+      if (status === 404) {
+        setTrabajos((actual) => {
+          const trabajosActualizados = actual.filter((item) => String(item.id) !== idTrabajo);
+          setPortfolioCache(jobsCacheKey, trabajosActualizados);
+          return trabajosActualizados;
+        });
+        setMensajeError('');
+        setMensajeExito('La experiencia laboral ya no existía. Se actualizó la lista.');
+        setTrabajoPendienteEliminar(null);
+        return;
+      }
+
+      setMensajeError(extractApiMessageByStatus(error, 'No se pudo eliminar la experiencia laboral.'));
     } finally {
       setEliminandoTrabajo(false);
     }

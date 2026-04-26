@@ -15,7 +15,7 @@ import {
 } from '@mdi/js';
 import Field from '../components/Field';
 import registerSchema from '../schemas/registerSchema';
-import { extractApiMessage } from '../utils/apiError';
+import { extractApiMessageByStatus } from '../utils/apiError';
 
 // Formulario de registro de nuevo usuario
 const Registro = () => {
@@ -97,17 +97,22 @@ const Registro = () => {
         navigate('/perfil', { state: { completarPerfil: true } });
       } catch (error) {
         if (error.response?.status === 422) {
-          const erroresBackend = error.response.data.errors;
+          const erroresBackend = error?.response?.data?.errors;
+          if (!erroresBackend || typeof erroresBackend !== 'object') {
+            setErrorServidor(extractApiMessageByStatus(error, 'Ocurrió un error. Intenta de nuevo.'));
+            return;
+          }
+
           setErrores({
             nombre: normalizarMensajeBackend(erroresBackend.name?.[0] || ''),
             email: normalizarMensajeBackend(erroresBackend.email?.[0] || ''),
             password: normalizarMensajeBackend(erroresBackend.password?.[0] || ''),
           });
           if (!erroresBackend?.name && !erroresBackend?.email && !erroresBackend?.password) {
-            setErrorServidor(extractApiMessage(error, 'Ocurrió un error. Intenta de nuevo.'));
+            setErrorServidor(extractApiMessageByStatus(error, 'Ocurrió un error. Intenta de nuevo.'));
           }
         } else {
-          setErrorServidor(extractApiMessage(error, 'Ocurrió un error. Intenta de nuevo.'));
+          setErrorServidor(extractApiMessageByStatus(error, 'Ocurrió un error. Intenta de nuevo.'));
         }
       } finally {
         setCargando(false);

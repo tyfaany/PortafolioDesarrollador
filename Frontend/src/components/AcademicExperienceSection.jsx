@@ -5,7 +5,7 @@ import { mdiClose, mdiContentSaveOutline, mdiDeleteOutline, mdiPencilOutline, md
 import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import { actualizarEstudio, crearEstudio, eliminarEstudio } from '../services/authService';
-import { extractApiMessage } from '../utils/apiError';
+import { extractApiMessageByStatus, getApiStatus } from '../utils/apiError';
 
 const FORMULARIO_ESTUDIO_INICIAL = {
   id: null,
@@ -293,7 +293,21 @@ function AcademicExperienceSection({
       setFormularioEstudio(FORMULARIO_ESTUDIO_INICIAL);
       await refreshUser();
     } catch (error) {
-      setMensajeAcademicoError(extractApiMessage(error, 'No se pudo guardar la información académica.'));
+      const status = getApiStatus(error);
+      if (status === 403) {
+        setMensajeAcademicoError('No tienes permisos para realizar esta acción.');
+        return;
+      }
+
+      if (status === 404 && formularioEstudio.id) {
+        setEstudios((estadoActual) => estadoActual.filter((item) => item.id !== formularioEstudio.id));
+        setMensajeAcademicoError('La experiencia académica ya no existe. Se actualizó la lista.');
+        setEstaModalEstudioAbierto(false);
+        setFormularioEstudio(FORMULARIO_ESTUDIO_INICIAL);
+        return;
+      }
+
+      setMensajeAcademicoError(extractApiMessageByStatus(error, 'No se pudo guardar la información académica.'));
     } finally {
       setGuardandoEstudio(false);
     }
@@ -330,7 +344,21 @@ function AcademicExperienceSection({
       setEstudioPendienteEliminar(null);
       await refreshUser();
     } catch (error) {
-      setMensajeAcademicoError(extractApiMessage(error, 'No se pudo eliminar la experiencia académica.'));
+      const status = getApiStatus(error);
+      if (status === 403) {
+        setMensajeAcademicoError('No tienes permisos para eliminar esta experiencia académica.');
+        return;
+      }
+
+      if (status === 404) {
+        setEstudios((estadoActual) => estadoActual.filter((item) => item.id !== estudioPendienteEliminar.id));
+        setMensajeAcademicoError('');
+        setMensajeAcademicoExito('La experiencia académica ya no existía. Se actualizó la lista.');
+        setEstudioPendienteEliminar(null);
+        return;
+      }
+
+      setMensajeAcademicoError(extractApiMessageByStatus(error, 'No se pudo eliminar la experiencia académica.'));
     } finally {
       setEliminandoEstudio(false);
     }

@@ -4,7 +4,7 @@ import { mdiAccount, mdiClose, mdiContentSaveOutline, mdiPencilOutline } from '@
 import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import { actualizarPerfil } from '../services/authService';
-import { extractApiMessage } from '../utils/apiError';
+import { extractApiMessageByStatus } from '../utils/apiError';
 
 function sanitizarTexto(valor) {
   return String(valor || '').replace(/\s+/g, ' ').trim();
@@ -155,7 +155,7 @@ function PortfolioPersonalInfoCard() {
       setMensajeExito('Información actualizada correctamente');
       setEstaModalAbierto(false);
     } catch (error) {
-      setMensajeError(extractApiMessage(error, 'No se pudo guardar la información personal.'));
+      setMensajeError(extractApiMessageByStatus(error, 'No se pudo guardar la información personal.'));
     } finally {
       setGuardando(false);
     }
