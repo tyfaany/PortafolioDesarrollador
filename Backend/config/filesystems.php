@@ -38,7 +38,8 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+            // Permite fijar ruta absoluta en hosting compartido cuando public_path() no coincide con public_html.
+            'root' => env('FILESYSTEM_PUBLIC_ROOT', public_path('storage')),
             'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
             'throw' => false,

@@ -215,6 +215,10 @@ class AuthController extends Controller
             $path = $request->file('photo')->store('profile_photos', 'public');
 
             if (! $path) {
+                Log::error('No se pudo guardar la imagen en disco public', [
+                    'user_id' => $user->id ?? null,
+                ]);
+
                 return response()->json([
                     'status' => 'error',
                     'message' => 'No se pudo guardar la imagen en el servidor.',
