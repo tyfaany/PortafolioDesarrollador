@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth; 
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -84,16 +85,21 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Inicio de sesión exitoso.',
-            'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-            ]
-        ], 200);
+        return response()->json(
+            [
+                'status' => 'success',
+                'message' => 'Inicio de sesión exitoso.',
+                'token' => $token,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ]
+            ],
+            200,
+            [],
+            JSON_INVALID_UTF8_SUBSTITUTE
+        );
     }
 
     /**
@@ -205,23 +211,52 @@ class AuthController extends Controller
 
         $user = $request->user();
 
-        // 2. Si el usuario ya tenía una foto, la borramos para no llenar el servidor de archivos viejos
-        if ($user->profile_photo) {
-            Storage::disk('public')->delete($user->profile_photo);
+        try {
+            $disk = Storage::disk('public');
+
+            if (! $disk->exists('profile_photos')) {
+                $disk->makeDirectory('profile_photos');
+            }
+
+            // 2. Si el usuario ya tenía una foto, la borramos para no llenar el servidor de archivos viejos
+            if ($user->profile_photo) {
+                $disk->delete($user->profile_photo);
+            }
+
+            // 3. Guardamos la nueva foto en la carpeta 'profile_photos'
+            $path = $request->file('photo')->store('profile_photos', 'public');
+
+            if (! $path) {
+                Log::error('No se pudo guardar la imagen en disco public', [
+                    'user_id' => $user->id ?? null,
+                ]);
+
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No se pudo guardar la imagen en el servidor.',
+                ], 500);
+            }
+
+            // 4. Actualizamos la ruta en la base de datos
+            $user->profile_photo = $path;
+            $user->save();
+
+            // 5. Devolvemos una respuesta exitosa con la URL completa de la imagen para que React la muestre
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Foto de perfil actualizada correctamente.',
+                'photo_url' => $user->profile_photo_url
+            ], 200);
+        } catch (\Throwable $e) {
+            Log::error('Error al subir foto de perfil', [
+                'user_id' => $user->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrio un error interno al subir la foto.',
+            ], 500);
         }
-
-        // 3. Guardamos la nueva foto en la carpeta 'profile_photos'
-        $path = $request->file('photo')->store('profile_photos', 'public');
-
-        // 4. Actualizamos la ruta en la base de datos
-        $user->profile_photo = $path;
-        $user->save();
-
-        // 5. Devolvemos una respuesta exitosa con la URL completa de la imagen para que React la muestre
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Foto de perfil actualizada correctamente.',
-            'photo_url' => $user->profile_photo_url
-        ], 200);
     }
 }

@@ -1,0 +1,5 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|storage|tests|vendor)/.*$ - [F,L]
+    RewriteRule ^(\.env|composer\.json|composer\.lock|package\.json|artisan)$ - [F,L]
+</IfModule>
