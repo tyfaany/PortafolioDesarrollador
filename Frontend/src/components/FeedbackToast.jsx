@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
 import { mdiCheckCircleOutline, mdiClose, mdiAlertCircleOutline } from '@mdi/js';
 
-function FeedbackToast({ toastId, message, type = 'success', onClose }) {
+function FeedbackToast({ toastId = 0, message = '', type = 'success', onClose }) {
   useEffect(() => {
     if (!message) {
       return undefined;
@@ -45,12 +45,6 @@ FeedbackToast.propTypes = {
   message: PropTypes.string,
   type: PropTypes.oneOf(['success', 'error']),
   onClose: PropTypes.func.isRequired,
-};
-
-FeedbackToast.defaultProps = {
-  toastId: 0,
-  message: '',
-  type: 'success',
 };
 
 export default FeedbackToast;
