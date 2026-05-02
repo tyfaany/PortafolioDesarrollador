@@ -455,6 +455,21 @@ function ProfileSettings() {
   };
 
   const cerrarModalPerfil = () => {
+    if (completarPerfil) {
+      const nombreLimpio = sanitizarTexto(formularioPerfil.nombreCompleto);
+      const profesionLimpia = sanitizarTexto(formularioPerfil.profesion);
+      if (!nombreLimpio || !profesionLimpia) {
+        setErroresFormulario((prev) => ({
+          ...prev,
+          ...(!nombreLimpio && { nombreCompleto: "El nombre es obligatorio." }),
+          ...(!profesionLimpia && {
+            profesion: "La profesión es obligatoria.",
+          }),
+        }));
+        return;
+      }
+    }
+
     if (guardandoPerfil) {
       return;
     }
@@ -993,27 +1008,40 @@ function ProfileSettings() {
       ) : null}
 
       {estaModalPerfilAbierto ? (
-        <div className="softsave-profile__modal-overlay" role="dialog" aria-modal="true">
+        <div
+          className="softsave-profile__modal-overlay"
+          role="dialog"
+          aria-modal="true"
+        >
           <div className="softsave-profile__modal softsave-profile__modal--portfolio">
             <header className="softsave-profile__modal-header">
               <div className="softsave-profile__modal-content">
-                <h3 className="softsave-profile__modal-title">Editar información personal</h3>
+                <h3 className="softsave-profile__modal-title">
+                  Editar información personal
+                </h3>
                 <p className="softsave-profile__modal-text">
-                  Completa los datos personales manteniendo la misma línea visual del sistema.
+                  {completarPerfil
+                    ? "Para continuar debes completar tu nombre y profesión."
+                    : "Completa los datos personales manteniendo la misma línea visual del sistema."}
                 </p>
               </div>
 
-              <button
-                type="button"
-                className="softsave-profile__icon-button"
-                onClick={cerrarModalPerfil}
-                aria-label="Cerrar modal"
-              >
-                <Icon path={mdiClose} size={1} />
-              </button>
+              {!completarPerfil && (
+                <button
+                  type="button"
+                  className="softsave-profile__icon-button"
+                  onClick={cerrarModalPerfil}
+                  aria-label="Cerrar modal"
+                >
+                  <Icon path={mdiClose} size={1} />
+                </button>
+              )}
             </header>
 
-            <form className="softsave-profile__form" onSubmit={manejarGuardarCambios}>
+            <form
+              className="softsave-profile__form"
+              onSubmit={manejarGuardarCambios}
+            >
               <label className="softsave-profile__field">
                 <span className="softsave-profile__label">Nombre Completo</span>
                 <input
@@ -1026,7 +1054,10 @@ function ProfileSettings() {
                   placeholder="Ej. Alejandra García"
                 />
                 {erroresFormulario.nombreCompleto ? (
-                  <span className="error-text softsave-profile__error-text" role="alert">
+                  <span
+                    className="error-text softsave-profile__error-text"
+                    role="alert"
+                  >
                     {erroresFormulario.nombreCompleto}
                   </span>
                 ) : null}
@@ -1044,7 +1075,10 @@ function ProfileSettings() {
                   placeholder="Ej. Senior Full Stack Developer"
                 />
                 {erroresFormulario.profesion ? (
-                  <span className="error-text softsave-profile__error-text" role="alert">
+                  <span
+                    className="error-text softsave-profile__error-text"
+                    role="alert"
+                  >
                     {erroresFormulario.profesion}
                   </span>
                 ) : null}
@@ -1061,27 +1095,35 @@ function ProfileSettings() {
                   placeholder="Cuéntanos sobre tu trayectoria, tecnologías favoritas y qué te apasiona construir."
                 />
                 {erroresFormulario.biografia ? (
-                  <span className="error-text softsave-profile__error-text" role="alert">
+                  <span
+                    className="error-text softsave-profile__error-text"
+                    role="alert"
+                  >
                     {erroresFormulario.biografia}
                   </span>
                 ) : null}
               </label>
 
               {mensajeGuardadoError ? (
-                <span className="error-text softsave-profile__error-text" role="alert">
+                <span
+                  className="error-text softsave-profile__error-text"
+                  role="alert"
+                >
                   {mensajeGuardadoError}
                 </span>
               ) : null}
 
               <div className="softsave-profile__modal-actions">
-                <button
-                  type="button"
-                  className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
-                  onClick={cerrarModalPerfil}
-                  disabled={guardandoPerfil}
-                >
-                  Cancelar
-                </button>
+                {!completarPerfil && (
+                  <button
+                    type="button"
+                    className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
+                    onClick={cerrarModalPerfil}
+                    disabled={guardandoPerfil}
+                  >
+                    Cancelar
+                  </button>
+                )}
                 <button
                   type="submit"
                   className="softsave-button softsave-button--compact"

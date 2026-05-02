@@ -41,7 +41,10 @@ const Registro = () => {
     const completarPerfil = sessionStorage.getItem('post_register');
     if (completarPerfil) {
       sessionStorage.removeItem('post_register');
-      navigate('/perfil', { state: { completarPerfil: true }, replace: true });
+      navigate("/perfil/contacto", {
+        state: { completarPerfil: true },
+        replace: true,
+      });
       return;
     }
 
@@ -80,7 +83,10 @@ const Registro = () => {
           formData.passwordConfirmacion
         );
         sessionStorage.setItem('post_register', 'true');
-        navigate('/perfil', { state: { completarPerfil: true } });
+        navigate("/perfil/contacto", {
+          state: { completarPerfil: true },
+          replace: true,
+        });
       } catch (error) {
         if (error.response?.status === 422) {
           const erroresBackend = error?.response?.data?.errors;
