@@ -56,11 +56,11 @@ function sanitizarTexto(valor) {
 }
 
 function normalizarProfesion(valor) {
-  return String(valor || "").replace(/[^\p{L}\p{N}\s.,\-\/()&]/gu, "");
+  return String(valor || "").replace(/[^\p{L}\p{N}\s.,\-/()&]/gu, "");
 }
 
 function esProfesionValida(valor) {
-  return /^(?=.*\p{L})[\p{L}\p{N}]+(?:[ .,&()\/-][\p{L}\p{N}]+)*$/u.test(valor);
+  return /^(?=.*\p{L})[\p{L}\p{N}]+(?:[ .,&()/-][\p{L}\p{N}]+)*$/u.test(valor);
 }
 
 function normalizarEnlacesProfesionales(user) {
@@ -455,6 +455,19 @@ function ProfileSettings() {
   };
 
   const cerrarModalPerfil = () => {
+    if (completarPerfil) {
+      const nombreLimpio = sanitizarTexto(formularioPerfil.nombreCompleto);
+      const profesionLimpia = sanitizarTexto(formularioPerfil.profesion);
+      if (!nombreLimpio || !profesionLimpia) {
+        setErroresFormulario((prev) => ({
+          ...prev,
+          ...(!nombreLimpio && { nombreCompleto: "El nombre es obligatorio." }),
+          ...(!profesionLimpia && { profesion: "La profesión es obligatoria." }),
+        }));
+        return;
+      }
+    }
+
     if (guardandoPerfil) {
       return;
     }
@@ -1003,14 +1016,16 @@ function ProfileSettings() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                className="softsave-profile__icon-button"
-                onClick={cerrarModalPerfil}
-                aria-label="Cerrar modal"
-              >
-                <Icon path={mdiClose} size={1} />
-              </button>
+              {!completarPerfil && (
+                <button
+                  type="button"
+                  className="softsave-profile__icon-button"
+                  onClick={cerrarModalPerfil}
+                  aria-label="Cerrar modal"
+                >
+                  <Icon path={mdiClose} size={1} />
+                </button>
+              )}
             </header>
 
             <form className="softsave-profile__form" onSubmit={manejarGuardarCambios}>
@@ -1074,14 +1089,16 @@ function ProfileSettings() {
               ) : null}
 
               <div className="softsave-profile__modal-actions">
-                <button
-                  type="button"
-                  className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
-                  onClick={cerrarModalPerfil}
-                  disabled={guardandoPerfil}
-                >
-                  Cancelar
-                </button>
+                {!completarPerfil && (
+                  <button
+                    type="button"
+                    className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
+                    onClick={cerrarModalPerfil}
+                    disabled={guardandoPerfil}
+                  >
+                    Cancelar
+                  </button>
+                )}
                 <button
                   type="submit"
                   className="softsave-button softsave-button--compact"

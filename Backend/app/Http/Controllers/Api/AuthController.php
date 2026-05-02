@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -47,7 +48,7 @@ class AuthController extends Controller
             'message' => 'Usuario registrado correctamente.',
             'user' => $user,
             'token' => $token,
-        ], 201);
+        ], 201, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     /**
@@ -66,18 +67,16 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'required',
             'remember' => 'boolean'
-        ]);    
+        ]);
 
-        // Extraemos las credenciales y el valor de remember (si no lo envían, es false)
         $credentials = $request->only('email', 'password');
         $remember = $request->boolean('remember');
 
-        // Pasamos el $remember al intento de autenticación
         if (!Auth::attempt($credentials, $remember)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Credenciales incorrectas.'
-            ], 401);
+            ], 401, [], JSON_INVALID_UTF8_SUBSTITUTE);
         }
 
         $user = User::where('email', $request->email)->first();
@@ -86,14 +85,14 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Inicio de sesión exitoso.',
+            'message' => 'Inicio de sesion exitoso.',
             'token' => $token,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
             ]
-        ], 200);
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     /**
@@ -105,8 +104,8 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Sesión cerrada correctamente.'
-        ], 200);
+            'message' => 'Sesion cerrada correctamente.'
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     /**
@@ -124,14 +123,14 @@ class AuthController extends Controller
         if ($status === Password::RESET_LINK_SENT) {
             return response()->json([
                 'status' => 'success',
-                'message' => 'Enlace de recuperación enviado al correo.'
-            ], 200);
+                'message' => 'Enlace de recuperacion enviado al correo.'
+            ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
         }
 
         return response()->json([
             'status' => 'error',
             'message' => 'No pudimos encontrar un usuario con ese correo.'
-        ], 400);
+        ], 400, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     public function resetPassword(Request $request)
@@ -152,18 +151,17 @@ class AuthController extends Controller
             }
         );
 
-        // 3. Respondemos según el resultado
         if ($status === Password::PASSWORD_RESET) {
             return response()->json([
                 'status' => 'success',
-                'message' => 'Contraseña restablecida correctamente.'
-            ], 200);
+                'message' => 'Contrasena restablecida correctamente.'
+            ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
         }
 
         return response()->json([
             'status' => 'error',
-            'message' => 'El token es inválido o el correo no coincide.'
-        ], 400);
+            'message' => 'El token es invalido o el correo no coincide.'
+        ], 400, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     /**
@@ -175,17 +173,17 @@ class AuthController extends Controller
             'current_password' => 'required',
             'password' => 'required|min:8|confirmed|different:current_password',
         ], [
-            'password.different' => 'La nueva contraseña debe ser diferente a la actual.'
+            'password.different' => 'La nueva contrasena debe ser diferente a la actual.'
         ]);
 
         $user = $request->user();
 
-    
+
         if (!Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'La contraseña actual es incorrecta.'
-            ], 422);
+                'message' => 'La contrasena actual es incorrecta.'
+            ], 422, [], JSON_INVALID_UTF8_SUBSTITUTE);
         }
 
         $user->password = Hash::make($request->password);
@@ -193,35 +191,54 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Actualización exitosa.'
-        ], 200);
+            'message' => 'Actualizacion exitosa.'
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
     public function uploadPhoto(Request $request)
     {
-        // 1. Validamos que el archivo sea una imagen válida y pese máximo 2MB
         $request->validate([
             'photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:10240',
         ]);
 
         $user = $request->user();
 
-        // 2. Si el usuario ya tenía una foto, la borramos para no llenar el servidor de archivos viejos
-        if ($user->profile_photo) {
-            Storage::disk('public')->delete($user->profile_photo);
+        try {
+            $disk = Storage::disk('public');
+            if (! $disk->exists('profile_photos')) {
+                $disk->makeDirectory('profile_photos');
+            }
+
+            if ($user->profile_photo) {
+                $disk->delete($user->profile_photo);
+            }
+
+            $path = $request->file('photo')->store('profile_photos', 'public');
+
+            if (! $path) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No se pudo guardar la imagen en el servidor.',
+                ], 500, [], JSON_INVALID_UTF8_SUBSTITUTE);
+            }
+
+            $user->profile_photo = $path;
+            $user->save();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Foto de perfil actualizada correctamente.',
+                'photo_url' => $user->profile_photo_url,
+            ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
+        } catch (\Throwable $e) {
+            Log::error('Error al subir foto de perfil', [
+                'user_id' => $user->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrio un error interno al subir la foto.',
+            ], 500, [], JSON_INVALID_UTF8_SUBSTITUTE);
         }
-
-        // 3. Guardamos la nueva foto en la carpeta 'profile_photos'
-        $path = $request->file('photo')->store('profile_photos', 'public');
-
-        // 4. Actualizamos la ruta en la base de datos
-        $user->profile_photo = $path;
-        $user->save();
-
-        // 5. Devolvemos una respuesta exitosa con la URL completa de la imagen para que React la muestre
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Foto de perfil actualizada correctamente.',
-            'photo_url' => $user->profile_photo_url
-        ], 200);
     }
 }
