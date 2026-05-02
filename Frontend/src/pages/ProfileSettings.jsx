@@ -482,7 +482,6 @@ function ProfileSettings() {
         setErroresFormulario((prev) => ({
           ...prev,
           ...(!nombreLimpio && { nombreCompleto: "El nombre es obligatorio." }),
-<<<<<<< HEAD
           ...(!profesionLimpia && {
             profesion: "La profesión es obligatoria.",
           }),

@@ -23,7 +23,7 @@ class AuthController extends Controller
         if ($request->has('name')) {
             $request->merge([
                 'name' => Str::squish($request->name),
-                'email' => Str::lower(Str::squish($request->email)), // Limpiamos y pasamos a minúsculas
+                'email' => Str::lower(Str::squish($request->email)),
             ]);
         }
 
@@ -117,7 +117,6 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
 
-        // Laravel busca el correo y envía el link automáticamente (requiere SMTP en .env)
         $status = Password::sendResetLink($request->only('email'));
 
         if ($status === Password::RESET_LINK_SENT) {
@@ -133,16 +132,17 @@ class AuthController extends Controller
         ], 400, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
+    /**
+     * Restablecer contraseña
+     */
     public function resetPassword(Request $request)
     {
-        // 1. Validamos que el Frontend nos envíe todo lo necesario
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',
             'password' => 'required|min:8|confirmed',
         ]);
 
-        // 2. Laravel busca el token y el correo, y si coinciden, cambia la contraseña
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, string $password) {
@@ -165,7 +165,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Subir o actualizar foto de perfil
+     * Actualizar contraseña
      */
     public function updatePassword(Request $request)
     {
@@ -177,7 +177,6 @@ class AuthController extends Controller
         ]);
 
         $user = $request->user();
-
 
         if (!Hash::check($request->current_password, $user->password)) {
             return response()->json([
@@ -194,6 +193,10 @@ class AuthController extends Controller
             'message' => 'Actualizacion exitosa.'
         ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
+
+    /**
+     * Subir o actualizar foto de perfil
+     */
     public function uploadPhoto(Request $request)
     {
         $request->validate([
