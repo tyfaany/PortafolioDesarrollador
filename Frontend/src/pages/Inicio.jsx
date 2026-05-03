@@ -13,7 +13,7 @@ function Inicio() {
         <p>Bienvenido, <strong>{user?.name || 'Usuario'}</strong></p>
         <div className="softsave-portafolio-actions">
           <button onClick={logout} className="softsave-button" type="button">
-            Cerrar Sesión
+            Cerrar Sesion
           </button>
           <button
             onClick={() => navigate('/perfil')}
@@ -28,7 +28,7 @@ function Inicio() {
       <section className="softsave-portafolio-grid">
         <div className="softsave-portafolio-card">
           <h3>Proyecto 1</h3>
-          <p>Esta información es privada y solo tú puedes verla.</p>
+          <p>Esta informacion es privada y solo tu puedes verla.</p>
         </div>
       </section>
     </div>

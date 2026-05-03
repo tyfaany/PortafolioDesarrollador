@@ -5,6 +5,7 @@ import {
   mdiAccount,
   mdiCameraOutline,
   mdiClose,
+  mdiCogOutline,
   mdiContentSaveOutline,
   mdiGithub,
   mdiImageOutline,
@@ -15,9 +16,11 @@ import {
 } from "@mdi/js";
 import useAuth from "../hooks/useAuth";
 import useFeedback from "../hooks/useFeedback";
+import PrivacySettingsPanel from "../components/PrivacySettingsPanel";
 import { actualizarPerfil, subirFoto } from "../services/authService";
 import { extractApiMessageByStatus } from "../utils/apiError";
 import "../styles/ProfileSettings.css";
+import "../styles/ProjectsPrivacyViews.css";
 
 const SECCIONES_PERFIL = [
   {
@@ -43,6 +46,10 @@ function obtenerIniciales(nombreCompleto) {
 }
 
 function obtenerSeccionActiva(pathname) {
+  if (pathname === "/perfil/privacidad") {
+    return "privacidad";
+  }
+
   const seccionActiva = SECCIONES_PERFIL.find(
     ({ route }) => pathname === route,
   );
@@ -596,6 +603,15 @@ function ProfileSettings() {
 
         <div className="softsave-profile__contact-actions">
           <button
+            type="button"
+            className="softsave-profile__secondary-button softsave-profile__secondary-button--pill softsave-profile__privacy-link"
+            onClick={() => navigate("/perfil/privacidad")}
+          >
+            <Icon path={mdiCogOutline} size={0.85} />
+            Configuracion de Privacidad
+          </button>
+
+          <button
             ref={botonEnlacesRef}
             type="button"
             className="softsave-button softsave-button--compact softsave-profile__section-button"
@@ -756,6 +772,17 @@ function ProfileSettings() {
           Todavía no vinculaste tu cuenta de GitHub desde enlaces profesionales.
         </p>
       )}
+
+      <div className="softsave-profile__panel-actions">
+        <button
+          type="button"
+          className="softsave-profile__secondary-button softsave-profile__secondary-button--pill softsave-profile__privacy-link"
+          onClick={() => navigate("/perfil/privacidad")}
+        >
+          <Icon path={mdiCogOutline} size={0.85} />
+          Configuracion de Privacidad
+        </button>
+      </div>
     </section>
   );
 
@@ -815,6 +842,7 @@ function ProfileSettings() {
           </div>
 
           <div className="softsave-profile__grid softsave-profile__grid--single">
+            {seccionActiva === "privacidad" && <PrivacySettingsPanel />}
             {seccionActiva === "contacto" && renderizarSeccionContacto()}
             {seccionActiva === "academica" && renderizarSeccionAcademicaBase()}
             {seccionActiva === "github" && renderizarSeccionGithub()}
