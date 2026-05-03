@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Http\Requests\UpdateContactRequest;
 
 class UserController extends Controller
 {
@@ -77,4 +78,71 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
 
         return true; 
     }
+   public function showContact(Request $request)
+{
+    $user = $request->user();
+
+    return response()->json([
+        'phone' => $user->phone,
+        'mobile' => $user->mobile,
+        'contact_email' => $user->contact_email,
+        'address' => $user->address,
+
+        'show_phone' => $user->show_phone,
+        'show_mobile' => $user->show_mobile,
+        'show_contact_email' => $user->show_contact_email,
+        'show_address' => $user->show_address,
+    ]);
+}
+     public function updateContact(UpdateContactRequest $request)
+{
+    $user = $request->user();
+
+    $data = $request->validated();
+
+    // Sanitizar strings
+    $sanitized = array_map(function($value) {
+        return is_string($value) ? strip_tags($value) : $value;
+    }, $data);
+
+    $user->update($sanitized);
+
+    return response()->json([
+        'message' => 'Información de contacto actualizada correctamente',
+        'contact' => [
+            'phone' => $user->phone,
+            'mobile' => $user->mobile,
+            'contact_email' => $user->contact_email,
+            'address' => $user->address,
+            'show_phone' => $user->show_phone,
+            'show_mobile' => $user->show_mobile,
+            'show_contact_email' => $user->show_contact_email,
+            'show_address' => $user->show_address,
+        ]
+    ]);
+}
+   public function showPublicContact($id)
+{
+    $user = \App\Models\User::findOrFail($id);
+
+    $data = [];
+
+    if ($user->show_phone) {
+        $data['phone'] = $user->phone;
+    }
+
+    if ($user->show_mobile) {
+        $data['mobile'] = $user->mobile;
+    }
+
+    if ($user->show_contact_email) {
+        $data['contact_email'] = $user->contact_email;
+    }
+
+    if ($user->show_address) {
+        $data['address'] = $user->address;
+    }
+
+    return response()->json($data);
+}
 }

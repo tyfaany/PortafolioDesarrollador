@@ -14,6 +14,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::get('users/{user}/studies', [StudyController::class, 'indexPublic']);
+Route::get('/users/{id}/contact', [UserController::class, 'showPublicContact']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user', [AuthController::class, 'updatePassword']);
@@ -21,6 +22,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/photo', [AuthController::class, 'uploadPhoto']);
     Route::get('/user', [UserController::class, 'show']);
+    Route::get('/user/contact', [UserController::class, 'showContact']);
+    Route::put('/user/contact', [UserController::class, 'updateContact']);
 
     // --- Tus Rutas (Experiencia y Habilidades) ---
     Route::get('/user/jobs', [JobController::class, 'index']);

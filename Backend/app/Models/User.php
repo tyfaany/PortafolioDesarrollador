@@ -21,6 +21,14 @@ class User extends Authenticatable
         'linkedin_url',
         'profile_photo',
         'profile_completed',
+        'phone',
+        'mobile',
+        'contact_email',
+        'address',
+        'show_phone',
+        'show_mobile',
+        'show_contact_email',
+        'show_address',
     ];
 
     protected $hidden = [
@@ -39,6 +47,10 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed', // Esto asegura que la contraseña siempre se guarde cifrada
+        'show_phone' => 'boolean',
+        'show_mobile' => 'boolean',
+        'show_contact_email' => 'boolean',
+        'show_address' => 'boolean',
     ];
 
     /*
