@@ -81,6 +81,50 @@ export const actualizarProyecto = (id, formData) => api.put(`/user/projects/${id
   headers: { 'Content-Type': 'multipart/form-data' },
 });
 
+export const toggleVisibilidadProyecto = (project) => {
+  const formData = new FormData();
+  const projectId = project?.id;
+  const technologies = Array.isArray(project?.technologies) ? project.technologies : [];
+  const normalizedTechnologies = technologies
+    .map((technology) => {
+      if (technology && typeof technology === 'object') {
+        return technology.id ?? technology.value ?? null;
+      }
+
+      return technology;
+    })
+    .filter((technology) => technology !== null && technology !== undefined && technology !== '');
+
+  formData.append('title', project?.title ?? '');
+  formData.append('description', project?.description ?? '');
+  normalizedTechnologies.forEach((technology) => {
+    formData.append('technologies[]', technology);
+  });
+
+  if (project?.start_date) {
+    formData.append('start_date', project.start_date);
+  }
+
+  const isInProgress = Boolean(project?.is_in_progress);
+  formData.append('is_in_progress', isInProgress ? '1' : '0');
+
+  if (!isInProgress && project?.end_date) {
+    formData.append('end_date', project.end_date);
+  }
+
+  if (project?.demo_url) {
+    formData.append('demo_url', project.demo_url);
+  }
+
+  if (project?.repo_url) {
+    formData.append('repo_url', project.repo_url);
+  }
+
+  formData.append('is_public', project?.is_public ? '0' : '1');
+
+  return actualizarProyecto(projectId, formData);
+};
+
 export const eliminarProyecto = (id) => api.delete(`/user/projects/${id}`);
 
 export const obtenerTecnologias = () => api.get('/project-technologies');
