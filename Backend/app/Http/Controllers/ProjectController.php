@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -11,11 +12,20 @@ class ProjectController extends Controller
 {
     public function index()
     {
-        // Obtenemos los proyectos del usuario (usando el ID 1 por ahora) 
-        // y adjuntamos las tecnologías que usó en cada uno.
         // Los ordenamos para que los más recientes salgan primero.
         $projects = Project::with('technologies')
             ->where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($projects, 200);
+    }
+
+    public function indexPublic(User $user)
+    {
+        $projects = Project::with('technologies')
+            ->where('user_id', $user->id)
+            ->where('is_public', true)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -77,12 +87,12 @@ class ProjectController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             // Si la imagen se subió al disco pero la base de datos falló, la borramos
             if (isset($imagePath)) {
                 Storage::disk('public')->delete($imagePath);
             }
-            
+
             return response()->json(['message' => 'Error al guardar el proyecto: ' . $e->getMessage()], 500);
         }
     }
