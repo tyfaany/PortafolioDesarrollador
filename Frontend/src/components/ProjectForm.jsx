@@ -140,6 +140,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
   const [imageRemoved, setImageRemoved] = useState(false);
   const [technologySuggestions, setTechnologySuggestions] = useState(TECHNOLOGY_SUGGESTIONS);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const { showFeedback } = useFeedback();
 
   useEffect(() => {
@@ -156,6 +157,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
     setImageFile(null);
     setImagePreview(nextState.currentImagePreview || '');
     setImageRemoved(false);
+    setIsDirty(false);
   }, [initialData, mode, project]);
 
   useEffect(() => {
@@ -226,6 +228,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
     }));
 
     setSubmitMessage('');
+    setIsDirty(true);
   };
 
   const handleAddTechnology = (technology) => {
@@ -305,6 +308,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
       image: '',
     }));
     setSubmitMessage('');
+    setIsDirty(true);
   };
 
   const handleRemoveImage = () => {
@@ -316,6 +320,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
       ...current,
       image: '',
     }));
+    setIsDirty(true);
   };
 
   const validateForm = () => {
@@ -388,6 +393,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
         setSubmitMessage('Proyecto guardado exitosamente.');
         showFeedback('Proyecto guardado exitosamente.');
         onProjectSaved(createdProject);
+        setIsDirty(false);
       } else {
         if (!project?.id) {
           showFeedback('No se encontro el proyecto a editar.', 'error');
@@ -400,6 +406,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
         setSubmitMessage('Cambios guardados exitosamente');
         showFeedback('Cambios guardados exitosamente');
         onProjectSaved(updatedProject);
+        setIsDirty(false);
       }
     } catch (requestError) {
       const status = requestError?.response?.status;
@@ -444,6 +451,10 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
   };
 
   const handleReset = () => {
+    if (isDirty && !window.confirm('Tienes cambios sin guardar. ¿Deseas descartarlos?')) {
+      return;
+    }
+
     const resetState = mode === 'edit' && project
       ? mapProjectToFormState(project)
       : createInitialFormState(initialData);
@@ -457,6 +468,19 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
     setImageFile(null);
     setImagePreview(resetState.currentImagePreview || '');
     setImageRemoved(false);
+    setIsDirty(false);
+  };
+
+  const handleSwitchMode = (nextMode) => {
+    if (nextMode === mode) {
+      return;
+    }
+
+    if (isDirty && !window.confirm('Tienes cambios sin guardar. ¿Deseas descartarlos?')) {
+      return;
+    }
+
+    onSwitchMode(nextMode);
   };
 
   return (
@@ -482,7 +506,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
           <button
             type="button"
             className={`softsave-projects-card__icon-button ${mode === 'create' ? 'is-active' : ''}`}
-            onClick={() => onSwitchMode('create')}
+            onClick={() => handleSwitchMode('create')}
             aria-label="Abrir formulario de nuevo proyecto"
           >
             <Icon path={mdiPlus} size={0.9} />
@@ -490,7 +514,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
           <button
             type="button"
             className={`softsave-projects-card__icon-button softsave-projects-card__icon-button--ghost ${mode === 'edit' ? 'is-active' : ''}`}
-            onClick={() => onSwitchMode('edit')}
+            onClick={() => handleSwitchMode('edit')}
             aria-label="Abrir formulario de edicion"
           >
             <Icon path={mdiPencilOutline} size={0.9} />
