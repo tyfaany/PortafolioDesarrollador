@@ -141,6 +141,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
   const [technologySuggestions, setTechnologySuggestions] = useState(TECHNOLOGY_SUGGESTIONS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [confirmState, setConfirmState] = useState(null);
   const { showFeedback } = useFeedback();
 
   useEffect(() => {
@@ -451,10 +452,6 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
   };
 
   const handleReset = () => {
-    if (isDirty && !window.confirm('Tienes cambios sin guardar. ¿Deseas descartarlos?')) {
-      return;
-    }
-
     const resetState = mode === 'edit' && project
       ? mapProjectToFormState(project)
       : createInitialFormState(initialData);
@@ -471,16 +468,45 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
     setIsDirty(false);
   };
 
+  const openConfirmModal = ({ title, message, confirmText, onConfirm }) => {
+    setConfirmState({
+      title,
+      message,
+      confirmText,
+      onConfirm,
+    });
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmState(null);
+  };
+
+  const requestDiscardChanges = (onConfirm) => {
+    if (!isDirty) {
+      onConfirm();
+      return;
+    }
+
+    openConfirmModal({
+      title: 'Descartar cambios',
+      message: 'Tienes cambios sin guardar. Si continuas, perderas las modificaciones pendientes.',
+      confirmText: 'Descartar',
+      onConfirm,
+    });
+  };
+
+  const runReset = () => {
+    handleReset();
+  };
+
   const handleSwitchMode = (nextMode) => {
     if (nextMode === mode) {
       return;
     }
 
-    if (isDirty && !window.confirm('Tienes cambios sin guardar. ¿Deseas descartarlos?')) {
-      return;
-    }
-
-    onSwitchMode(nextMode);
+    requestDiscardChanges(() => {
+      onSwitchMode(nextMode);
+    });
   };
 
   return (
@@ -762,7 +788,19 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
                 type="radio"
                 name={`visibility-${mode}`}
                 checked={formData.visibility === 'private'}
-                onChange={() => updateField('visibility', 'private')}
+                onChange={() => {
+                  if (formData.visibility === 'public') {
+                    openConfirmModal({
+                      title: 'Cambiar visibilidad',
+                      message: 'Al pasar a privado, este proyecto dejara de verse en tu perfil publico.',
+                      confirmText: 'Cambiar a privado',
+                      onConfirm: () => updateField('visibility', 'private'),
+                    });
+                    return;
+                  }
+
+                  updateField('visibility', 'private');
+                }}
               />
               Privado
             </label>
@@ -780,7 +818,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
           <button
             type="button"
             className="softsave-project-form__cancel"
-            onClick={handleReset}
+            onClick={() => requestDiscardChanges(runReset)}
             disabled={isSubmitting}
           >
             Cancelar
@@ -790,6 +828,46 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
           </button>
         </div>
       </form>
+
+      {confirmState ? (
+        <div
+          className="softsave-profile__modal-overlay softsave-profile__modal-overlay--centered"
+          role="dialog"
+          aria-modal="true"
+          onClick={closeConfirmModal}
+        >
+          <div className="softsave-profile__modal softsave-profile__modal--confirm" onClick={(event) => event.stopPropagation()}>
+            <header className="softsave-profile__modal-header">
+              <div className="softsave-profile__modal-content">
+                <h3 className="softsave-profile__modal-title">{confirmState.title}</h3>
+                <p className="softsave-profile__modal-text">{confirmState.message}</p>
+              </div>
+            </header>
+            <div className="softsave-profile__modal-actions">
+              <button
+                type="button"
+                className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
+                onClick={closeConfirmModal}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="softsave-button softsave-button--danger"
+                onClick={() => {
+                  const action = confirmState.onConfirm;
+                  closeConfirmModal();
+                  if (typeof action === 'function') {
+                    action();
+                  }
+                }}
+              >
+                {confirmState.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
