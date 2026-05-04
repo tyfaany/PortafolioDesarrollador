@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\TechnicalSkillController;
 use App\Http\Controllers\Api\SoftSkillController;
 use App\Http\Controllers\Api\StudyController; // Importación agregada para evitar errores del equipo
+use App\Http\Controllers\ProjectController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -40,4 +41,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('studies', [StudyController::class, 'store']);
     Route::put('studies/{study}', [StudyController::class, 'update']);
     Route::delete('studies/{study}', [StudyController::class, 'destroy']);
+    Route::post('/user/projects', [ProjectController::class, 'store']);
+    Route::put('/user/projects/{project}', [ProjectController::class, 'update']);
+    // Ruta para listar todos los proyectos del usuario
+Route::get('/user/projects', [ProjectController::class, 'index']);
 });
