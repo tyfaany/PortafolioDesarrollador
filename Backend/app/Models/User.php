@@ -29,6 +29,12 @@ class User extends Authenticatable
         'show_mobile',
         'show_contact_email',
         'show_address',
+        'show_bio',
+        'show_studies',
+        'show_jobs',
+        'show_skills',
+        'show_social_links',
+        'show_profile_photo',
     ];
 
     protected $hidden = [
@@ -51,6 +57,12 @@ class User extends Authenticatable
         'show_mobile' => 'boolean',
         'show_contact_email' => 'boolean',
         'show_address' => 'boolean',
+        'show_bio' => 'boolean',
+        'show_studies' => 'boolean',
+        'show_jobs' => 'boolean',
+        'show_skills' => 'boolean',
+        'show_social_links' => 'boolean',
+        'show_profile_photo' => 'boolean',
     ];
 
     /*
