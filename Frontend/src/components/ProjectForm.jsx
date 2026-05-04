@@ -118,7 +118,7 @@ function mapProjectToFormState(project) {
     repositoryUrl: project.repo_url || '',
     visibility: project.is_public ? 'public' : 'private',
     currentImageName: project.image_path ? String(project.image_path).split('/').pop() : '',
-    currentImagePreview: project.image_url || project.image_path || '',
+    currentImagePreview: resolveProjectImageUrl(project.image_url || project.image_path || ''),
   };
 }
 function isValidHttpUrl(value) {
@@ -145,6 +145,42 @@ function normalizeTechnologyIds(technologies) {
       return null;
     })
     .filter((technology) => technology !== null && technology !== undefined && technology !== '');
+}
+
+function resolveProjectImageUrl(rawUrl) {
+  if (!rawUrl) {
+    return '';
+  }
+
+  if (/^https?:\/\//i.test(rawUrl) || rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) {
+    return rawUrl;
+  }
+
+  const apiBase = import.meta.env.VITE_LARAVEL_API_URL;
+  if (!apiBase) {
+    return rawUrl;
+  }
+
+  let backendOrigin = '';
+  try {
+    backendOrigin = new URL(apiBase).origin;
+  } catch {
+    return rawUrl;
+  }
+
+  if (rawUrl.startsWith('/storage/')) {
+    return `${backendOrigin}${rawUrl}`;
+  }
+
+  if (rawUrl.startsWith('storage/')) {
+    return `${backendOrigin}/${rawUrl}`;
+  }
+
+  if (rawUrl.startsWith('projects/')) {
+    return `${backendOrigin}/storage/${rawUrl}`;
+  }
+
+  return `${backendOrigin}/${rawUrl.replace(/^\/+/, '')}`;
 }
 
 function buildFormData(formData, imageFile) {
@@ -206,7 +242,7 @@ function ProjectForm({
   const [showTechInput, setShowTechInput] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(
-    mode === 'edit' && project ? (project.image_url || project.image_path || '') : (initialData?.currentImagePreview || ''),
+    mode === 'edit' && project ? resolveProjectImageUrl(project.image_url || project.image_path || '') : (initialData?.currentImagePreview || ''),
   );
   const [imageRemoved, setImageRemoved] = useState(false);
   const [technologySuggestions, setTechnologySuggestions] = useState(TECHNOLOGY_SUGGESTIONS);
@@ -416,32 +452,22 @@ function ProjectForm({
       nextErrors.technologies = 'Debes seleccionar entre 1 y 15 tecnologias.';
     }
 
-    if (!formData.startDate) {
-      nextErrors.startDate = 'La fecha de inicio es obligatoria.';
-    }
-
-    if (!formData.inProgress && !formData.endDate) {
-      nextErrors.endDate = 'La fecha fin es obligatoria si el proyecto no esta en progreso.';
-    }
+    // Backend allows nullable dates; keep only logical validation when both are present.
 
     if (formData.startDate && formData.endDate && formData.startDate > formData.endDate) {
       nextErrors.endDate = 'La fecha de inicio no puede ser mayor a la fecha fin.';
     }
 
-    if (!formData.demoUrl || !isValidHttpUrl(formData.demoUrl)) {
+    if (formData.demoUrl && !isValidHttpUrl(formData.demoUrl)) {
       nextErrors.demoUrl = 'Ingresa una URL demo valida con HTTP o HTTPS.';
     }
 
-    if (!formData.repositoryUrl || !isValidHttpUrl(formData.repositoryUrl)) {
+    if (formData.repositoryUrl && !isValidHttpUrl(formData.repositoryUrl)) {
       nextErrors.repositoryUrl = 'Ingresa una URL de repositorio valida con HTTP o HTTPS.';
     }
 
     if (mode === 'create' && !imageFile) {
       nextErrors.image = 'La imagen principal es obligatoria.';
-    }
-
-    if (mode === 'edit' && !hasImage && !imageFile) {
-      nextErrors.image = 'Debes conservar o cargar una imagen principal.';
     }
 
     setErrors(nextErrors);

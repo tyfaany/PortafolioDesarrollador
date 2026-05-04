@@ -170,7 +170,6 @@ function ProjectList({ refreshKey = 0 }) {
               onDelete={requestDeleteProject}
               onToggleVisibility={handleToggleVisibility}
               onToggleEdit={toggleEdit}
-              isExpanded={expandedEditId === project.id}
             />
             {expandedEditId === project.id ? (
               <div className="softsave-projects-card__editor">
@@ -216,7 +215,7 @@ function ProjectList({ refreshKey = 0 }) {
               </button>
               <button
                 type="button"
-                className="softsave-button softsave-button--danger"
+                className="softsave-profile__danger-button"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
               >

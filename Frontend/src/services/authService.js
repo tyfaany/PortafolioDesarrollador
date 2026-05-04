@@ -77,9 +77,12 @@ export const crearProyecto = (formData) => api.post('/user/projects', formData, 
   headers: { 'Content-Type': 'multipart/form-data' },
 });
 
-export const actualizarProyecto = (id, formData) => api.put(`/user/projects/${id}`, formData, {
-  headers: { 'Content-Type': 'multipart/form-data' },
-});
+export const actualizarProyecto = (id, formData) => {
+  formData.append('_method', 'PUT');
+  return api.post(`/user/projects/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
 
 export const toggleVisibilidadProyecto = (project) => {
   const formData = new FormData();

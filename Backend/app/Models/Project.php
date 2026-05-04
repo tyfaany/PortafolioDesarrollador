@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Project extends Model
 {
@@ -25,6 +26,12 @@ class Project extends Model
     protected $appends = [
         'title',
         'repo_url',
+        'image_url',
+    ];
+
+    protected $casts = [
+        'is_public' => 'boolean',
+        'is_in_progress' => 'boolean',
     ];
 
     public function getTitleAttribute()
@@ -35,6 +42,16 @@ class Project extends Model
     public function getRepoUrlAttribute()
     {
         return $this->attributes['repo_url'] ?? $this->attributes['repository_url'] ?? null;
+    }
+
+    public function getImageUrlAttribute()
+    {
+        $path = $this->attributes['image_path'] ?? null;
+        if (!$path) {
+            return null;
+        }
+
+        return Storage::url($path);
     }
 
     public function user()
