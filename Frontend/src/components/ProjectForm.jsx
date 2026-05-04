@@ -9,7 +9,7 @@ import {
   mdiPlus,
   mdiTrashCanOutline,
 } from '@mdi/js';
-import { crearProyecto, obtenerTecnologias } from '../services/authService';
+import { actualizarProyecto, crearProyecto, obtenerTecnologias } from '../services/authService';
 import useFeedback from '../hooks/useFeedback';
 
 const TECHNOLOGY_SUGGESTIONS = [
@@ -41,6 +41,25 @@ function createInitialFormState(initialData) {
   };
 }
 
+function mapProjectToFormState(project) {
+  if (!project) {
+    return createInitialFormState(null);
+  }
+
+  return {
+    title: project.title || '',
+    description: project.description || '',
+    technologies: Array.isArray(project.technologies) ? project.technologies : [],
+    startDate: project.start_date ? String(project.start_date).slice(0, 10) : '',
+    endDate: project.end_date ? String(project.end_date).slice(0, 10) : '',
+    inProgress: Boolean(project.is_in_progress),
+    demoUrl: project.demo_url || '',
+    repositoryUrl: project.repo_url || '',
+    visibility: project.is_public ? 'public' : 'private',
+    currentImageName: project.image_path ? String(project.image_path).split('/').pop() : '',
+    currentImagePreview: project.image_url || project.image_path || '',
+  };
+}
 function isValidHttpUrl(value) {
   try {
     const parsed = new URL(value);
@@ -105,31 +124,39 @@ function buildFormData(formData, imageFile) {
   return payload;
 }
 
-function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved }) {
-  const [formData, setFormData] = useState(() => createInitialFormState(initialData));
+function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project }) {
+  const [formData, setFormData] = useState(() => (
+    mode === 'edit' && project ? mapProjectToFormState(project) : createInitialFormState(initialData)
+  ));
   const [errors, setErrors] = useState({});
   const [submitMessage, setSubmitMessage] = useState('');
   const [imageError, setImageError] = useState('');
   const [techInput, setTechInput] = useState('');
   const [showTechInput, setShowTechInput] = useState(false);
   const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(initialData?.currentImagePreview || '');
+  const [imagePreview, setImagePreview] = useState(
+    mode === 'edit' && project ? (project.image_url || project.image_path || '') : (initialData?.currentImagePreview || ''),
+  );
   const [imageRemoved, setImageRemoved] = useState(false);
   const [technologySuggestions, setTechnologySuggestions] = useState(TECHNOLOGY_SUGGESTIONS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { showFeedback } = useFeedback();
 
   useEffect(() => {
-    setFormData(createInitialFormState(initialData));
+    const nextState = mode === 'edit' && project
+      ? mapProjectToFormState(project)
+      : createInitialFormState(initialData);
+
+    setFormData(nextState);
     setErrors({});
     setSubmitMessage('');
     setImageError('');
     setTechInput('');
     setShowTechInput(false);
     setImageFile(null);
-    setImagePreview(initialData?.currentImagePreview || '');
+    setImagePreview(nextState.currentImagePreview || '');
     setImageRemoved(false);
-  }, [initialData, mode]);
+  }, [initialData, mode, project]);
 
   useEffect(() => {
     if (!imageFile) {
@@ -348,22 +375,32 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved }) {
       return;
     }
 
-    if (mode !== 'create') {
-      setSubmitMessage('Cambios del proyecto listos para guardar localmente.');
-      return;
-    }
-
     setIsSubmitting(true);
     setSubmitMessage('');
 
     try {
       const payload = buildFormData(formData, imageFile);
-      const response = await crearProyecto(payload);
-      const createdProject = response?.data?.project;
 
-      setSubmitMessage('Proyecto guardado exitosamente.');
-      showFeedback('Proyecto guardado exitosamente.');
-      onProjectSaved(createdProject);
+      if (mode === 'create') {
+        const response = await crearProyecto(payload);
+        const createdProject = response?.data?.project;
+
+        setSubmitMessage('Proyecto guardado exitosamente.');
+        showFeedback('Proyecto guardado exitosamente.');
+        onProjectSaved(createdProject);
+      } else {
+        if (!project?.id) {
+          showFeedback('No se encontro el proyecto a editar.', 'error');
+          return;
+        }
+
+        const response = await actualizarProyecto(project.id, payload);
+        const updatedProject = response?.data?.project;
+
+        setSubmitMessage('Cambios guardados exitosamente');
+        showFeedback('Cambios guardados exitosamente');
+        onProjectSaved(updatedProject);
+      }
     } catch (requestError) {
       const status = requestError?.response?.status;
       const backendErrors = requestError?.response?.data?.errors || {};
@@ -394,7 +431,12 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved }) {
         setImageError(nextErrors.image || '');
         showFeedback('Revisa los campos marcados e intenta de nuevo.', 'error');
       } else {
-        showFeedback('No se pudo guardar el proyecto. Intenta nuevamente.', 'error');
+        showFeedback(
+          mode === 'create'
+            ? 'No se pudo guardar el proyecto. Intenta nuevamente.'
+            : 'No se pudo actualizar el proyecto. Intenta nuevamente.',
+          'error',
+        );
       }
     } finally {
       setIsSubmitting(false);
@@ -402,14 +444,18 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved }) {
   };
 
   const handleReset = () => {
-    setFormData(createInitialFormState(initialData));
+    const resetState = mode === 'edit' && project
+      ? mapProjectToFormState(project)
+      : createInitialFormState(initialData);
+
+    setFormData(resetState);
     setErrors({});
     setSubmitMessage('');
     setImageError('');
     setTechInput('');
     setShowTechInput(false);
     setImageFile(null);
-    setImagePreview(initialData?.currentImagePreview || '');
+    setImagePreview(resetState.currentImagePreview || '');
     setImageRemoved(false);
   };
 
@@ -734,6 +780,7 @@ function formatFileSize(sizeInBytes) {
 
 ProjectForm.defaultProps = {
   onProjectSaved: () => {},
+  project: null,
 };
 
 export default ProjectForm;
