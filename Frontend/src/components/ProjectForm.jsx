@@ -9,7 +9,8 @@ import {
   mdiPlus,
   mdiTrashCanOutline,
 } from '@mdi/js';
-import { obtenerTecnologias } from '../services/authService';
+import { crearProyecto, obtenerTecnologias } from '../services/authService';
+import useFeedback from '../hooks/useFeedback';
 
 const TECHNOLOGY_SUGGESTIONS = [
   'JavaScript',
@@ -113,7 +114,7 @@ function buildFormData(formData, imageFile) {
   return payload;
 }
 
-function ProjectForm({ mode, initialData, onSwitchMode }) {
+function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved }) {
   const [formData, setFormData] = useState(() => createInitialFormState(initialData));
   const [errors, setErrors] = useState({});
   const [submitMessage, setSubmitMessage] = useState('');
@@ -124,6 +125,8 @@ function ProjectForm({ mode, initialData, onSwitchMode }) {
   const [imagePreview, setImagePreview] = useState(initialData?.currentImagePreview || '');
   const [imageRemoved, setImageRemoved] = useState(false);
   const [technologySuggestions, setTechnologySuggestions] = useState(TECHNOLOGY_SUGGESTIONS);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showFeedback } = useFeedback();
 
   useEffect(() => {
     setFormData(createInitialFormState(initialData));
@@ -347,20 +350,64 @@ function ProjectForm({ mode, initialData, onSwitchMode }) {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    buildFormData(formData, imageFile);
+    if (mode !== 'create') {
+      setSubmitMessage('Cambios del proyecto listos para guardar localmente.');
+      return;
+    }
 
-    setSubmitMessage(
-      mode === 'create'
-        ? 'Proyecto listo para guardar localmente.'
-        : 'Cambios del proyecto listos para guardar localmente.',
-    );
+    setIsSubmitting(true);
+    setSubmitMessage('');
+
+    try {
+      const payload = buildFormData(formData, imageFile);
+      const response = await crearProyecto(payload);
+      const createdProject = response?.data?.project;
+
+      setSubmitMessage('Proyecto guardado exitosamente.');
+      showFeedback('Proyecto guardado exitosamente.');
+      onProjectSaved(createdProject);
+    } catch (requestError) {
+      const status = requestError?.response?.status;
+      const backendErrors = requestError?.response?.data?.errors || {};
+
+      if (status === 422) {
+        const nextErrors = {};
+
+        if (backendErrors.title?.[0]) {
+          nextErrors.title = backendErrors.title[0];
+        }
+
+        if (backendErrors.description?.[0]) {
+          nextErrors.description = backendErrors.description[0];
+        }
+
+        if (backendErrors.technologies?.[0] || backendErrors['technologies.0']?.[0]) {
+          nextErrors.technologies = backendErrors.technologies?.[0] || backendErrors['technologies.0'][0];
+        }
+
+        if (backendErrors.image?.[0]) {
+          nextErrors.image = backendErrors.image[0];
+        }
+
+        setErrors((current) => ({
+          ...current,
+          ...nextErrors,
+        }));
+        setImageError(nextErrors.image || '');
+        showFeedback('Revisa los campos marcados e intenta de nuevo.', 'error');
+      } else {
+        showFeedback('No se pudo guardar el proyecto. Intenta nuevamente.', 'error');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
@@ -672,16 +719,21 @@ function ProjectForm({ mode, initialData, onSwitchMode }) {
             type="button"
             className="softsave-project-form__cancel"
             onClick={handleReset}
+            disabled={isSubmitting}
           >
             Cancelar
           </button>
-          <button type="submit" className="softsave-button softsave-project-form__submit">
-            {mode === 'create' ? 'Guardar proyecto' : 'Guardar cambios'}
+          <button type="submit" className="softsave-button softsave-project-form__submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Guardando...' : (mode === 'create' ? 'Guardar proyecto' : 'Guardar cambios')}
           </button>
         </div>
       </form>
     </section>
   );
 }
+
+ProjectForm.defaultProps = {
+  onProjectSaved: () => {},
+};
 
 export default ProjectForm;
