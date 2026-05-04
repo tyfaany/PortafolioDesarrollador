@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 
@@ -42,12 +43,25 @@ class ProjectController extends Controller
             'technologies.*' => 'exists:project_technologies,id', // Verifica que las tecnologías existan en el catálogo
             'image' => 'nullable|image|mimes:jpeg,png|max:10240', // Formato JPEG/PNG, máx 10MB[cite: 2]
             'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date', // Inicio no mayor a fin[cite: 2]
+            'end_date' => 'nullable|date',
             'is_in_progress' => 'boolean',
             'demo_url' => 'nullable|url', // URLs válidas[cite: 2]
             'repo_url' => 'nullable|url', // URLs válidas[cite: 2]
             'is_public' => 'boolean'
         ]);
+
+        $isInProgress = (bool) ($validated['is_in_progress'] ?? false);
+        if ($isInProgress) {
+            $validated['end_date'] = null;
+        } elseif (
+            !empty($validated['start_date']) &&
+            !empty($validated['end_date']) &&
+            Carbon::parse($validated['end_date'])->lt(Carbon::parse($validated['start_date']))
+        ) {
+            return response()->json([
+                'message' => 'La fecha de fin debe ser mayor o igual a la fecha de inicio cuando el proyecto no está en progreso.'
+            ], 422);
+        }
 
         try {
             // Usamos una transacción: Si algo falla a la mitad, no se guarda basura en la BD
@@ -114,12 +128,25 @@ class ProjectController extends Controller
             'technologies.*' => 'exists:project_technologies,id',
             'image' => 'nullable|image|mimes:jpeg,png|max:10240',
             'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'end_date' => 'nullable|date',
             'is_in_progress' => 'boolean',
             'demo_url' => 'nullable|url',
             'repo_url' => 'nullable|url',
             'is_public' => 'boolean'
         ]);
+
+        $isInProgress = (bool) ($validated['is_in_progress'] ?? false);
+        if ($isInProgress) {
+            $validated['end_date'] = null;
+        } elseif (
+            !empty($validated['start_date']) &&
+            !empty($validated['end_date']) &&
+            Carbon::parse($validated['end_date'])->lt(Carbon::parse($validated['start_date']))
+        ) {
+            return response()->json([
+                'message' => 'La fecha de fin debe ser mayor o igual a la fecha de inicio cuando el proyecto no está en progreso.'
+            ], 422);
+        }
 
         try {
             DB::beginTransaction();
