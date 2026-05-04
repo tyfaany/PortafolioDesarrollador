@@ -565,7 +565,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved }) {
 
               <div className="softsave-project-form__image-meta">
                 <strong>{formData.currentImageName || imageFile?.name || 'Sin imagen seleccionada'}</strong>
-                <span>JPEG o PNG hasta 10MB</span>
+                <span>{imageFile ? formatFileSize(imageFile.size) : 'JPEG o PNG hasta 10MB'}</span>
               </div>
 
               <label className="softsave-project-form__mini-button">
@@ -597,7 +597,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved }) {
               </div>
               <div className="softsave-project-form__image-meta">
                 <strong>{imageFile.name}</strong>
-                <span>{(imageFile.size / (1024 * 1024)).toFixed(2)} MB</span>
+                <span>{formatFileSize(imageFile.size)}</span>
               </div>
             </div>
           ) : null}
@@ -722,6 +722,14 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved }) {
       </form>
     </section>
   );
+}
+
+function formatFileSize(sizeInBytes) {
+  if (!sizeInBytes) {
+    return '';
+  }
+
+  return `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
 ProjectForm.defaultProps = {
