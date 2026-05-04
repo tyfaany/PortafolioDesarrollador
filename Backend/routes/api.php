@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\TechnicalSkillController;
 use App\Http\Controllers\Api\SoftSkillController;
 use App\Http\Controllers\Api\StudyController; // Importación agregada para evitar errores del equipo
 use App\Http\Controllers\Api\ProjectTechnologyController;
+use App\Http\Controllers\Api\PrivacyController;
 use App\Http\Controllers\ProjectController;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -28,6 +29,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [UserController::class, 'show']);
     Route::get('/user/contact', [UserController::class, 'showContact']);
     Route::put('/user/contact', [UserController::class, 'updateContact']);
+    Route::get('/user/privacy', [PrivacyController::class, 'show']);
+    Route::put('/user/privacy', [PrivacyController::class, 'update']);
 
     // --- Tus Rutas (Experiencia y Habilidades) ---
     Route::get('/user/jobs', [JobController::class, 'index']);
@@ -50,4 +53,3 @@ Route::middleware('auth:sanctum')->group(function () {
     // Ruta para listar todos los proyectos del usuario
     Route::get('/user/projects', [ProjectController::class, 'index']);
 });
-
