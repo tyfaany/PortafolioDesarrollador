@@ -606,7 +606,7 @@ function AcademicExperienceSection({
               <div className="softsave-profile__modal-content">
                 <h3 className="softsave-profile__modal-title">Eliminar experiencia académica</h3>
                 <p className="softsave-profile__modal-text">
-                  Esta acción eliminará "{estudioPendienteEliminar.academic_institution}" de tu portafolio.
+                  Esta acción eliminará &quot;{estudioPendienteEliminar.academic_institution}&quot; de tu portafolio.
                 </p>
               </div>
             </header>

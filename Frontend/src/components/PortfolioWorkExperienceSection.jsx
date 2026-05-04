@@ -877,7 +877,7 @@ function PortfolioWorkExperienceSection() {
               <div className="softsave-profile__modal-content">
                 <h3 className="softsave-profile__modal-title">Eliminar experiencia laboral</h3>
                 <p className="softsave-profile__modal-text">
-                  Esta acción eliminará "{trabajoPendienteEliminar.company_name}" de tu portafolio.
+                  Esta acción eliminará &quot;{trabajoPendienteEliminar.company_name}&quot; de tu portafolio.
                 </p>
               </div>
             </header>

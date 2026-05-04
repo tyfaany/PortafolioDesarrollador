@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Icon from '@mdi/react';
+import PropTypes from 'prop-types';
 import {
   mdiCheckCircleOutline,
   mdiClose,
@@ -313,7 +314,6 @@ function ProjectForm({
   }, []);
 
   const cardTitle = mode === 'create' ? 'Nuevo proyecto' : formData.title || 'Proyecto personal';
-  const hasImage = Boolean((imagePreview && !imageRemoved) || (formData.currentImagePreview && !imageRemoved));
   const selectedTechs = formData.technologies;
 
   const visiblePreview = useMemo(() => {
@@ -1002,5 +1002,41 @@ function formatFileSize(sizeInBytes) {
 
   return `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
 }
+
+ProjectForm.propTypes = {
+  mode: PropTypes.oneOf(['create', 'edit']).isRequired,
+  initialData: PropTypes.shape({
+    title: PropTypes.string,
+    description: PropTypes.string,
+    technologies: PropTypes.array,
+    startDate: PropTypes.string,
+    endDate: PropTypes.string,
+    inProgress: PropTypes.bool,
+    demoUrl: PropTypes.string,
+    repositoryUrl: PropTypes.string,
+    visibility: PropTypes.oneOf(['public', 'private']),
+    currentImageName: PropTypes.string,
+    currentImagePreview: PropTypes.string,
+  }),
+  onSwitchMode: PropTypes.func,
+  onProjectSaved: PropTypes.func,
+  project: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    title: PropTypes.string,
+    description: PropTypes.string,
+    technologies: PropTypes.array,
+    start_date: PropTypes.string,
+    end_date: PropTypes.string,
+    is_in_progress: PropTypes.bool,
+    demo_url: PropTypes.string,
+    repo_url: PropTypes.string,
+    is_public: PropTypes.bool,
+    image_path: PropTypes.string,
+    image_url: PropTypes.string,
+  }),
+  showModeActions: PropTypes.bool,
+  onCancel: PropTypes.func,
+  showHeader: PropTypes.bool,
+};
 
 export default ProjectForm;

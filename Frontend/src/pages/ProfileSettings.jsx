@@ -5,7 +5,6 @@ import {
   mdiAccount,
   mdiCameraOutline,
   mdiClose,
-  mdiCogOutline,
   mdiContentSaveOutline,
   mdiGithub,
   mdiImageOutline,
@@ -117,7 +116,6 @@ function ProfileSettings() {
   const navigate = useNavigate();
   const { pathname } = location;
   const inputImagenRef = useRef(null);
-  const botonEnlacesRef = useRef(null);
   const modalAvatarRef = useRef(null);
   const arrastreImagenRef = useRef({
     activo: false,
@@ -502,16 +500,6 @@ function ProfileSettings() {
     setErroresFormulario({});
     setMensajeGuardadoError("");
     setEstaModalPerfilAbierto(false);
-  };
-
-  const abrirModalEnlaces = () => {
-    setFormularioEnlaces({
-      githubUrl: user?.github_url || "",
-      linkedinUrl: user?.linkedin_url || "",
-    });
-    setErroresEnlaces({});
-    setMensajeEnlacesError("");
-    setEstaModalEnlacesAbierto(true);
   };
 
   const cerrarModalEnlaces = () => {

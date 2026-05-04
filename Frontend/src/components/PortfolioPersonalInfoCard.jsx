@@ -11,11 +11,11 @@ function sanitizarTexto(valor) {
 }
 
 function normalizarProfesion(valor) {
-  return String(valor || '').replace(/[^\p{L}\p{N}\s.,\-\/()&]/gu, '');
+  return String(valor || '').replace(/[^\p{L}\p{N}\s.,/()&-]/gu, '');
 }
 
 function esProfesionValida(valor) {
-  return /^(?=.*\p{L})[\p{L}\p{N}]+(?:[ .,&()\/-][\p{L}\p{N}]+)*$/u.test(valor);
+  return /^(?=.*\p{L})[\p{L}\p{N}]+(?:[ .,&()/-][\p{L}\p{N}]+)*$/u.test(valor);
 }
 
 function PortfolioPersonalInfoCard() {

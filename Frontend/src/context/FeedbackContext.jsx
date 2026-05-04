@@ -1,11 +1,7 @@
-import { createContext, useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import FeedbackToast from '../components/FeedbackToast';
-
-export const FeedbackContext = createContext({
-  showFeedback: () => {},
-  clearFeedback: () => {},
-});
+import { FeedbackContext } from './FeedbackContext';
 
 function FeedbackProvider({ children }) {
   const [toast, setToast] = useState({

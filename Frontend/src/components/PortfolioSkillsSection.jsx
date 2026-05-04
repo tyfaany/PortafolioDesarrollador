@@ -1042,7 +1042,7 @@ function PortfolioSkillsSection() {
               <div className="softsave-profile__modal-content">
                 <h3 className="softsave-profile__modal-title">Eliminar habilidad técnica</h3>
                 <p className="softsave-profile__modal-text">
-                  Esta acción eliminará "{tecnicaPendienteEliminar.name}" de tu portafolio.
+                  Esta acción eliminará &quot;{tecnicaPendienteEliminar.name}&quot; de tu portafolio.
                 </p>
               </div>
             </header>

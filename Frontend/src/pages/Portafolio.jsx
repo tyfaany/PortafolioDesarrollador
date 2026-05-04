@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Icon from '@mdi/react';
-import { mdiChevronDown, mdiChevronUp, mdiPlus } from '@mdi/js';
+import { mdiChevronUp, mdiPlus } from '@mdi/js';
 import AcademicExperienceSection from '../components/AcademicExperienceSection';
 import ProjectForm from '../components/ProjectForm';
 import ProjectList from '../components/ProjectList';
