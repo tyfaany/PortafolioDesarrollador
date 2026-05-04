@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import AcademicExperienceSection from '../components/AcademicExperienceSection';
 import ProjectForm from '../components/ProjectForm';
+import ProjectList from '../components/ProjectList';
 import PortfolioPersonalInfoCard from '../components/PortfolioPersonalInfoCard';
 import PortfolioSkillsSection from '../components/PortfolioSkillsSection';
 import PortfolioWorkExperienceSection from '../components/PortfolioWorkExperienceSection';
@@ -27,27 +28,33 @@ const PROJECT_DRAFT = {
   currentImagePreview: '',
 };
 
-const PROJECT_SAMPLE = {
-  title: 'E-commerce Platform',
-  description:
-    'Plataforma de compras con carrito de compras y pago integrado con multiples metodos de pago.',
-  technologies: ['React', 'Node.js', 'MongoDB', 'Docker'],
-  startDate: '2023-06-01',
-  endDate: '2023-09-30',
-  inProgress: false,
-  demoUrl: 'https://ecommerce-demo.com',
-  repositoryUrl: 'https://github.com/john/ecommerce',
-  visibility: 'public',
-  currentImageName: 'Imagen_Proyecto.png',
-  currentImagePreview:
-    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='220' viewBox='0 0 360 220'%3E%3Crect width='360' height='220' rx='24' fill='%23F4F7F6'/%3E%3Crect x='30' y='26' width='300' height='168' rx='18' fill='%23FFFFFF' stroke='%23D7DEE5'/%3E%3Crect x='54' y='54' width='252' height='22' rx='11' fill='%23F2540D' fill-opacity='.14'/%3E%3Crect x='54' y='92' width='168' height='12' rx='6' fill='%232C3E50' fill-opacity='.18'/%3E%3Crect x='54' y='116' width='222' height='12' rx='6' fill='%232C3E50' fill-opacity='.12'/%3E%3Crect x='54' y='150' width='92' height='24' rx='12' fill='%23F2540D'/%3E%3C/svg%3E",
-};
-
 function Portfolio() {
   const [tabActiva, setTabActiva] = useState('general');
   const [modoProyecto, setModoProyecto] = useState('create');
+  const [proyectoEnEdicion, setProyectoEnEdicion] = useState(null);
+  const [refreshProjectsKey, setRefreshProjectsKey] = useState(0);
   const panelIdActivo = `portafolio-panel-${tabActiva}`;
   const tabIdActiva = `portafolio-tab-${tabActiva}`;
+
+  const handleEditProject = (project) => {
+    setProyectoEnEdicion(project);
+    setModoProyecto('edit');
+  };
+
+  const handleProjectSaved = (project) => {
+    if (project?.id) {
+      setProyectoEnEdicion(project);
+    }
+
+    setRefreshProjectsKey((current) => current + 1);
+  };
+
+  const handleSwitchProjectMode = (nextMode) => {
+    setModoProyecto(nextMode);
+    if (nextMode === 'create') {
+      setProyectoEnEdicion(null);
+    }
+  };
 
   return (
     <div className="softsave-portafolio-shell softsave-portafolio-shell--portfolio">
@@ -89,10 +96,16 @@ function Portfolio() {
             aria-labelledby={tabIdActiva}
             className="softsave-portafolio-stack"
           >
+            <ProjectList
+              onEdit={handleEditProject}
+              refreshKey={refreshProjectsKey}
+            />
             <ProjectForm
               mode={modoProyecto}
-              initialData={modoProyecto === 'create' ? PROJECT_DRAFT : PROJECT_SAMPLE}
-              onSwitchMode={setModoProyecto}
+              initialData={PROJECT_DRAFT}
+              project={modoProyecto === 'edit' ? proyectoEnEdicion : null}
+              onSwitchMode={handleSwitchProjectMode}
+              onProjectSaved={handleProjectSaved}
             />
           </section>
         )}

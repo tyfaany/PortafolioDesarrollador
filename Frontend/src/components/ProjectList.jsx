@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import ProjectCard from './ProjectCard';
-import { obtenerProyectos, toggleVisibilidadProyecto } from '../services/authService';
+import { eliminarProyecto, obtenerProyectos, toggleVisibilidadProyecto } from '../services/authService';
 import useFeedback from '../hooks/useFeedback';
 
-function ProjectList({ onEdit, onDelete }) {
+function ProjectList({ onEdit, refreshKey }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [pendingToggleIds, setPendingToggleIds] = useState([]);
+  const [projectToDelete, setProjectToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { showFeedback } = useFeedback();
 
   useEffect(() => {
@@ -44,7 +46,7 @@ function ProjectList({ onEdit, onDelete }) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [refreshKey]);
 
   const handleToggleVisibility = async (project) => {
     const projectId = project?.id;
@@ -80,6 +82,50 @@ function ProjectList({ onEdit, onDelete }) {
     }
   };
 
+  const requestDeleteProject = (project) => {
+    setProjectToDelete(project);
+  };
+
+  const closeDeleteModal = () => {
+    if (isDeleting) {
+      return;
+    }
+
+    setProjectToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!projectToDelete?.id) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await eliminarProyecto(projectToDelete.id);
+      setProjects((current) => current.filter((item) => item.id !== projectToDelete.id));
+      showFeedback('Proyecto eliminado correctamente.');
+      setProjectToDelete(null);
+    } catch (requestError) {
+      const status = requestError?.response?.status;
+
+      if (status === 403) {
+        showFeedback('No tienes permisos para eliminar este proyecto.', 'error');
+        return;
+      }
+
+      if (status === 404) {
+        setProjects((current) => current.filter((item) => item.id !== projectToDelete.id));
+        showFeedback('El proyecto ya no existe en el servidor.');
+        setProjectToDelete(null);
+        return;
+      }
+
+      showFeedback('No se pudo eliminar el proyecto. Intenta nuevamente.', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return <p className="softsave-project-form__hint">Cargando proyectos...</p>;
   }
@@ -102,24 +148,62 @@ function ProjectList({ onEdit, onDelete }) {
             <ProjectCard
               project={project}
               onEdit={onEdit}
-              onDelete={onDelete}
+              onDelete={requestDeleteProject}
               onToggleVisibility={handleToggleVisibility}
             />
           </div>
         );
       })}
+
+      {projectToDelete ? (
+        <div
+          className="softsave-profile__modal-overlay softsave-profile__modal-overlay--centered"
+          role="dialog"
+          aria-modal="true"
+          onClick={closeDeleteModal}
+        >
+          <div className="softsave-profile__modal softsave-profile__modal--confirm" onClick={(event) => event.stopPropagation()}>
+            <header className="softsave-profile__modal-header">
+              <div className="softsave-profile__modal-content">
+                <h3 className="softsave-profile__modal-title">Eliminar proyecto</h3>
+                <p className="softsave-profile__modal-text">
+                  ¿Seguro que deseas eliminar <strong>{projectToDelete.title}</strong>? Esta accion no se puede deshacer.
+                </p>
+              </div>
+            </header>
+            <div className="softsave-profile__modal-actions">
+              <button
+                type="button"
+                className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
+                onClick={closeDeleteModal}
+                disabled={isDeleting}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="softsave-button softsave-button--danger"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
 
 ProjectList.propTypes = {
   onEdit: PropTypes.func,
-  onDelete: PropTypes.func,
+  refreshKey: PropTypes.number,
 };
 
 ProjectList.defaultProps = {
   onEdit: () => {},
-  onDelete: () => {},
+  refreshKey: 0,
 };
 
 export default ProjectList;
