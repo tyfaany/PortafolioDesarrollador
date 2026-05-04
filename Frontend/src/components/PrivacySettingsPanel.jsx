@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Icon from '@mdi/react';
-import {
-  mdiCogOutline,
-  mdiEyeOutline,
-  mdiLockOutline,
-  mdiLockOpenVariantOutline,
-} from '@mdi/js';
+import { mdiLockOutline, mdiLockOpenVariantOutline } from '@mdi/js';
 import { actualizarPrivacidad, obtenerPrivacidad } from '../services/authService';
 import useFeedback from '../hooks/useFeedback';
 
@@ -87,7 +82,6 @@ function PrivacySettingsPanel() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isHidingAll, setIsHidingAll] = useState(false);
-  const alwaysVisibleSections = 5;
   const { showFeedback } = useFeedback();
   const sections = useMemo(
     () => SECTIONS.map((section) => mapSectionVisibility(section, privacyConfig)),
@@ -130,8 +124,8 @@ function PrivacySettingsPanel() {
   }, []);
 
   const visibleSummary = useMemo(() => {
-    const visibleCount = sections.filter((section) => section.visible).length + alwaysVisibleSections;
-    return `${visibleCount} de 9 secciones visibles`;
+    const visibleCount = sections.filter((section) => section.visible).length;
+    return `${visibleCount} de ${sections.length} secciones configurables visibles`;
   }, [sections]);
 
   const toggleSection = async (sectionId) => {
@@ -197,7 +191,7 @@ function PrivacySettingsPanel() {
         ...current,
         ...hiddenConfig,
       }));
-      showFeedback('Se ocultaron todas las secciones del perfil.');
+      showFeedback('Se ocultaron todas las secciones configurables del perfil.');
     } catch {
       showFeedback('No se pudo ocultar todo. Intenta nuevamente.', 'error');
     } finally {
@@ -206,20 +200,15 @@ function PrivacySettingsPanel() {
   };
 
   return (
-    <section className="softsave-privacy">
-      <header className="softsave-privacy__header">
-        <div className="softsave-privacy__title-wrap">
-          <span className="softsave-privacy__icon" aria-hidden="true">
-            <Icon path={mdiCogOutline} size={1.15} />
-          </span>
-          <div>
-            <h2 className="softsave-privacy__title">Configuracion de Privacidad</h2>
-            <p className="softsave-privacy__subtitle">
-              Controla que informacion se muestra en tu portafolio publico
-            </p>
-          </div>
+    <section className="softsave-profile__form-card softsave-privacy">
+      <div className="softsave-profile__section-head">
+        <div>
+          <h2 className="softsave-profile__form-title">Configuracion de Privacidad</h2>
+          <p className="softsave-profile__form-subtitle">
+            Controla que informacion se muestra en tu portafolio publico.
+          </p>
         </div>
-      </header>
+      </div>
 
       <article className="softsave-privacy__card">
         <div className="softsave-privacy__general">
@@ -229,13 +218,9 @@ function PrivacySettingsPanel() {
           </div>
 
           <div className="softsave-privacy__general-actions">
-            <button type="button" className="softsave-privacy__primary-action">
-              <Icon path={mdiEyeOutline} size={0.9} />
-              Ver portafolio publico
-            </button>
             <button
               type="button"
-              className="softsave-privacy__secondary-action"
+              className="softsave-button softsave-button--danger"
               onClick={hideAll}
               disabled={isHidingAll || isLoading}
             >
@@ -262,8 +247,11 @@ function PrivacySettingsPanel() {
               <div className="softsave-privacy__item-copy">
                 <div className="softsave-privacy__item-title">
                   <strong>{section.title}</strong>
-                  <span className="softsave-privacy__item-lock" aria-hidden="true">
-                    <Icon path={mdiLockOpenVariantOutline} size={0.82} />
+                  <span
+                    className={`softsave-privacy__item-lock ${section.visible ? 'is-visible' : 'is-hidden'}`}
+                    aria-hidden="true"
+                  >
+                    <Icon path={section.visible ? mdiLockOpenVariantOutline : mdiLockOutline} size={0.82} />
                   </span>
                 </div>
                 <p>{section.description}</p>

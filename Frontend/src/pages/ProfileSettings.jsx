@@ -34,6 +34,7 @@ const SECCIONES_PERFIL = [
     route: "/perfil/academica",
   },
   { id: "github", label: "Ecosistema de Git Hub", route: "/perfil/github" },
+  { id: "privacidad", label: "Privacidad", route: "/perfil/privacidad" },
 ];
 
 function obtenerIniciales(nombreCompleto) {
@@ -46,10 +47,6 @@ function obtenerIniciales(nombreCompleto) {
 }
 
 function obtenerSeccionActiva(pathname) {
-  if (pathname === "/perfil/privacidad") {
-    return "privacidad";
-  }
-
   const seccionActiva = SECCIONES_PERFIL.find(
     ({ route }) => pathname === route,
   );
@@ -159,6 +156,8 @@ function ProfileSettings() {
     nombreCompleto: user?.name || "",
     profesion: user?.profession || "",
     biografia: user?.biography || "",
+    githubUrl: user?.github_url || "",
+    linkedinUrl: user?.linkedin_url || "",
   });
   const [formularioEnlaces, setFormularioEnlaces] = useState({
     githubUrl: user?.github_url || "",
@@ -224,6 +223,8 @@ function ProfileSettings() {
       nombreCompleto: user.name || "",
       profesion: user.profession || "",
       biografia: user.biography || "",
+      githubUrl: user.github_url || "",
+      linkedinUrl: user.linkedin_url || "",
     };
 
     setPerfilCabecera(datosPerfil);
@@ -263,6 +264,8 @@ function ProfileSettings() {
     const nombreLimpio = sanitizarTexto(formularioPerfil.nombreCompleto);
     const profesionLimpia = sanitizarTexto(formularioPerfil.profesion);
     const biografiaLimpia = sanitizarTexto(formularioPerfil.biografia);
+    const githubError = validarUrlProfesional(formularioPerfil.githubUrl, "GitHub");
+    const linkedinError = validarUrlProfesional(formularioPerfil.linkedinUrl, "LinkedIn");
 
     if (!nombreLimpio) {
       nuevosErrores.nombreCompleto = "El nombre es obligatorio.";
@@ -285,6 +288,12 @@ function ProfileSettings() {
       nuevosErrores.biografia =
         "La biografía debe tener máximo 1000 caracteres.";
     }
+    if (githubError) {
+      nuevosErrores.githubUrl = githubError;
+    }
+    if (linkedinError) {
+      nuevosErrores.linkedinUrl = linkedinError;
+    }
 
     setErroresFormulario(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
@@ -301,8 +310,8 @@ function ProfileSettings() {
       name: sanitizarTexto(formularioPerfil.nombreCompleto),
       profession: sanitizarTexto(formularioPerfil.profesion),
       biography: sanitizarTexto(formularioPerfil.biografia),
-      github_url: user?.github_url || null,
-      linkedin_url: user?.linkedin_url || null,
+      github_url: sanitizarTexto(formularioPerfil.githubUrl) || null,
+      linkedin_url: sanitizarTexto(formularioPerfil.linkedinUrl) || null,
     };
 
     setGuardandoPerfil(true);
@@ -316,6 +325,8 @@ function ProfileSettings() {
         nombreCompleto: payloadPerfil.name,
         profesion: payloadPerfil.profession,
         biografia: payloadPerfil.biography,
+        githubUrl: payloadPerfil.github_url || "",
+        linkedinUrl: payloadPerfil.linkedin_url || "",
       });
       setEstaModalPerfilAbierto(false);
       setMensajeGuardadoExito("Información actualizada correctamente");
@@ -454,6 +465,8 @@ function ProfileSettings() {
       nombreCompleto: perfilCabecera.nombreCompleto,
       profesion: perfilCabecera.profesion,
       biografia: perfilCabecera.biografia,
+      githubUrl: user?.github_url || "",
+      linkedinUrl: user?.linkedin_url || "",
     });
     setErroresFormulario({});
     setMensajeGuardadoError("");
@@ -604,24 +617,6 @@ function ProfileSettings() {
         <div className="softsave-profile__contact-actions">
           <button
             type="button"
-            className="softsave-profile__secondary-button softsave-profile__secondary-button--pill softsave-profile__privacy-link"
-            onClick={() => navigate("/perfil/privacidad")}
-          >
-            <Icon path={mdiCogOutline} size={0.85} />
-            Configuracion de Privacidad
-          </button>
-
-          <button
-            ref={botonEnlacesRef}
-            type="button"
-            className="softsave-button softsave-button--compact softsave-profile__section-button"
-            onClick={abrirModalEnlaces}
-          >
-            Enlaces profesionales
-          </button>
-
-          <button
-            type="button"
             className="softsave-button softsave-profile__primary-button"
             onClick={abrirModalPerfil}
             title="Editar perfil"
@@ -743,7 +738,7 @@ function ProfileSettings() {
         <button
           type="button"
           className="softsave-button softsave-button--compact softsave-profile__section-button"
-          onClick={abrirModalEnlaces}
+          onClick={abrirModalPerfil}
         >
           Enlaces profesionales
         </button>
@@ -773,16 +768,6 @@ function ProfileSettings() {
         </p>
       )}
 
-      <div className="softsave-profile__panel-actions">
-        <button
-          type="button"
-          className="softsave-profile__secondary-button softsave-profile__secondary-button--pill softsave-profile__privacy-link"
-          onClick={() => navigate("/perfil/privacidad")}
-        >
-          <Icon path={mdiCogOutline} size={0.85} />
-          Configuracion de Privacidad
-        </button>
-      </div>
     </section>
   );
 
@@ -1106,6 +1091,40 @@ function ProfileSettings() {
                 {erroresFormulario.biografia ? (
                   <span className="error-text softsave-profile__error-text" role="alert">
                     {erroresFormulario.biografia}
+                  </span>
+                ) : null}
+              </label>
+
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">URL de GitHub</span>
+                <input
+                  type="url"
+                  name="githubUrl"
+                  value={formularioPerfil.githubUrl}
+                  onChange={manejarCambioFormulario}
+                  className="softsave-input softsave-profile__input"
+                  placeholder="https://github.com/tu-usuario"
+                />
+                {erroresFormulario.githubUrl ? (
+                  <span className="error-text softsave-profile__error-text" role="alert">
+                    {erroresFormulario.githubUrl}
+                  </span>
+                ) : null}
+              </label>
+
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">URL de LinkedIn</span>
+                <input
+                  type="url"
+                  name="linkedinUrl"
+                  value={formularioPerfil.linkedinUrl}
+                  onChange={manejarCambioFormulario}
+                  className="softsave-input softsave-profile__input"
+                  placeholder="https://www.linkedin.com/in/tu-perfil"
+                />
+                {erroresFormulario.linkedinUrl ? (
+                  <span className="error-text softsave-profile__error-text" role="alert">
+                    {erroresFormulario.linkedinUrl}
                   </span>
                 ) : null}
               </label>
