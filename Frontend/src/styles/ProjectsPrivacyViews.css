@@ -71,6 +71,11 @@
   padding: 16px 18px 18px;
 }
 
+.softsave-projects-list {
+  display: grid;
+  gap: 16px;
+}
+
 .softsave-projects-card__header {
   display: flex;
   align-items: flex-start;
@@ -134,6 +139,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
 }
 
 .softsave-projects-card__icon-button {
@@ -553,6 +560,71 @@
   transform: translateX(20px);
 }
 
+.softsave-projects-card > .softsave-project-form__upload-preview {
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid rgba(var(--color-texto-rgb), 0.08);
+  border-radius: 12px;
+  background-color: rgba(var(--color-texto-rgb), 0.02);
+}
+
+.softsave-projects-card--composer .softsave-projects-card__header {
+  margin-bottom: 0;
+}
+
+.softsave-projects-card__summary {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.softsave-projects-card__summary p {
+  margin: 0;
+  color: var(--color-texto);
+  line-height: 1.5;
+}
+
+.softsave-projects-card .softsave-project-form__hint {
+  margin-top: 4px;
+}
+
+.softsave-projects-card__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 0.86rem;
+}
+
+.softsave-projects-card__links a {
+  color: var(--color-primario);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.softsave-projects-card__links a:hover,
+.softsave-projects-card__links a:focus-visible {
+  text-decoration: underline;
+}
+
+.softsave-projects-card__links span {
+  color: var(--color-texto-suave);
+}
+
+.softsave-projects-card__editor {
+  margin-top: 12px;
+  padding: 14px 14px 8px;
+  border: 1px dashed rgba(var(--color-primario-rgb), 0.28);
+  border-radius: 14px;
+  background-color: #fffaf7;
+}
+
+.softsave-projects-card__editor .softsave-projects-card {
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+}
+
 @media (max-width: 768px) {
   .softsave-workspace {
     padding: 18px 12px 30px;
@@ -583,7 +655,11 @@
   }
 
   .softsave-projects-card__actions {
-    justify-content: flex-end;
+    justify-content: stretch;
+  }
+
+  .softsave-projects-card__actions .softsave-project-form__mini-button {
+    width: 100%;
   }
 
   .softsave-project-form__grid,
@@ -594,6 +670,11 @@
 
   .softsave-project-form__footer {
     flex-direction: column;
+  }
+
+  .softsave-projects-card__links {
+    flex-direction: column;
+    gap: 4px;
   }
 
   .softsave-project-form__cancel,

@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import ProjectCard from './ProjectCard';
+import ProjectForm from './ProjectForm';
 import { eliminarProyecto, obtenerProyectos, toggleVisibilidadProyecto } from '../services/authService';
 import useFeedback from '../hooks/useFeedback';
 
-function ProjectList({ onEdit = () => {}, refreshKey = 0 }) {
+function ProjectList({ refreshKey = 0 }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [pendingToggleIds, setPendingToggleIds] = useState([]);
   const [projectToDelete, setProjectToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [expandedEditId, setExpandedEditId] = useState(null);
   const { showFeedback } = useFeedback();
 
   useEffect(() => {
@@ -86,6 +88,24 @@ function ProjectList({ onEdit = () => {}, refreshKey = 0 }) {
     setProjectToDelete(project);
   };
 
+  const toggleEdit = (project) => {
+    const projectId = project?.id;
+    if (!projectId) {
+      return;
+    }
+
+    setExpandedEditId((current) => (current === projectId ? null : projectId));
+  };
+
+  const handleProjectUpdated = (updatedProject) => {
+    if (!updatedProject?.id) {
+      return;
+    }
+
+    setProjects((current) => current.map((item) => (item.id === updatedProject.id ? updatedProject : item)));
+    setExpandedEditId(null);
+  };
+
   const closeDeleteModal = () => {
     if (isDeleting) {
       return;
@@ -139,7 +159,7 @@ function ProjectList({ onEdit = () => {}, refreshKey = 0 }) {
   }
 
   return (
-    <section className="softsave-privacy__list" aria-label="Listado de proyectos">
+    <section className="softsave-projects-list" aria-label="Listado de proyectos">
       {projects.map((project) => {
         const isPending = pendingToggleIds.includes(project.id);
 
@@ -147,10 +167,24 @@ function ProjectList({ onEdit = () => {}, refreshKey = 0 }) {
           <div key={project.id} aria-busy={isPending}>
             <ProjectCard
               project={project}
-              onEdit={onEdit}
               onDelete={requestDeleteProject}
               onToggleVisibility={handleToggleVisibility}
+              onToggleEdit={toggleEdit}
+              isExpanded={expandedEditId === project.id}
             />
+            {expandedEditId === project.id ? (
+              <div className="softsave-projects-card__editor">
+                <ProjectForm
+                  mode="edit"
+                  project={project}
+                  initialData={null}
+                  onProjectSaved={handleProjectUpdated}
+                  showModeActions={false}
+                  onCancel={() => setExpandedEditId(null)}
+                  showHeader={false}
+                />
+              </div>
+            ) : null}
           </div>
         );
       })}
@@ -197,7 +231,6 @@ function ProjectList({ onEdit = () => {}, refreshKey = 0 }) {
 }
 
 ProjectList.propTypes = {
-  onEdit: PropTypes.func,
   refreshKey: PropTypes.number,
 };
 

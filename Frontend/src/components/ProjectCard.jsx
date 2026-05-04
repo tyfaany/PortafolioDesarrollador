@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
 import {
+  mdiChevronDown,
+  mdiChevronUp,
   mdiEyeOffOutline,
   mdiEyeOutline,
   mdiImageOutline,
@@ -59,15 +61,12 @@ function resolveImageUrl(project) {
   return project?.image_url || project?.image_path || project?.currentImagePreview || '';
 }
 
-function ProjectCard({
-  project,
-  onEdit = () => {},
-  onDelete = () => {},
-  onToggleVisibility = () => {},
-}) {
+function ProjectCard({ project, onDelete = () => {}, onToggleVisibility = () => {}, onToggleEdit = () => {}, isExpanded = false }) {
   const technologies = normalizeTechnologies(project?.technologies);
   const isPublic = Boolean(project?.is_public ?? project?.visibility === 'public');
   const imageUrl = resolveImageUrl(project);
+  const demoUrl = project?.demo_url || '';
+  const repoUrl = project?.repo_url || project?.repository_url || '';
 
   return (
     <article className="softsave-projects-card" aria-label={`Proyecto ${project?.title || ''}`}>
@@ -92,7 +91,13 @@ function ProjectCard({
           )}
         </div>
 
-        <p>{truncateDescription(project?.description || '')}</p>
+        <div className="softsave-projects-card__summary">
+          <p>{truncateDescription(project?.description || '')}</p>
+          <div className="softsave-projects-card__links">
+            {demoUrl ? <a href={demoUrl} target="_blank" rel="noreferrer">Demo</a> : <span>Demo: no disponible</span>}
+            {repoUrl ? <a href={repoUrl} target="_blank" rel="noreferrer">Repositorio</a> : <span>Repo: no disponible</span>}
+          </div>
+        </div>
       </div>
 
       <div className="softsave-project-form__chips" aria-label="Tecnologias del proyecto">
@@ -116,10 +121,10 @@ function ProjectCard({
         <button
           type="button"
           className="softsave-project-form__mini-button"
-          onClick={() => onEdit(project)}
+          onClick={() => onToggleEdit(project)}
         >
-          <Icon path={mdiPencilOutline} size={0.8} />
-          Editar
+          <Icon path={isExpanded ? mdiChevronUp : mdiPencilOutline} size={0.8} />
+          {isExpanded ? 'Cerrar edicion' : 'Editar'}
         </button>
 
         <button
@@ -162,9 +167,10 @@ ProjectCard.propTypes = {
     image_path: PropTypes.string,
     currentImagePreview: PropTypes.string,
   }).isRequired,
-  onEdit: PropTypes.func,
   onDelete: PropTypes.func,
   onToggleVisibility: PropTypes.func,
+  onToggleEdit: PropTypes.func,
+  isExpanded: PropTypes.bool,
 };
 
 export default ProjectCard;

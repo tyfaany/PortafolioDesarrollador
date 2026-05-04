@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import Icon from '@mdi/react';
+import { mdiChevronDown, mdiChevronUp, mdiPlus } from '@mdi/js';
 import AcademicExperienceSection from '../components/AcademicExperienceSection';
 import ProjectForm from '../components/ProjectForm';
 import ProjectList from '../components/ProjectList';
@@ -30,30 +32,14 @@ const PROJECT_DRAFT = {
 
 function Portfolio() {
   const [tabActiva, setTabActiva] = useState('general');
-  const [modoProyecto, setModoProyecto] = useState('create');
-  const [proyectoEnEdicion, setProyectoEnEdicion] = useState(null);
+  const [isCreateExpanded, setIsCreateExpanded] = useState(false);
   const [refreshProjectsKey, setRefreshProjectsKey] = useState(0);
   const panelIdActivo = `portafolio-panel-${tabActiva}`;
   const tabIdActiva = `portafolio-tab-${tabActiva}`;
 
-  const handleEditProject = (project) => {
-    setProyectoEnEdicion(project);
-    setModoProyecto('edit');
-  };
-
-  const handleProjectSaved = (project) => {
-    if (project?.id) {
-      setProyectoEnEdicion(project);
-    }
-
+  const handleProjectSaved = () => {
     setRefreshProjectsKey((current) => current + 1);
-  };
-
-  const handleSwitchProjectMode = (nextMode) => {
-    setModoProyecto(nextMode);
-    if (nextMode === 'create') {
-      setProyectoEnEdicion(null);
-    }
+    setIsCreateExpanded(false);
   };
 
   return (
@@ -96,16 +82,36 @@ function Portfolio() {
             aria-labelledby={tabIdActiva}
             className="softsave-portafolio-stack"
           >
+            <section className="softsave-projects-card softsave-projects-card--composer">
+              <div className="softsave-projects-card__header">
+                <div className="softsave-projects-card__title-wrap">
+                  <h2 className="softsave-projects-card__title">Agregar proyecto</h2>
+                  <p className="softsave-project-form__hint">Crea un nuevo proyecto sin salir de esta vista.</p>
+                </div>
+                <button
+                  type="button"
+                  className="softsave-project-form__mini-button"
+                  onClick={() => setIsCreateExpanded((current) => !current)}
+                >
+                  <Icon path={isCreateExpanded ? mdiChevronUp : mdiPlus} size={0.8} />
+                  {isCreateExpanded ? 'Cerrar' : 'Nuevo'}
+                </button>
+              </div>
+
+              {isCreateExpanded ? (
+                <ProjectForm
+                  mode="create"
+                  initialData={PROJECT_DRAFT}
+                  onProjectSaved={handleProjectSaved}
+                  showModeActions={false}
+                  onCancel={() => setIsCreateExpanded(false)}
+                  showHeader={false}
+                />
+              ) : null}
+            </section>
+
             <ProjectList
-              onEdit={handleEditProject}
               refreshKey={refreshProjectsKey}
-            />
-            <ProjectForm
-              mode={modoProyecto}
-              initialData={PROJECT_DRAFT}
-              project={modoProyecto === 'edit' ? proyectoEnEdicion : null}
-              onSwitchMode={handleSwitchProjectMode}
-              onProjectSaved={handleProjectSaved}
             />
           </section>
         )}

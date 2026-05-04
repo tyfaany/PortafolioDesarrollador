@@ -189,9 +189,12 @@ function buildFormData(formData, imageFile) {
 function ProjectForm({
   mode,
   initialData,
-  onSwitchMode,
+  onSwitchMode = () => {},
   onProjectSaved = () => {},
   project = null,
+  showModeActions = true,
+  onCancel = () => {},
+  showHeader = true,
 }) {
   const [formData, setFormData] = useState(() => (
     mode === 'edit' && project ? mapProjectToFormState(project) : createInitialFormState(initialData)
@@ -575,6 +578,10 @@ function ProjectForm({
   };
 
   const handleSwitchMode = (nextMode) => {
+    if (!showModeActions) {
+      return;
+    }
+
     if (nextMode === mode) {
       return;
     }
@@ -586,42 +593,46 @@ function ProjectForm({
 
   return (
     <section className="softsave-projects-card">
-      <div className="softsave-projects-card__header">
-        <div className="softsave-projects-card__title-wrap">
-          {mode === 'create' ? (
-            <>
-              <span className="softsave-projects-card__title-icon" aria-hidden="true">
-                <Icon path={mdiFileDocumentOutline} size={0.82} />
-              </span>
-              <h2 className="softsave-projects-card__title">{cardTitle}</h2>
-            </>
-          ) : (
-            <div className="softsave-projects-card__edit-strip">
-              <h2 className="softsave-projects-card__edit-title">{cardTitle}</h2>
-              <span className="softsave-projects-card__badge">Editando</span>
-            </div>
-          )}
-        </div>
+      {showHeader ? (
+        <div className="softsave-projects-card__header">
+          <div className="softsave-projects-card__title-wrap">
+            {mode === 'create' ? (
+              <>
+                <span className="softsave-projects-card__title-icon" aria-hidden="true">
+                  <Icon path={mdiFileDocumentOutline} size={0.82} />
+                </span>
+                <h2 className="softsave-projects-card__title">{cardTitle}</h2>
+              </>
+            ) : (
+              <div className="softsave-projects-card__edit-strip">
+                <h2 className="softsave-projects-card__edit-title">{cardTitle}</h2>
+                <span className="softsave-projects-card__badge">Editando</span>
+              </div>
+            )}
+          </div>
 
-        <div className="softsave-projects-card__actions">
-          <button
-            type="button"
-            className={`softsave-projects-card__icon-button ${mode === 'create' ? 'is-active' : ''}`}
-            onClick={() => handleSwitchMode('create')}
-            aria-label="Abrir formulario de nuevo proyecto"
-          >
-            <Icon path={mdiPlus} size={0.9} />
-          </button>
-          <button
-            type="button"
-            className={`softsave-projects-card__icon-button softsave-projects-card__icon-button--ghost ${mode === 'edit' ? 'is-active' : ''}`}
-            onClick={() => handleSwitchMode('edit')}
-            aria-label="Abrir formulario de edicion"
-          >
-            <Icon path={mdiPencilOutline} size={0.9} />
-          </button>
+          {showModeActions ? (
+            <div className="softsave-projects-card__actions">
+              <button
+                type="button"
+                className={`softsave-projects-card__icon-button ${mode === 'create' ? 'is-active' : ''}`}
+                onClick={() => handleSwitchMode('create')}
+                aria-label="Abrir formulario de nuevo proyecto"
+              >
+                <Icon path={mdiPlus} size={0.9} />
+              </button>
+              <button
+                type="button"
+                className={`softsave-projects-card__icon-button softsave-projects-card__icon-button--ghost ${mode === 'edit' ? 'is-active' : ''}`}
+                onClick={() => handleSwitchMode('edit')}
+                aria-label="Abrir formulario de edicion"
+              >
+                <Icon path={mdiPencilOutline} size={0.9} />
+              </button>
+            </div>
+          ) : null}
         </div>
-      </div>
+      ) : null}
 
       <form className="softsave-project-form" onSubmit={handleSubmit} noValidate>
         <label className="softsave-project-form__field">
@@ -901,10 +912,13 @@ function ProjectForm({
           <button
             type="button"
             className="softsave-project-form__cancel"
-            onClick={() => requestDiscardChanges(runReset)}
+            onClick={() => requestDiscardChanges(() => {
+              runReset();
+              onCancel();
+            })}
             disabled={isSubmitting}
           >
-            Cancelar
+            {mode === 'edit' ? 'Cerrar edicion' : 'Cancelar'}
           </button>
           <button type="submit" className="softsave-button softsave-project-form__submit" disabled={isSubmitting}>
             {isSubmitting ? 'Guardando...' : (mode === 'create' ? 'Guardar proyecto' : 'Guardar cambios')}
