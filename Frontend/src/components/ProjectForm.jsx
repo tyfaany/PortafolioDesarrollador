@@ -9,6 +9,7 @@ import {
   mdiPlus,
   mdiTrashCanOutline,
 } from '@mdi/js';
+import { obtenerTecnologias } from '../services/authService';
 
 const TECHNOLOGY_SUGGESTIONS = [
   'JavaScript',
@@ -57,6 +58,61 @@ function formatDateLabel(value) {
   return `${day}/${month}/${year}`;
 }
 
+function normalizeTechnologyIds(technologies) {
+  if (!Array.isArray(technologies)) {
+    return [];
+  }
+
+  return technologies
+    .map((technology) => {
+      if (technology && typeof technology === 'object') {
+        return technology.id ?? null;
+      }
+
+      return technology;
+    })
+    .filter((technology) => technology !== null && technology !== undefined && technology !== '');
+}
+
+function buildFormData(formData, imageFile) {
+  const payload = new FormData();
+  const technologyIds = normalizeTechnologyIds(formData.technologies);
+  const isInProgress = Boolean(formData.inProgress);
+  const isPublic = formData.visibility !== 'private';
+
+  payload.append('title', formData.title.trim());
+  payload.append('description', formData.description.trim());
+
+  technologyIds.forEach((technologyId) => {
+    payload.append('technologies[]', technologyId);
+  });
+
+  payload.append('is_in_progress', isInProgress ? '1' : '0');
+  payload.append('is_public', isPublic ? '1' : '0');
+
+  if (formData.startDate) {
+    payload.append('start_date', formData.startDate);
+  }
+
+  if (!isInProgress && formData.endDate) {
+    payload.append('end_date', formData.endDate);
+  }
+
+  if (formData.demoUrl) {
+    payload.append('demo_url', formData.demoUrl.trim());
+  }
+
+  if (formData.repositoryUrl) {
+    payload.append('repo_url', formData.repositoryUrl.trim());
+  }
+
+  if (imageFile) {
+    payload.append('image', imageFile);
+  }
+
+  return payload;
+}
+
 function ProjectForm({ mode, initialData, onSwitchMode }) {
   const [formData, setFormData] = useState(() => createInitialFormState(initialData));
   const [errors, setErrors] = useState({});
@@ -67,6 +123,7 @@ function ProjectForm({ mode, initialData, onSwitchMode }) {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(initialData?.currentImagePreview || '');
   const [imageRemoved, setImageRemoved] = useState(false);
+  const [technologySuggestions, setTechnologySuggestions] = useState(TECHNOLOGY_SUGGESTIONS);
 
   useEffect(() => {
     setFormData(createInitialFormState(initialData));
@@ -92,6 +149,37 @@ function ProjectForm({ mode, initialData, onSwitchMode }) {
       URL.revokeObjectURL(localPreview);
     };
   }, [imageFile]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadTechnologies = async () => {
+      try {
+        const response = await obtenerTecnologias();
+        const technologies = Array.isArray(response?.data) ? response.data : [];
+        const normalizedSuggestions = technologies
+          .map((technology) => ({
+            id: technology?.id,
+            name: technology?.name,
+          }))
+          .filter((technology) => technology.id && technology.name);
+
+        if (isMounted && normalizedSuggestions.length > 0) {
+          setTechnologySuggestions(normalizedSuggestions);
+        }
+      } catch {
+        if (isMounted) {
+          setTechnologySuggestions(TECHNOLOGY_SUGGESTIONS);
+        }
+      }
+    };
+
+    loadTechnologies();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const cardTitle = mode === 'create' ? 'Nuevo proyecto' : formData.title || 'Proyecto personal';
   const hasImage = Boolean((imagePreview && !imageRemoved) || (formData.currentImagePreview && !imageRemoved));
@@ -266,6 +354,8 @@ function ProjectForm({ mode, initialData, onSwitchMode }) {
       return;
     }
 
+    buildFormData(formData, imageFile);
+
     setSubmitMessage(
       mode === 'create'
         ? 'Proyecto listo para guardar localmente.'
@@ -369,16 +459,19 @@ function ProjectForm({ mode, initialData, onSwitchMode }) {
               </span>
             ))}
 
-            {TECHNOLOGY_SUGGESTIONS.filter((technology) => !selectedTechs.includes(technology))
+            {technologySuggestions.filter((technology) => {
+              const technologyName = typeof technology === 'object' ? technology.name : technology;
+              return !selectedTechs.includes(technologyName);
+            })
               .slice(0, 5)
               .map((technology) => (
                 <button
-                  key={technology}
+                  key={typeof technology === 'object' ? technology.id : technology}
                   type="button"
                   className="softsave-project-form__chip"
-                  onClick={() => handleAddTechnology(technology)}
+                  onClick={() => handleAddTechnology(typeof technology === 'object' ? technology.name : technology)}
                 >
-                  {technology}
+                  {typeof technology === 'object' ? technology.name : technology}
                 </button>
               ))}
 
