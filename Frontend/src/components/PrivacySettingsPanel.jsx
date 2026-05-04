@@ -6,7 +6,8 @@ import {
   mdiLockOutline,
   mdiLockOpenVariantOutline,
 } from '@mdi/js';
-import { obtenerPrivacidad } from '../services/authService';
+import { actualizarPrivacidad, obtenerPrivacidad } from '../services/authService';
+import useFeedback from '../hooks/useFeedback';
 
 const SECTIONS = [
   {
@@ -84,7 +85,9 @@ function mapSectionVisibility(section, privacyConfig) {
 function PrivacySettingsPanel() {
   const [privacyConfig, setPrivacyConfig] = useState(DEFAULT_PRIVACY);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
   const alwaysVisibleSections = 5;
+  const { showFeedback } = useFeedback();
   const sections = useMemo(
     () => SECTIONS.map((section) => mapSectionVisibility(section, privacyConfig)),
     [privacyConfig],
@@ -130,7 +133,11 @@ function PrivacySettingsPanel() {
     return `${visibleCount} de 9 secciones visibles`;
   }, [sections]);
 
-  const toggleSection = (sectionId) => {
+  const toggleSection = async (sectionId) => {
+    if (isUpdating) {
+      return;
+    }
+
     const section = SECTIONS.find((item) => item.id === sectionId);
     if (!section) {
       return;
@@ -145,6 +152,23 @@ function PrivacySettingsPanel() {
     });
 
     setPrivacyConfig(updatedConfig);
+
+    setIsUpdating(true);
+    try {
+      await actualizarPrivacidad(
+        section.fields.reduce((accumulator, field) => ({
+          ...accumulator,
+          [field]: nextValue,
+        }), {}),
+      );
+
+      showFeedback('Configuracion de privacidad actualizada.');
+    } catch {
+      setPrivacyConfig(privacyConfig);
+      showFeedback('No se pudo actualizar la privacidad. Se revirtio el cambio.', 'error');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const hideAll = () => {
@@ -228,6 +252,7 @@ function PrivacySettingsPanel() {
                 role="switch"
                 aria-checked={section.visible}
                 aria-label={`Cambiar visibilidad de ${section.title}`}
+                disabled={isUpdating || isLoading}
                 onClick={() => toggleSection(section.id)}
               >
                 <span className="softsave-privacy__switch-thumb" />
