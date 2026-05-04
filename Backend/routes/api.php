@@ -43,6 +43,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('studies/{study}', [StudyController::class, 'destroy']);
     Route::post('/user/projects', [ProjectController::class, 'store']);
     Route::put('/user/projects/{project}', [ProjectController::class, 'update']);
+    Route::delete('/user/projects/{project}', [ProjectController::class, 'destroy']);
     // Ruta para listar todos los proyectos del usuario
-Route::get('/user/projects', [ProjectController::class, 'index']);
+    Route::get('/user/projects', [ProjectController::class, 'index']);
 });
+

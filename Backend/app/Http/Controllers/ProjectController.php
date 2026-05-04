@@ -86,6 +86,7 @@ class ProjectController extends Controller
             return response()->json(['message' => 'Error al guardar el proyecto: ' . $e->getMessage()], 500);
         }
     }
+
     public function update(Request $request, string $id)
     {
         // Buscamos el proyecto por su UUID
@@ -149,5 +150,20 @@ class ProjectController extends Controller
             DB::rollBack();
             return response()->json(['message' => 'Error al actualizar: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function destroy(Project $project)
+    {
+        if ($project->user_id !== auth()->id()) {
+            return response()->json(['message' => 'No tienes permiso para eliminar este proyecto'], 403);
+        }
+
+        if ($project->image_path) {
+            Storage::disk('public')->delete($project->image_path);
+        }
+
+        $project->delete();
+
+        return response()->json(['message' => 'Proyecto eliminado correctamente'], 200);
     }
 }
