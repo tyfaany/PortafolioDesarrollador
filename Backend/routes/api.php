@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\TechnicalSkillController;
 use App\Http\Controllers\Api\SoftSkillController;
 use App\Http\Controllers\Api\StudyController; // Importación agregada para evitar errores del equipo
+use App\Http\Controllers\Api\ProjectTechnologyController;
 use App\Http\Controllers\ProjectController;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -16,6 +17,7 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::get('users/{user}/studies', [StudyController::class, 'indexPublic']);
 Route::get('/users/{id}/contact', [UserController::class, 'showPublicContact']);
+Route::get('/project-technologies', [ProjectTechnologyController::class, 'index']);
 Route::get('/users/{user}/projects', [ProjectController::class, 'indexPublic']);
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -48,3 +50,4 @@ Route::middleware('auth:sanctum')->group(function () {
     // Ruta para listar todos los proyectos del usuario
     Route::get('/user/projects', [ProjectController::class, 'index']);
 });
+
