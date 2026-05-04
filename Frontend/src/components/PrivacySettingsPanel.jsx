@@ -86,6 +86,7 @@ function PrivacySettingsPanel() {
   const [privacyConfig, setPrivacyConfig] = useState(DEFAULT_PRIVACY);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isHidingAll, setIsHidingAll] = useState(false);
   const alwaysVisibleSections = 5;
   const { showFeedback } = useFeedback();
   const sections = useMemo(
@@ -171,9 +172,12 @@ function PrivacySettingsPanel() {
     }
   };
 
-  const hideAll = () => {
-    setPrivacyConfig((current) => ({
-      ...current,
+  const hideAll = async () => {
+    if (isHidingAll || isLoading) {
+      return;
+    }
+
+    const hiddenConfig = {
       show_bio: false,
       show_studies: false,
       show_jobs: false,
@@ -184,7 +188,21 @@ function PrivacySettingsPanel() {
       show_mobile: false,
       show_contact_email: false,
       show_address: false,
-    }));
+    };
+
+    setIsHidingAll(true);
+    try {
+      await actualizarPrivacidad(hiddenConfig);
+      setPrivacyConfig((current) => ({
+        ...current,
+        ...hiddenConfig,
+      }));
+      showFeedback('Se ocultaron todas las secciones del perfil.');
+    } catch {
+      showFeedback('No se pudo ocultar todo. Intenta nuevamente.', 'error');
+    } finally {
+      setIsHidingAll(false);
+    }
   };
 
   return (
@@ -215,9 +233,14 @@ function PrivacySettingsPanel() {
               <Icon path={mdiEyeOutline} size={0.9} />
               Ver portafolio publico
             </button>
-            <button type="button" className="softsave-privacy__secondary-action" onClick={hideAll}>
+            <button
+              type="button"
+              className="softsave-privacy__secondary-action"
+              onClick={hideAll}
+              disabled={isHidingAll || isLoading}
+            >
               <Icon path={mdiLockOutline} size={0.82} />
-              Ocultar todo
+              {isHidingAll ? 'Ocultando...' : 'Ocultar todo'}
             </button>
           </div>
         </div>
