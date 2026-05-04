@@ -50,15 +50,6 @@ function isValidHttpUrl(value) {
   }
 }
 
-function formatDateLabel(value) {
-  if (!value) {
-    return 'DD/MM/AAAA';
-  }
-
-  const [year, month, day] = value.split('-');
-  return `${day}/${month}/${year}`;
-}
-
 function normalizeTechnologyIds(technologies) {
   if (!Array.isArray(technologies)) {
     return [];
@@ -623,7 +614,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved }) {
               value={formData.startDate}
               onChange={(event) => updateField('startDate', event.target.value)}
             />
-            <span className="softsave-project-form__hint">{formatDateLabel(formData.startDate)}</span>
+            <span className="softsave-project-form__hint">DD/MM/AAAA</span>
             {errors.startDate ? <span className="error-text">{errors.startDate}</span> : null}
           </label>
 
@@ -655,6 +646,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved }) {
               />
               En progreso
             </label>
+            <span className="softsave-project-form__hint">DD/MM/AAAA</span>
             {errors.endDate ? <span className="error-text">{errors.endDate}</span> : null}
           </div>
         </div>
