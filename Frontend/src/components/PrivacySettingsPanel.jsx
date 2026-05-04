@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Icon from '@mdi/react';
 import {
   mdiCogOutline,
@@ -6,37 +6,124 @@ import {
   mdiLockOutline,
   mdiLockOpenVariantOutline,
 } from '@mdi/js';
+import { obtenerPrivacidad } from '../services/authService';
 
 const SECTIONS = [
   {
     id: 'profilePhoto',
     title: 'Foto de perfil',
     description: 'Muestra tu foto de perfil en el portafolio',
-    visible: true,
+    fields: ['show_profile_photo'],
   },
   {
-    id: 'personalInfo',
-    title: 'Informacion personal',
-    description: 'Incluye email, telefono y ubicacion',
-    visible: true,
+    id: 'socialLinks',
+    title: 'Enlaces profesionales',
+    description: 'Muestra GitHub, LinkedIn y enlaces relevantes',
+    fields: ['show_social_links'],
   },
   {
     id: 'bio',
     title: 'Biografia',
     description: 'Muestra tu descripcion profesional',
-    visible: true,
+    fields: ['show_bio'],
+  },
+  {
+    id: 'studies',
+    title: 'Estudios',
+    description: 'Muestra tu formacion academica',
+    fields: ['show_studies'],
   },
   {
     id: 'experience',
     title: 'Experiencia laboral',
     description: 'Muestra tu historial de trabajos',
-    visible: true,
+    fields: ['show_jobs'],
+  },
+  {
+    id: 'skills',
+    title: 'Habilidades',
+    description: 'Muestra tus habilidades tecnicas y blandas',
+    fields: ['show_skills'],
+  },
+  {
+    id: 'personalInfo',
+    title: 'Informacion de contacto',
+    description: 'Incluye email, telefono y ubicacion',
+    fields: ['show_phone', 'show_mobile', 'show_contact_email', 'show_address'],
   },
 ];
 
+const DEFAULT_PRIVACY = {
+  show_bio: true,
+  show_studies: true,
+  show_jobs: true,
+  show_skills: true,
+  show_social_links: true,
+  show_profile_photo: true,
+  show_phone: true,
+  show_mobile: true,
+  show_contact_email: true,
+  show_address: true,
+};
+
+function isSectionVisible(section, privacyConfig) {
+  if (!Array.isArray(section.fields) || section.fields.length === 0) {
+    return true;
+  }
+
+  return section.fields.some((field) => Boolean(privacyConfig[field]));
+}
+
+function mapSectionVisibility(section, privacyConfig) {
+  return {
+    ...section,
+    visible: isSectionVisible(section, privacyConfig),
+  },
+}
+
 function PrivacySettingsPanel() {
-  const [sections, setSections] = useState(SECTIONS);
+  const [privacyConfig, setPrivacyConfig] = useState(DEFAULT_PRIVACY);
+  const [isLoading, setIsLoading] = useState(true);
   const alwaysVisibleSections = 5;
+  const sections = useMemo(
+    () => SECTIONS.map((section) => mapSectionVisibility(section, privacyConfig)),
+    [privacyConfig],
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPrivacySettings = async () => {
+      setIsLoading(true);
+      try {
+        const response = await obtenerPrivacidad();
+        const data = response?.data || {};
+
+        if (!isMounted) {
+          return;
+        }
+
+        setPrivacyConfig({
+          ...DEFAULT_PRIVACY,
+          ...data,
+        });
+      } catch {
+        if (isMounted) {
+          setPrivacyConfig(DEFAULT_PRIVACY);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadPrivacySettings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const visibleSummary = useMemo(() => {
     const visibleCount = sections.filter((section) => section.visible).length + alwaysVisibleSections;
@@ -44,25 +131,36 @@ function PrivacySettingsPanel() {
   }, [sections]);
 
   const toggleSection = (sectionId) => {
-    setSections((current) =>
-      current.map((section) =>
-        section.id === sectionId
-          ? {
-              ...section,
-              visible: !section.visible,
-            }
-          : section,
-      ),
-    );
+    const section = SECTIONS.find((item) => item.id === sectionId);
+    if (!section) {
+      return;
+    }
+
+    const isVisible = isSectionVisible(section, privacyConfig);
+    const nextValue = !isVisible;
+    const updatedConfig = { ...privacyConfig };
+
+    section.fields.forEach((field) => {
+      updatedConfig[field] = nextValue;
+    });
+
+    setPrivacyConfig(updatedConfig);
   };
 
   const hideAll = () => {
-    setSections((current) =>
-      current.map((section) => ({
-        ...section,
-        visible: false,
-      })),
-    );
+    setPrivacyConfig((current) => ({
+      ...current,
+      show_bio: false,
+      show_studies: false,
+      show_jobs: false,
+      show_skills: false,
+      show_social_links: false,
+      show_profile_photo: false,
+      show_phone: false,
+      show_mobile: false,
+      show_contact_email: false,
+      show_address: false,
+    }));
   };
 
   return (
@@ -85,7 +183,7 @@ function PrivacySettingsPanel() {
         <div className="softsave-privacy__general">
           <div>
             <h3>Vista general</h3>
-            <p>{visibleSummary}</p>
+            <p>{isLoading ? 'Cargando configuracion...' : visibleSummary}</p>
           </div>
 
           <div className="softsave-privacy__general-actions">
@@ -104,7 +202,11 @@ function PrivacySettingsPanel() {
       <article className="softsave-privacy__card">
         <div className="softsave-privacy__section-head">
           <h3>Secciones del portafolio</h3>
-          <p>Activa o desactiva las secciones que deseas mostrar</p>
+          <p>
+            {isLoading
+              ? 'Obteniendo configuracion de privacidad...'
+              : 'Activa o desactiva las secciones que deseas mostrar'}
+          </p>
         </div>
 
         <div className="softsave-privacy__list">

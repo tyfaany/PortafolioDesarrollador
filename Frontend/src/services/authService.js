@@ -128,3 +128,7 @@ export const toggleVisibilidadProyecto = (project) => {
 export const eliminarProyecto = (id) => api.delete(`/user/projects/${id}`);
 
 export const obtenerTecnologias = () => api.get('/project-technologies');
+
+export const obtenerPrivacidad = () => api.get('/user/privacy');
+
+export const actualizarPrivacidad = (data) => api.put('/user/privacy', data);
