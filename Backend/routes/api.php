@@ -18,6 +18,7 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::get('users/{user}/studies', [StudyController::class, 'indexPublic']);
 Route::get('/users/{id}/contact', [UserController::class, 'showPublicContact']);
+Route::get('/users/{user}/profile', [UserController::class, 'showPublicProfile']);
 Route::get('/project-technologies', [ProjectTechnologyController::class, 'index']);
 Route::get('/users/{user}/projects', [ProjectController::class, 'indexPublic']);
 

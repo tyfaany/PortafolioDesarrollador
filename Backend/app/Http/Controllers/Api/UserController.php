@@ -145,4 +145,69 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
 
     return response()->json($data);
 }
+
+   public function showPublicProfile(User $user)
+{
+    $user->load([
+        'projects.technologies',
+        'studies',
+        'jobs',
+        'skills',
+        'softSkills',
+    ]);
+
+    $profile = [
+        'id' => $user->id,
+        'name' => $user->name,
+        'profession' => $user->profession,
+    ];
+
+    if ($user->show_bio) {
+        $profile['biography'] = $user->biography;
+    }
+
+    if ($user->show_social_links) {
+        $profile['github_url'] = $user->github_url;
+        $profile['linkedin_url'] = $user->linkedin_url;
+    }
+
+    if ($user->show_profile_photo) {
+        $profile['profile_photo_url'] = $user->profile_photo_url;
+    }
+
+    if ($user->show_phone) {
+        $profile['phone'] = $user->phone;
+    }
+
+    if ($user->show_mobile) {
+        $profile['mobile'] = $user->mobile;
+    }
+
+    if ($user->show_contact_email) {
+        $profile['contact_email'] = $user->contact_email;
+    }
+
+    if ($user->show_address) {
+        $profile['address'] = $user->address;
+    }
+
+    if ($user->show_studies) {
+        $profile['studies'] = $user->studies;
+    }
+
+    if ($user->show_jobs) {
+        $profile['jobs'] = $user->jobs;
+    }
+
+    if ($user->show_skills) {
+        $profile['skills'] = $user->skills;
+        $profile['soft_skills'] = $user->softSkills;
+    }
+
+    $profile['projects'] = $user->projects
+        ->where('is_public', true)
+        ->values();
+
+    return response()->json($profile, 200);
+}
 }
