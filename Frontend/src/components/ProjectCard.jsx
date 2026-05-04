@@ -59,7 +59,12 @@ function resolveImageUrl(project) {
   return project?.image_url || project?.image_path || project?.currentImagePreview || '';
 }
 
-function ProjectCard({ project, onEdit, onDelete, onToggleVisibility }) {
+function ProjectCard({
+  project,
+  onEdit = () => {},
+  onDelete = () => {},
+  onToggleVisibility = () => {},
+}) {
   const technologies = normalizeTechnologies(project?.technologies);
   const isPublic = Boolean(project?.is_public ?? project?.visibility === 'public');
   const imageUrl = resolveImageUrl(project);
@@ -160,12 +165,6 @@ ProjectCard.propTypes = {
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
   onToggleVisibility: PropTypes.func,
-};
-
-ProjectCard.defaultProps = {
-  onEdit: () => {},
-  onDelete: () => {},
-  onToggleVisibility: () => {},
 };
 
 export default ProjectCard;

@@ -4,24 +4,38 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Project extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'title',
+        'name',
         'description',
         'image_path',
         'start_date',
         'end_date',
         'is_in_progress',
         'demo_url',
-        'repo_url',
+        'repository_url',
         'is_public'
     ];
+
+    protected $appends = [
+        'title',
+        'repo_url',
+    ];
+
+    public function getTitleAttribute()
+    {
+        return $this->attributes['title'] ?? $this->attributes['name'] ?? null;
+    }
+
+    public function getRepoUrlAttribute()
+    {
+        return $this->attributes['repo_url'] ?? $this->attributes['repository_url'] ?? null;
+    }
 
     public function user()
     {

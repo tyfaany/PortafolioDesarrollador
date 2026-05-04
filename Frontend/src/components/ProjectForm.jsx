@@ -25,11 +25,72 @@ const TECHNOLOGY_SUGGESTIONS = [
   'Laravel',
 ];
 
+function toTechnologyOption(technology) {
+  if (technology && typeof technology === 'object') {
+    const id = technology.id ?? null;
+    const name = technology.name ?? '';
+    return id && name ? { id, name } : null;
+  }
+
+  return null;
+}
+
+function resolveTechnologyOption(technology, suggestions) {
+  const directOption = toTechnologyOption(technology);
+  if (directOption) {
+    return directOption;
+  }
+
+  const name = getTechnologyName(technology).trim().toLowerCase();
+  if (!name) {
+    return null;
+  }
+
+  const source = Array.isArray(suggestions) ? suggestions : [];
+  const match = source.find((item) => {
+    const option = toTechnologyOption(item);
+    return option ? option.name.trim().toLowerCase() === name : false;
+  });
+
+  return match ? toTechnologyOption(match) : null;
+}
+
+function getTechnologyName(technology) {
+  if (technology && typeof technology === 'object') {
+    return technology.name ?? '';
+  }
+
+  return typeof technology === 'string' ? technology : '';
+}
+
+function normalizeSelectedTechnologies(technologies) {
+  if (!Array.isArray(technologies)) {
+    return [];
+  }
+
+  return technologies
+    .map((technology) => {
+      if (technology && typeof technology === 'object' && technology.id && technology.name) {
+        return {
+          id: technology.id,
+          name: technology.name,
+        };
+      }
+
+      if (typeof technology === 'string' && technology.trim()) {
+        return null;
+      }
+
+      return null;
+    })
+    .filter(Boolean);
+}
+
 function createInitialFormState(initialData) {
   return {
     title: initialData?.title || '',
     description: initialData?.description || '',
-    technologies: initialData?.technologies || [],
+    technologies: normalizeSelectedTechnologies(initialData?.technologies),
     startDate: initialData?.startDate || '',
     endDate: initialData?.endDate || '',
     inProgress: Boolean(initialData?.inProgress),
@@ -49,7 +110,7 @@ function mapProjectToFormState(project) {
   return {
     title: project.title || '',
     description: project.description || '',
-    technologies: Array.isArray(project.technologies) ? project.technologies : [],
+    technologies: normalizeSelectedTechnologies(project.technologies),
     startDate: project.start_date ? String(project.start_date).slice(0, 10) : '',
     endDate: project.end_date ? String(project.end_date).slice(0, 10) : '',
     inProgress: Boolean(project.is_in_progress),
@@ -77,10 +138,11 @@ function normalizeTechnologyIds(technologies) {
   return technologies
     .map((technology) => {
       if (technology && typeof technology === 'object') {
-        return technology.id ?? null;
+        const rawId = technology.id ?? null;
+        const numericId = Number(rawId);
+        return Number.isInteger(numericId) && numericId > 0 ? numericId : null;
       }
-
-      return technology;
+      return null;
     })
     .filter((technology) => technology !== null && technology !== undefined && technology !== '');
 }
@@ -124,7 +186,13 @@ function buildFormData(formData, imageFile) {
   return payload;
 }
 
-function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project }) {
+function ProjectForm({
+  mode,
+  initialData,
+  onSwitchMode,
+  onProjectSaved = () => {},
+  project = null,
+}) {
   const [formData, setFormData] = useState(() => (
     mode === 'edit' && project ? mapProjectToFormState(project) : createInitialFormState(initialData)
   ));
@@ -233,13 +301,17 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
   };
 
   const handleAddTechnology = (technology) => {
-    const normalizedTechnology = technology.trim();
+    const normalizedTechnology = resolveTechnologyOption(technology, technologySuggestions);
 
     if (!normalizedTechnology) {
+      setErrors((current) => ({
+        ...current,
+        technologies: 'Selecciona tecnologias del catalogo disponible.',
+      }));
       return;
     }
 
-    if (selectedTechs.includes(normalizedTechnology)) {
+    if (selectedTechs.some((item) => item.id === normalizedTechnology.id)) {
       setShowTechInput(false);
       setTechInput('');
       return;
@@ -261,7 +333,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
   const handleRemoveTechnology = (technologyToRemove) => {
     updateField(
       'technologies',
-      selectedTechs.filter((technology) => technology !== technologyToRemove),
+      selectedTechs.filter((technology) => technology.id !== technologyToRemove.id),
     );
   };
 
@@ -412,6 +484,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
     } catch (requestError) {
       const status = requestError?.response?.status;
       const backendErrors = requestError?.response?.data?.errors || {};
+      const backendMessage = requestError?.response?.data?.message;
 
       if (status === 422) {
         const nextErrors = {};
@@ -440,9 +513,11 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
         showFeedback('Revisa los campos marcados e intenta de nuevo.', 'error');
       } else {
         showFeedback(
-          mode === 'create'
-            ? 'No se pudo guardar el proyecto. Intenta nuevamente.'
-            : 'No se pudo actualizar el proyecto. Intenta nuevamente.',
+          backendMessage || (
+            mode === 'create'
+              ? 'No se pudo guardar el proyecto. Intenta nuevamente.'
+              : 'No se pudo actualizar el proyecto. Intenta nuevamente.'
+          ),
           'error',
         );
       }
@@ -580,12 +655,12 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
           <span className="softsave-project-form__label">Tecnologias utilizadas *</span>
           <div className="softsave-project-form__chips">
             {selectedTechs.map((technology) => (
-              <span key={technology} className="softsave-project-form__chip softsave-project-form__chip--selected">
-                {technology}
+              <span key={technology.id} className="softsave-project-form__chip softsave-project-form__chip--selected">
+                {getTechnologyName(technology)}
                 <button
                   type="button"
                   className="softsave-project-form__chip-remove"
-                  aria-label={`Eliminar ${technology}`}
+                  aria-label={`Eliminar ${getTechnologyName(technology)}`}
                   onClick={() => handleRemoveTechnology(technology)}
                 >
                   <Icon path={mdiClose} size={0.72} />
@@ -594,8 +669,16 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
             ))}
 
             {technologySuggestions.filter((technology) => {
-              const technologyName = typeof technology === 'object' ? technology.name : technology;
-              return !selectedTechs.includes(technologyName);
+              const option = toTechnologyOption(technology);
+              if (option) {
+                return !selectedTechs.some((selected) => selected.id === option.id);
+              }
+
+              if (typeof technology === 'string') {
+                return !selectedTechs.some((selected) => selected.name === technology);
+              }
+
+              return false;
             })
               .slice(0, 5)
               .map((technology) => (
@@ -603,7 +686,7 @@ function ProjectForm({ mode, initialData, onSwitchMode, onProjectSaved, project 
                   key={typeof technology === 'object' ? technology.id : technology}
                   type="button"
                   className="softsave-project-form__chip"
-                  onClick={() => handleAddTechnology(typeof technology === 'object' ? technology.name : technology)}
+                  onClick={() => handleAddTechnology(technology)}
                 >
                   {typeof technology === 'object' ? technology.name : technology}
                 </button>
@@ -879,10 +962,5 @@ function formatFileSize(sizeInBytes) {
 
   return `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
 }
-
-ProjectForm.defaultProps = {
-  onProjectSaved: () => {},
-  project: null,
-};
 
 export default ProjectForm;

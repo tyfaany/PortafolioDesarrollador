@@ -17,7 +17,7 @@ const TABS_PORTAFOLIO = [
 const PROJECT_DRAFT = {
   title: '',
   description: '',
-  technologies: ['JavaScript', 'React'],
+  technologies: [],
   startDate: '',
   endDate: '',
   inProgress: false,

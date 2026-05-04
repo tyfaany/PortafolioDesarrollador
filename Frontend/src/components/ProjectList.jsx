@@ -4,7 +4,7 @@ import ProjectCard from './ProjectCard';
 import { eliminarProyecto, obtenerProyectos, toggleVisibilidadProyecto } from '../services/authService';
 import useFeedback from '../hooks/useFeedback';
 
-function ProjectList({ onEdit, refreshKey }) {
+function ProjectList({ onEdit = () => {}, refreshKey = 0 }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -199,11 +199,6 @@ function ProjectList({ onEdit, refreshKey }) {
 ProjectList.propTypes = {
   onEdit: PropTypes.func,
   refreshKey: PropTypes.number,
-};
-
-ProjectList.defaultProps = {
-  onEdit: () => {},
-  refreshKey: 0,
 };
 
 export default ProjectList;

@@ -79,7 +79,7 @@ function mapSectionVisibility(section, privacyConfig) {
   return {
     ...section,
     visible: isSectionVisible(section, privacyConfig),
-  },
+  };
 }
 
 function PrivacySettingsPanel() {
