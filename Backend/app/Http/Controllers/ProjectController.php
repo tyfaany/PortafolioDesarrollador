@@ -15,7 +15,7 @@ class ProjectController extends Controller
         // y adjuntamos las tecnologías que usó en cada uno.
         // Los ordenamos para que los más recientes salgan primero.
         $projects = Project::with('technologies')
-            ->where('user_id', 1)
+            ->where('user_id', auth()->id())
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -51,9 +51,8 @@ class ProjectController extends Controller
             }
 
             // 3. Crear el Registro del Proyecto
-            // Asignamos user_id = 1 temporalmente para pruebas. Luego se usará auth()->id()
             $project = Project::create([
-                'user_id' => 1, 
+                'user_id' => auth()->id(),
                 'title' => $validated['title'],
                 'description' => $validated['description'],
                 'image_path' => $imagePath,
@@ -91,6 +90,10 @@ class ProjectController extends Controller
     {
         // Buscamos el proyecto por su UUID
         $project = Project::findOrFail($id);
+
+        if ($project->user_id !== auth()->id()) {
+            return response()->json(['message' => 'No tienes permiso para editar este proyecto'], 403);
+        }
 
         // Las mismas validaciones de creación se aplican a la edición[cite: 1]
         $validated = $request->validate([
