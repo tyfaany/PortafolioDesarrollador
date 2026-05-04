@@ -70,3 +70,17 @@ export const obtenerSoftSkills = () => api.get('/user/soft-skills');
 
 export const sincronizarSoftSkills = (skills) =>
   api.post('/user/soft-skills/sync', { skills });
+
+export const obtenerProyectos = () => api.get('/user/projects');
+
+export const crearProyecto = (formData) => api.post('/user/projects', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' },
+});
+
+export const actualizarProyecto = (id, formData) => api.put(`/user/projects/${id}`, formData, {
+  headers: { 'Content-Type': 'multipart/form-data' },
+});
+
+export const eliminarProyecto = (id) => api.delete(`/user/projects/${id}`);
+
+export const obtenerTecnologias = () => api.get('/project-technologies');
