@@ -5,6 +5,7 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import ForgotPassword from './pages/ForgotPassword';
 import Inicio from './pages/Inicio';
 import Login from './pages/Login';
+import PerfilPublico from './pages/PerfilPublico';
 import Portafolio from './pages/Portafolio';
 import ProfileSettings from './pages/ProfileSettings';
 import Registro from './pages/Registro';
@@ -20,6 +21,7 @@ function App() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/password-reset/:token" element={<ResetPassword />} />
+        <Route path="/users/:user/profile" element={<PerfilPublico />} />
       </Route>
 
       {/* Rutas protegidas */}
