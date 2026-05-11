@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/App.css';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import FeedbackProvider from './context/FeedbackContext';
+import FeedbackProvider from './context/FeedbackProvider';
 import App from './App.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
