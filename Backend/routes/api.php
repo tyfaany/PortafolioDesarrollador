@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\StudyController; // Importación agregada para evit
 use App\Http\Controllers\Api\ProjectTechnologyController;
 use App\Http\Controllers\Api\PrivacyController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\GithubController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -55,4 +56,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/user/projects/{project}', [ProjectController::class, 'destroy']);
     // Ruta para listar todos los proyectos del usuario
     Route::get('/user/projects', [ProjectController::class, 'index']);
+    Route::post('/user/github/sync', [GithubController::class, 'syncRepositories']);
+    // Ruta para obtener la lista de repositorios
+    Route::get('/user/github/repositories', [GithubController::class, 'index']);
+
+    // Ruta para guardar la selección de repositorios a mostrar
+    Route::put('/user/github/repositories/selection', [GithubController::class, 'saveSelection']);
 });
