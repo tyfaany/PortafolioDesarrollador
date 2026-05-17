@@ -14,6 +14,8 @@ use App\Http\Controllers\ProjectController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/auth/linkedin/redirect', [AuthController::class, 'redirect']);
+Route::get('/auth/linkedin/callback', [AuthController::class, 'handleLinkedInCallback']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::get('users/{user}/studies', [StudyController::class, 'indexPublic']);

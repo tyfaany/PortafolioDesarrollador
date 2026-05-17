@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+//use App\Models\SocialAccount;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -15,6 +16,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'linkedin_id',
         'profession',
         'biography',
         'github_url',
@@ -116,10 +118,15 @@ class User extends Authenticatable
                 ->withTimestamps();
     }
 
+    public function socialAccounts()
+{
+    return $this->hasMany(SocialAccount::class);
+}
     // --- NUEVO: Agregamos la función del Accessor al final ---
     /**
      * Accessor para obtener la URL completa de la foto de perfil automáticamente
      */
+    
     public function getProfilePhotoUrlAttribute()
     {
         if (!$this->profile_photo) {

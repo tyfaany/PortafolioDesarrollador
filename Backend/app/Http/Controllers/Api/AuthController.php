@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
+use App\Models\SocialAccount;
+
 
 class AuthController extends Controller
 {
@@ -248,4 +251,71 @@ class AuthController extends Controller
             ], 500, [], JSON_INVALID_UTF8_SUBSTITUTE);
         }
     }
+    /**
+     * Autenticación y Registro con LinkedIn vía API (Postman/Frontend)
+     */
+     public function redirect()
+    {
+        return Socialite::driver('linkedin-openid')
+            ->scopes(['openid', 'profile', 'email'])
+            ->stateless()
+            ->redirect();
+    }
+
+    public function handleLinkedInCallback()
+{
+    try {
+
+        $linkedinUser = Socialite::driver('linkedin-openid')
+            ->stateless()
+            ->user();
+
+        // 1️⃣ Buscar si ya existe esta cuenta social
+        $socialAccount = SocialAccount::where('provider', 'linkedin')
+            ->where('provider_id', $linkedinUser->getId())
+            ->first();
+
+        if ($socialAccount) {
+
+            // Ya existe → login directo
+            $user = $socialAccount->user;
+
+        } else {
+
+            // 2️⃣ Buscar usuario por email
+            $user = User::where('email', $linkedinUser->getEmail())->first();
+
+            if (!$user) {
+                // 3️⃣ Si no existe → crear usuario nuevo
+                $user = User::create([
+                    'name' => $linkedinUser->getName(),
+                    'email' => $linkedinUser->getEmail(),
+                    'password' => null,
+                ]);
+            }
+
+            // 4️⃣ Crear registro en social_accounts
+            SocialAccount::create([
+                'user_id' => $user->id,
+                'provider' => 'linkedin',
+                'provider_id' => $linkedinUser->getId(),
+                'avatar' => $linkedinUser->getAvatar(),
+            ]);
+        }
+
+        // 5️⃣ Generar token
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return redirect()->away(
+    env('FRONTEND_URL') . '/auth/callback?token=' . $token
+);
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 400);
+    }
+}
+
 }
