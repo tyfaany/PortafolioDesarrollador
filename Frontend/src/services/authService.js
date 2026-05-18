@@ -143,3 +143,5 @@ export const obtenerRepositoriosGithub = () => api.get('/user/github/repositorie
 
 export const guardarSeleccionRepositorios = (selectedIds) =>
   api.put('/user/github/repositories/selection', { selected_repos: selectedIds });
+
+export const obtenerPerfilLinkedIn = () => api.get('/user/linkedin/profile');
