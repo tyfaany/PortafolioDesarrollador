@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import AuthLayout from './layouts/AuthLayout';
 import MainLayout from './layouts/MainLayout';
 import ProtectedRoute from './routes/ProtectedRoute';
+import AuthCallback from './pages/AuthCallback';
 import ForgotPassword from './pages/ForgotPassword';
 import Inicio from './pages/Inicio';
 import Login from './pages/Login';
@@ -21,6 +22,7 @@ function App() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/password-reset/:token" element={<ResetPassword />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/users/:user/profile" element={<PerfilPublico />} />
       </Route>
 
