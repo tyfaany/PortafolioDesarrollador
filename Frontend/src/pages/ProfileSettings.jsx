@@ -1240,6 +1240,16 @@ function ProfileSettings() {
               </span>
               <button
                 type="button"
+                className={`softsave-profile__icon-button softsave-profile__icon-button--inline softsave-profile__github-sync-button${cargandoReposGithub ? " is-loading" : ""}`}
+                onClick={sincronizarGithubAhora}
+                disabled={cargandoReposGithub}
+                aria-label="Sincronizar repositorios de GitHub"
+                title="Sincronizar repositorios"
+              >
+                <Icon path={mdiRefresh} size={0.9} />
+              </button>
+              <button
+                type="button"
                 className="softsave-button softsave-button--compact"
                 onClick={() => setEstaModalReposAbierto(true)}
                 disabled={cargandoReposGithub}

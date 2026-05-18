@@ -21,7 +21,15 @@ class GithubController extends Controller
 
         try {
             // 2. Consumimos la API pública de GitHub
-            $response = Http::get("https://api.github.com/users/{$username}/repos");
+            $response = Http::withHeaders([
+                'User-Agent' => 'SoftSaveApp',
+                'Accept' => 'application/vnd.github+json',
+            ])->get("https://api.github.com/users/{$username}/repos", [
+                'per_page' => 100,
+                'sort' => 'updated',
+                'direction' => 'desc',
+                'type' => 'owner',
+            ]);
 
             // Si GitHub responde con error (ej. usuario no existe)
             if ($response->failed()) {
@@ -37,6 +45,10 @@ class GithubController extends Controller
 
             // 3. Procesamos y guardamos cada repositorio
             foreach ($repos as $repo) {
+                $descripcion = isset($repo['description'])
+                    ? trim((string) $repo['description'])
+                    : null;
+
                 GithubRepository::updateOrCreate(
                     [
                         // Condición para buscar si ya existe
@@ -46,7 +58,7 @@ class GithubController extends Controller
                     [
                         // Datos a actualizar o crear
                         'name' => $repo['name'],
-                        'description' => $repo['description'],
+                        'description' => $descripcion !== '' ? $descripcion : null,
                         'html_url' => $repo['html_url'],
                         'stars_count' => $repo['stargazers_count'],
                         'forks_count' => $repo['forks_count'],
