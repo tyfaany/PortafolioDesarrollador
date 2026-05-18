@@ -88,11 +88,25 @@ class GithubController extends Controller
     {
         // Validamos que sea un arreglo y que máximo tenga 15 elementos 
         $request->validate([
-            'selected_repos' => 'present|array|max:15', 
-            'selected_repos.*' => 'exists:github_repositories,id'
+            'selected_repos' => 'present|array|max:15',
+            'selected_repos.*' => 'integer'
         ]);
 
         $userId = auth()->id();
+        $selectedRepos = array_values(array_unique($request->selected_repos ?? []));
+
+        // Validamos pertenencia: todos los IDs deben ser del usuario autenticado
+        if (!empty($selectedRepos)) {
+            $reposPropiosCount = GithubRepository::where('user_id', $userId)
+                ->whereIn('id', $selectedRepos)
+                ->count();
+
+            if ($reposPropiosCount !== count($selectedRepos)) {
+                return response()->json([
+                    'message' => 'Uno o más repositorios no pertenecen al usuario autenticado.'
+                ], 422);
+            }
+        }
 
         try {
             DB::beginTransaction();
@@ -101,8 +115,8 @@ class GithubController extends Controller
             GithubRepository::where('user_id', $userId)->update(['is_visible' => false]);
 
             // 2. Luego, si envió IDs, marcamos SOLO esos como visibles
-            if (!empty($request->selected_repos)) {
-                GithubRepository::whereIn('id', $request->selected_repos)
+            if (!empty($selectedRepos)) {
+                GithubRepository::whereIn('id', $selectedRepos)
                                 ->where('user_id', $userId)
                                 ->update(['is_visible' => true]);
             }
