@@ -41,6 +41,7 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'contact_email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
@@ -350,6 +351,7 @@ class AuthController extends Controller
                 $user = User::create([
                     'name' => $linkedinUser->getName(),
                     'email' => $linkedinUser->getEmail(),
+                    'contact_email' => $linkedinUser->getEmail(),
                     'password' => null,
                 ]);
             }

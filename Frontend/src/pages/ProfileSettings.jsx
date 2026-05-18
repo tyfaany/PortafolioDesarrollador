@@ -303,6 +303,7 @@ function ProfileSettings() {
   const vistaPreviaModal = imagenTemporal || imagenPerfil;
   const estaLinkedinVinculado = Boolean(perfilLinkedinImportado);
   const totalRepositoriosGithub = reposGithub.length;
+  const correoContactoPredeterminado = user?.contact_email || user?.email || "";
   const repositoriosSeleccionados = useMemo(
     () => reposGithub.filter((repo) => reposSeleccionados.includes(repo.id)),
     [reposGithub, reposSeleccionados],
@@ -451,7 +452,7 @@ function ProfileSettings() {
           ...estadoActual,
           telefono: contacto.phone || "",
           movil: contacto.mobile || "",
-          correoContacto: contacto.contact_email || "",
+          correoContacto: contacto.contact_email || correoContactoPredeterminado,
           direccion: contacto.address || "",
         }));
       } catch {
@@ -459,14 +460,14 @@ function ProfileSettings() {
           ...estadoActual,
           telefono: user?.phone || "",
           movil: user?.mobile || "",
-          correoContacto: user?.contact_email || "",
+          correoContacto: correoContactoPredeterminado,
           direccion: user?.address || "",
         }));
       }
     };
 
     void cargarContacto();
-  }, [user]);
+  }, [user, correoContactoPredeterminado]);
 
   useEffect(() => {
     if (seccionActiva !== "github" || !estaGithubConectado) {
@@ -606,7 +607,7 @@ function ProfileSettings() {
       linkedinUrl: user?.linkedin_url || "",
       telefono: user?.phone || "",
       movil: user?.mobile || "",
-      correoContacto: user?.contact_email || "",
+      correoContacto: correoContactoPredeterminado,
       direccion: user?.address || "",
     });
     setErroresFormulario({});
