@@ -17,7 +17,7 @@ class GithubController extends Controller
         ]);
 
         $username = $request->github_username;
-        $userId = 1; // Usamos 1 temporalmente para pruebas. Luego será auth()->id()
+        $userId = auth()->id();
 
         try {
             // 2. Consumimos la API pública de GitHub
@@ -73,7 +73,7 @@ class GithubController extends Controller
     // Función para enviar los repositorios al Frontend
     public function index()
     {
-        $userId = 1; // Usamos 1 temporalmente. Luego será auth()->id()
+        $userId = auth()->id();
         
         // Obtenemos los repositorios ordenados por la actualización más reciente 
         $repos = GithubRepository::where('user_id', $userId)
@@ -92,7 +92,7 @@ class GithubController extends Controller
             'selected_repos.*' => 'exists:github_repositories,id'
         ]);
 
-        $userId = 1;
+        $userId = auth()->id();
 
         try {
             DB::beginTransaction();
