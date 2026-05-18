@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import AcademicExperienceSection from '../components/AcademicExperienceSection';
+import GitHubRepoSelectionManager from '../components/GitHubRepoSelectionManager';
 import ProjectForm from '../components/ProjectForm';
 import PortfolioPersonalInfoCard from '../components/PortfolioPersonalInfoCard';
 import PortfolioSkillsSection from '../components/PortfolioSkillsSection';
@@ -89,6 +90,7 @@ function Portfolio() {
             aria-labelledby={tabIdActiva}
             className="softsave-portafolio-stack"
           >
+            <GitHubRepoSelectionManager />
             <ProjectForm
               mode={modoProyecto}
               initialData={modoProyecto === 'create' ? PROJECT_DRAFT : PROJECT_SAMPLE}

@@ -3,16 +3,25 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Icon from "@mdi/react";
 import {
   mdiAccount,
+  mdiAlertCircleOutline,
   mdiCameraOutline,
+  mdiCheckCircle,
   mdiClose,
+  mdiCodeTags,
   mdiCogOutline,
+  mdiConsoleLine,
   mdiContentSaveOutline,
+  mdiFolderOutline,
   mdiGithub,
   mdiImageOutline,
   mdiLinkedin,
+  mdiMagnify,
   mdiOpenInNew,
   mdiPlus,
+  mdiRefresh,
   mdiSchoolOutline,
+  mdiSourceBranch,
+  mdiWeb,
 } from "@mdi/js";
 import useAuth from "../hooks/useAuth";
 import useFeedback from "../hooks/useFeedback";
@@ -23,21 +32,244 @@ import "../styles/ProfileSettings.css";
 import "../styles/ProjectsPrivacyViews.css";
 
 const SECCIONES_PERFIL = [
-  {
-    id: "contacto",
-    label: "Información de contacto",
-    route: "/perfil/contacto",
-  },
-  {
-    id: "academica",
-    label: "Trayectoria académica",
-    route: "/perfil/academica",
-  },
+  { id: "contacto", label: "Información de contacto", route: "/perfil/contacto" },
+  { id: "academica", label: "Trayectoria académica", route: "/perfil/academica" },
   { id: "github", label: "Ecosistema de Git Hub", route: "/perfil/github" },
 ];
 
+const FOTO_LINKEDIN_MOCK = `data:image/svg+xml;utf8,${encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+    <defs>
+      <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#1d4e89"/>
+        <stop offset="100%" stop-color="#0a66c2"/>
+      </linearGradient>
+    </defs>
+    <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+    <circle cx="64" cy="45" r="22" fill="#f4f7f6"/>
+    <path d="M28 108c5-22 20-34 36-34s31 12 36 34" fill="#f4f7f6"/>
+  </svg>
+`)}`;
+
+const DATOS_LINKEDIN_MOCK = {
+  nombreCompleto: "Juan Pérez (LinkedIn)",
+  profesion: "Senior Full Stack Engineer at TechCorp",
+  fotografia: FOTO_LINKEDIN_MOCK,
+  linkedinUrl: "https://www.linkedin.com/in/juan-perez-dev",
+};
+
+const REPOSITORIOS_GITHUB_MOCK = [
+  {
+    id: 1,
+    nombre: "SoftSave-Engine",
+    descripcion: "Motor de renderizado asíncrono diseñado para aplicaciones de portafolio editorial.",
+    lenguajes: [
+      { nombre: "TypeScript", color: "#3178c6" },
+      { nombre: "JavaScript", color: "#f1c40f" },
+    ],
+    estrellas: 128,
+    forks: 14,
+    actualizadoDias: 2,
+    esFork: false,
+    url: "https://github.com/john-developer/SoftSave-Engine",
+  },
+  {
+    id: 2,
+    nombre: "Auto-Editorial-ML",
+    descripcion: "Pipeline de machine learning para clasificar estilos visuales en diseños editoriales.",
+    lenguajes: [{ nombre: "Python", color: "#3776ab" }],
+    estrellas: 84,
+    forks: 5,
+    actualizadoDias: 5,
+    esFork: false,
+    url: "https://github.com/john-developer/Auto-Editorial-ML",
+  },
+  {
+    id: 3,
+    nombre: "Bento-UI-Library",
+    descripcion: "Biblioteca de componentes React con patrón Bento Grid para layouts modernos.",
+    lenguajes: [
+      { nombre: "React", color: "#61dafb" },
+      { nombre: "CSS", color: "#2965f1" },
+    ],
+    estrellas: 256,
+    forks: 32,
+    actualizadoDias: 8,
+    esFork: false,
+    url: "https://github.com/john-developer/Bento-UI-Library",
+  },
+  {
+    id: 4,
+    nombre: "Secure-Vault-API",
+    descripcion: "Microservicio de alta seguridad para la gestión de secretos y claves de integración.",
+    lenguajes: [{ nombre: "Go", color: "#00add8" }],
+    estrellas: 42,
+    forks: 2,
+    actualizadoDias: 13,
+    esFork: false,
+    url: "https://github.com/john-developer/Secure-Vault-API",
+  },
+  {
+    id: 5,
+    nombre: "Fast-Buffer-Queue",
+    descripcion: "Implementación de bajo nivel de colas de mensajes circulares para tiempo real.",
+    lenguajes: [{ nombre: "Rust", color: "#b7410e" }],
+    estrellas: 310,
+    forks: 45,
+    actualizadoDias: 18,
+    esFork: false,
+    url: "https://github.com/john-developer/Fast-Buffer-Queue",
+  },
+  {
+    id: 6,
+    nombre: "Minimal-Design-System",
+    descripcion: "Sistema de diseño utilitario centrado en tipografía, escala y espaciado.",
+    lenguajes: [
+      { nombre: "CSS", color: "#2965f1" },
+      { nombre: "HTML", color: "#e34c26" },
+    ],
+    estrellas: 192,
+    forks: 18,
+    actualizadoDias: 26,
+    esFork: false,
+    url: "https://github.com/john-developer/Minimal-Design-System",
+  },
+  {
+    id: 7,
+    nombre: "portfolio-builder",
+    descripcion: "Generador visual para portafolios profesionales con secciones dinámicas.",
+    lenguajes: [{ nombre: "React", color: "#61dafb" }],
+    estrellas: 8,
+    forks: 1,
+    actualizadoDias: 5,
+    esFork: false,
+    url: "https://github.com/john-developer/portfolio-builder",
+  },
+  {
+    id: 8,
+    nombre: "e-commerce-app",
+    descripcion: "Frontend de comercio electrónico con carrito, catálogo y panel administrativo.",
+    lenguajes: [{ nombre: "JavaScript", color: "#f1c40f" }],
+    estrellas: 12,
+    forks: 3,
+    actualizadoDias: 2,
+    esFork: false,
+    url: "https://github.com/john-developer/e-commerce-app",
+  },
+  {
+    id: 9,
+    nombre: "learning-python",
+    descripcion: "Colección de ejercicios y notebooks para practicar automatización y scraping.",
+    lenguajes: [{ nombre: "Python", color: "#3776ab" }],
+    estrellas: 0,
+    forks: 0,
+    actualizadoDias: 180,
+    esFork: false,
+    url: "https://github.com/john-developer/learning-python",
+  },
+  {
+    id: 10,
+    nombre: "fork-awesome-lib",
+    descripcion: "Fork experimental de una librería JS con mejoras de accesibilidad y performance.",
+    lenguajes: [{ nombre: "JavaScript", color: "#f1c40f" }],
+    estrellas: 250,
+    forks: 45,
+    actualizadoDias: 90,
+    esFork: true,
+    url: "https://github.com/john-developer/fork-awesome-lib",
+  },
+  {
+    id: 11,
+    nombre: "vue-analytics-hub",
+    descripcion: "Dashboard analítico reutilizable para monitoreo de métricas de producto.",
+    lenguajes: [{ nombre: "Vue", color: "#42b883" }],
+    estrellas: 67,
+    forks: 11,
+    actualizadoDias: 11,
+    esFork: false,
+    url: "https://github.com/john-developer/vue-analytics-hub",
+  },
+  {
+    id: 12,
+    nombre: "angular-workspace-pro",
+    descripcion: "Monorepo Angular con microfrontends y módulos compartidos para empresas.",
+    lenguajes: [{ nombre: "Angular", color: "#dd0031" }],
+    estrellas: 145,
+    forks: 20,
+    actualizadoDias: 47,
+    esFork: false,
+    url: "https://github.com/john-developer/angular-workspace-pro",
+  },
+  {
+    id: 13,
+    nombre: "node-stream-lab",
+    descripcion: "Laboratorio de procesamiento de streams con Node.js para ingestión masiva.",
+    lenguajes: [{ nombre: "Node.js", color: "#68a063" }],
+    estrellas: 88,
+    forks: 16,
+    actualizadoDias: 31,
+    esFork: false,
+    url: "https://github.com/john-developer/node-stream-lab",
+  },
+  {
+    id: 14,
+    nombre: "storybook-showcase",
+    descripcion: "Showcase de patrones UI documentados con historias reutilizables.",
+    lenguajes: [{ nombre: "Storybook", color: "#ff4785" }],
+    estrellas: 33,
+    forks: 4,
+    actualizadoDias: 21,
+    esFork: false,
+    url: "https://github.com/john-developer/storybook-showcase",
+  },
+  {
+    id: 15,
+    nombre: "design-tokens-sync",
+    descripcion: "Sincronizador de design tokens entre Figma, CSS variables y apps web.",
+    lenguajes: [{ nombre: "TypeScript", color: "#3178c6" }],
+    estrellas: 119,
+    forks: 17,
+    actualizadoDias: 14,
+    esFork: false,
+    url: "https://github.com/john-developer/design-tokens-sync",
+  },
+  {
+    id: 16,
+    nombre: "openapi-mock-studio",
+    descripcion: "Toolkit para generar mocks tipados a partir de especificaciones OpenAPI.",
+    lenguajes: [{ nombre: "TypeScript", color: "#3178c6" }],
+    estrellas: 58,
+    forks: 9,
+    actualizadoDias: 9,
+    esFork: false,
+    url: "https://github.com/john-developer/openapi-mock-studio",
+  },
+  {
+    id: 17,
+    nombre: "next-landing-experiments",
+    descripcion: "Colección de landings experimentales con animación editorial y pruebas A/B.",
+    lenguajes: [{ nombre: "Next.js", color: "#111111" }],
+    estrellas: 96,
+    forks: 13,
+    actualizadoDias: 6,
+    esFork: false,
+    url: "https://github.com/john-developer/next-landing-experiments",
+  },
+  {
+    id: 18,
+    nombre: "cli-devstack-tools",
+    descripcion: "Utilidades de línea de comandos para acelerar tareas comunes de desarrollo.",
+    lenguajes: [{ nombre: "Node.js", color: "#68a063" }],
+    estrellas: 23,
+    forks: 3,
+    actualizadoDias: 120,
+    esFork: false,
+    url: "https://github.com/john-developer/cli-devstack-tools",
+  },
+];
+
 function obtenerIniciales(nombreCompleto) {
-  return nombreCompleto
+  return String(nombreCompleto || "")
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
@@ -50,9 +282,7 @@ function obtenerSeccionActiva(pathname) {
     return "privacidad";
   }
 
-  const seccionActiva = SECCIONES_PERFIL.find(
-    ({ route }) => pathname === route,
-  );
+  const seccionActiva = SECCIONES_PERFIL.find(({ route }) => pathname === route);
   return seccionActiva?.id || "contacto";
 }
 
@@ -102,8 +332,7 @@ function validarUrlProfesional(valor, plataforma) {
   }
 
   const patronGitHub = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9_.-]+/i;
-  const patronLinkedIn =
-    /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/i;
+  const patronLinkedIn = /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/i;
   const patron = plataforma === "GitHub" ? patronGitHub : patronLinkedIn;
 
   if (!patron.test(limpio)) {
@@ -113,6 +342,35 @@ function validarUrlProfesional(valor, plataforma) {
   return "";
 }
 
+function formatearTiempoRelativo(dias) {
+  if (dias <= 1) {
+    return "hace 1 día";
+  }
+
+  if (dias < 30) {
+    return `hace ${dias} días`;
+  }
+
+  const meses = Math.round(dias / 30);
+  return `hace ${meses} ${meses === 1 ? "mes" : "meses"}`;
+}
+
+function iconoRepositorio(repositorio) {
+  if (repositorio.lenguajes.some(({ nombre }) => nombre === "Python")) {
+    return mdiConsoleLine;
+  }
+
+  if (repositorio.lenguajes.some(({ nombre }) => nombre === "React")) {
+    return mdiCodeTags;
+  }
+
+  if (repositorio.lenguajes.some(({ nombre }) => nombre === "CSS")) {
+    return mdiWeb;
+  }
+
+  return mdiFolderOutline;
+}
+
 function ProfileSettings() {
   const { user, refreshUser } = useAuth();
   const { showFeedback } = useFeedback();
@@ -120,7 +378,6 @@ function ProfileSettings() {
   const navigate = useNavigate();
   const { pathname } = location;
   const inputImagenRef = useRef(null);
-  const botonEnlacesRef = useRef(null);
   const modalAvatarRef = useRef(null);
   const arrastreImagenRef = useRef({
     activo: false,
@@ -131,25 +388,34 @@ function ProfileSettings() {
   });
 
   const [estaModalAbierto, setEstaModalAbierto] = useState(false);
-  const [estaModalPerfilAbierto, setEstaModalPerfilAbierto] = useState(false);
   const [estaModalEnlacesAbierto, setEstaModalEnlacesAbierto] = useState(false);
+  const [estaPanelLinkedinAbierto, setEstaPanelLinkedinAbierto] = useState(false);
+  const [estaModalReposAbierto, setEstaModalReposAbierto] = useState(false);
   const [mensajeImagenError, setMensajeImagenError] = useState("");
   const [erroresFormulario, setErroresFormulario] = useState({});
   const [erroresEnlaces, setErroresEnlaces] = useState({});
   const [mensajeGuardadoError, setMensajeGuardadoError] = useState("");
   const [mensajeGuardadoExito, setMensajeGuardadoExito] = useState("");
   const [mensajeEnlacesError, setMensajeEnlacesError] = useState("");
+  const [mensajeGithubError, setMensajeGithubError] = useState("");
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
   const [guardandoEnlaces, setGuardandoEnlaces] = useState(false);
+  const [estaEditandoPerfil, setEstaEditandoPerfil] = useState(false);
+  const [simulandoLinkedin, setSimulandoLinkedin] = useState(false);
+  const [estaLinkedinVinculado, setEstaLinkedinVinculado] = useState(false);
+  const [linkedinSincronizado, setLinkedinSincronizado] = useState(false);
+  const [vistaPreviaLinkedin, setVistaPreviaLinkedin] = useState(null);
+  const [estaGithubConectado, setEstaGithubConectado] = useState(false);
+  const [ultimaSyncGithub, setUltimaSyncGithub] = useState("hace 2 horas");
+  const [busquedaRepos, setBusquedaRepos] = useState("");
+  const [filtroRepos, setFiltroRepos] = useState("Todos");
+  const [ordenRepos, setOrdenRepos] = useState("Más recientes");
+  const [reposSeleccionados, setReposSeleccionados] = useState([1, 2, 3, 4, 5, 6, 7, 8]);
+  const [seleccionTemporalRepos, setSeleccionTemporalRepos] = useState([1, 2, 7, 8]);
   const [imagenTemporal, setImagenTemporal] = useState("");
-  const [imagenPerfil, setImagenPerfil] = useState(
-    user?.profile_photo_url || "",
-  );
+  const [imagenPerfil, setImagenPerfil] = useState(user?.profile_photo_url || "");
   const [zoomImagen, setZoomImagen] = useState(1);
-  const [desplazamientoImagen, setDesplazamientoImagen] = useState({
-    x: 0,
-    y: 0,
-  });
+  const [desplazamientoImagen, setDesplazamientoImagen] = useState({ x: 0, y: 0 });
   const [perfilCabecera, setPerfilCabecera] = useState({
     nombreCompleto: user?.name || "",
     profesion: user?.profession || "",
@@ -176,10 +442,43 @@ function ProfileSettings() {
     [user],
   );
   const vistaPreviaModal = imagenTemporal || imagenPerfil;
+  const totalRepositoriosGithub = REPOSITORIOS_GITHUB_MOCK.length;
+  const repositoriosSeleccionados = useMemo(
+    () => REPOSITORIOS_GITHUB_MOCK.filter((repo) => reposSeleccionados.includes(repo.id)),
+    [reposSeleccionados],
+  );
+  const repositoriosGestionados = useMemo(() => {
+    const termino = sanitizarTexto(busquedaRepos).toLowerCase();
+
+    return [...REPOSITORIOS_GITHUB_MOCK]
+      .filter((repositorio) => {
+        const coincideBusqueda =
+          !termino ||
+          repositorio.nombre.toLowerCase().includes(termino) ||
+          repositorio.descripcion.toLowerCase().includes(termino);
+
+        const coincideFiltro =
+          filtroRepos === "Todos" ||
+          (filtroRepos === "Forks" && repositorio.esFork) ||
+          (filtroRepos === "Originales" && !repositorio.esFork);
+
+        return coincideBusqueda && coincideFiltro;
+      })
+      .sort((a, b) => {
+        if (ordenRepos === "Más populares") {
+          return b.estrellas - a.estrellas;
+        }
+
+        return a.actualizadoDias - b.actualizadoDias;
+      });
+  }, [busquedaRepos, filtroRepos, ordenRepos]);
 
   useEffect(() => {
     const algunModalAbierto =
-      estaModalAbierto || estaModalPerfilAbierto || estaModalEnlacesAbierto;
+      estaModalAbierto ||
+      estaModalEnlacesAbierto ||
+      estaPanelLinkedinAbierto ||
+      estaModalReposAbierto;
 
     if (!algunModalAbierto) {
       return undefined;
@@ -191,14 +490,12 @@ function ProfileSettings() {
     return () => {
       document.body.style.overflow = overflowPrevio;
     };
-  }, [estaModalAbierto, estaModalPerfilAbierto, estaModalEnlacesAbierto]);
-
-  useEffect(() => {
-    if (completarPerfil) {
-      setEstaModalPerfilAbierto(true);
-      setMensajeGuardadoError("");
-    }
-  }, [completarPerfil]);
+  }, [
+    estaModalAbierto,
+    estaModalEnlacesAbierto,
+    estaPanelLinkedinAbierto,
+    estaModalReposAbierto,
+  ]);
 
   useEffect(() => {
     if (!mensajeGuardadoExito) {
@@ -208,6 +505,12 @@ function ProfileSettings() {
     showFeedback(mensajeGuardadoExito, "success");
     setMensajeGuardadoExito("");
   }, [mensajeGuardadoExito, showFeedback]);
+
+  useEffect(() => {
+    if (completarPerfil) {
+      setEstaEditandoPerfil(true);
+    }
+  }, [completarPerfil]);
 
   useEffect(() => {
     if (user?.profile_photo_url) {
@@ -227,18 +530,16 @@ function ProfileSettings() {
     };
 
     setPerfilCabecera(datosPerfil);
+    setFormularioPerfil(datosPerfil);
+    setFormularioEnlaces({
+      githubUrl: user.github_url || "",
+      linkedinUrl: user.linkedin_url || "",
+    });
 
-    if (!estaModalPerfilAbierto) {
-      setFormularioPerfil(datosPerfil);
+    if (user.github_url) {
+      setEstaGithubConectado(true);
     }
-
-    if (!estaModalEnlacesAbierto) {
-      setFormularioEnlaces({
-        githubUrl: user.github_url || "",
-        linkedinUrl: user.linkedin_url || "",
-      });
-    }
-  }, [user, estaModalPerfilAbierto, estaModalEnlacesAbierto]);
+  }, [user]);
 
   const manejarCambioFormulario = (evento) => {
     const { name, value } = evento.target;
@@ -248,14 +549,11 @@ function ProfileSettings() {
       ...estadoActual,
       [name]: valorProcesado,
     }));
-
     setErroresFormulario((estadoActual) => ({
       ...estadoActual,
       [name]: "",
     }));
-
     setMensajeGuardadoError("");
-    setMensajeGuardadoExito("");
   };
 
   const validarFormulario = () => {
@@ -267,23 +565,19 @@ function ProfileSettings() {
     if (!nombreLimpio) {
       nuevosErrores.nombreCompleto = "El nombre es obligatorio.";
     } else if (nombreLimpio.length > 50) {
-      nuevosErrores.nombreCompleto =
-        "El nombre debe tener máximo 50 caracteres.";
+      nuevosErrores.nombreCompleto = "El nombre debe tener máximo 50 caracteres.";
     }
 
     if (!profesionLimpia) {
       nuevosErrores.profesion = "La profesión es obligatoria.";
     } else if (profesionLimpia.length > 100) {
-      nuevosErrores.profesion =
-        "La profesión debe tener máximo 100 caracteres.";
+      nuevosErrores.profesion = "La profesión debe tener máximo 100 caracteres.";
     } else if (!esProfesionValida(profesionLimpia)) {
-      nuevosErrores.profesion =
-        "La profesión debe tener palabras válidas y no secuencias de símbolos.";
+      nuevosErrores.profesion = "La profesión debe contener palabras válidas.";
     }
 
     if (biografiaLimpia.length > 1000) {
-      nuevosErrores.biografia =
-        "La biografía debe tener máximo 1000 caracteres.";
+      nuevosErrores.biografia = "La biografía debe tener máximo 1000 caracteres.";
     }
 
     setErroresFormulario(nuevosErrores);
@@ -307,7 +601,6 @@ function ProfileSettings() {
 
     setGuardandoPerfil(true);
     setMensajeGuardadoError("");
-    setMensajeGuardadoExito("");
 
     try {
       await actualizarPerfil(payloadPerfil);
@@ -317,11 +610,13 @@ function ProfileSettings() {
         profesion: payloadPerfil.profession,
         biografia: payloadPerfil.biography,
       });
-      setEstaModalPerfilAbierto(false);
+      setEstaEditandoPerfil(false);
+      setVistaPreviaLinkedin(null);
+      setLinkedinSincronizado(false);
       setMensajeGuardadoExito("Información actualizada correctamente");
 
       if (location.state?.completarPerfil) {
-        navigate("/perfil", { replace: true });
+        navigate("/perfil/contacto", { replace: true });
       }
     } catch (error) {
       setMensajeGuardadoError(
@@ -330,6 +625,30 @@ function ProfileSettings() {
     } finally {
       setGuardandoPerfil(false);
     }
+  };
+
+  const descartarCambiosContacto = () => {
+    setFormularioPerfil({
+      nombreCompleto: perfilCabecera.nombreCompleto,
+      profesion: perfilCabecera.profesion,
+      biografia: perfilCabecera.biografia,
+    });
+    setEstaEditandoPerfil(Boolean(completarPerfil));
+    setVistaPreviaLinkedin(null);
+    setLinkedinSincronizado(false);
+    setErroresFormulario({});
+    setMensajeGuardadoError("");
+  };
+
+  const alternarEdicionPerfil = () => {
+    if (estaEditandoPerfil) {
+      descartarCambiosContacto();
+      return;
+    }
+
+    setEstaEditandoPerfil(true);
+    setErroresFormulario({});
+    setMensajeGuardadoError("");
   };
 
   const abrirModalImagen = () => {
@@ -445,55 +764,13 @@ function ProfileSettings() {
       setEstaModalAbierto(false);
       setMensajeImagenError("");
     } catch (error) {
-      setMensajeImagenError(extractApiMessageByStatus(error, "No se pudo subir la imagen. Intenta de nuevo."));
+      setMensajeImagenError(
+        extractApiMessageByStatus(error, "No se pudo subir la imagen. Intenta de nuevo."),
+      );
     }
-  };
-
-  const abrirModalPerfil = () => {
-    setFormularioPerfil({
-      nombreCompleto: perfilCabecera.nombreCompleto,
-      profesion: perfilCabecera.profesion,
-      biografia: perfilCabecera.biografia,
-    });
-    setErroresFormulario({});
-    setMensajeGuardadoError("");
-    setMensajeGuardadoExito("");
-    setEstaModalPerfilAbierto(true);
-  };
-
-  const cerrarModalPerfil = () => {
-    if (completarPerfil) {
-      const nombreLimpio = sanitizarTexto(formularioPerfil.nombreCompleto);
-      const profesionLimpia = sanitizarTexto(formularioPerfil.profesion);
-      if (!nombreLimpio || !profesionLimpia) {
-        setErroresFormulario((prev) => ({
-          ...prev,
-          ...(!nombreLimpio && { nombreCompleto: "El nombre es obligatorio." }),
-          ...(!profesionLimpia && { profesion: "La profesión es obligatoria." }),
-        }));
-        return;
-      }
-    }
-
-    if (guardandoPerfil) {
-      return;
-    }
-
-    setFormularioPerfil({
-      nombreCompleto: perfilCabecera.nombreCompleto,
-      profesion: perfilCabecera.profesion,
-      biografia: perfilCabecera.biografia,
-    });
-    setErroresFormulario({});
-    setMensajeGuardadoError("");
-    setEstaModalPerfilAbierto(false);
   };
 
   const abrirModalEnlaces = () => {
-    setFormularioEnlaces({
-      githubUrl: user?.github_url || "",
-      linkedinUrl: user?.linkedin_url || "",
-    });
     setErroresEnlaces({});
     setMensajeEnlacesError("");
     setEstaModalEnlacesAbierto(true);
@@ -516,22 +793,17 @@ function ProfileSettings() {
       ...estadoActual,
       [name]: value,
     }));
-
     setErroresEnlaces((estadoActual) => ({
       ...estadoActual,
       [name]: "",
     }));
-
     setMensajeEnlacesError("");
   };
 
   const validarEnlaces = () => {
     const nuevosErrores = {
       githubUrl: validarUrlProfesional(formularioEnlaces.githubUrl, "GitHub"),
-      linkedinUrl: validarUrlProfesional(
-        formularioEnlaces.linkedinUrl,
-        "LinkedIn",
-      ),
+      linkedinUrl: validarUrlProfesional(formularioEnlaces.linkedinUrl, "LinkedIn"),
     };
 
     const erroresFiltrados = Object.fromEntries(
@@ -564,6 +836,7 @@ function ProfileSettings() {
       await actualizarPerfil(payload);
       await refreshUser();
       setEstaModalEnlacesAbierto(false);
+      showFeedback("Enlaces profesionales actualizados.", "success");
     } catch (error) {
       setMensajeEnlacesError(
         extractApiMessageByStatus(error, "No se pudieron guardar los enlaces profesionales."),
@@ -571,6 +844,132 @@ function ProfileSettings() {
     } finally {
       setGuardandoEnlaces(false);
     }
+  };
+
+  const abrirPanelLinkedin = () => {
+    setEstaPanelLinkedinAbierto(true);
+  };
+
+  const cerrarPanelLinkedin = () => {
+    if (!simulandoLinkedin) {
+      setEstaPanelLinkedinAbierto(false);
+    }
+  };
+
+  const vincularCuentaLinkedin = () => {
+    setSimulandoLinkedin(true);
+
+    window.setTimeout(() => {
+      setEstaLinkedinVinculado(true);
+      setSimulandoLinkedin(false);
+      setFormularioEnlaces((estadoActual) => ({
+        ...estadoActual,
+        linkedinUrl: DATOS_LINKEDIN_MOCK.linkedinUrl,
+      }));
+    }, 900);
+  };
+
+  const sincronizarDatosLinkedin = () => {
+    setFormularioPerfil((estadoActual) => ({
+      ...estadoActual,
+      nombreCompleto: DATOS_LINKEDIN_MOCK.nombreCompleto,
+      profesion: DATOS_LINKEDIN_MOCK.profesion,
+    }));
+    setVistaPreviaLinkedin(DATOS_LINKEDIN_MOCK);
+    setLinkedinSincronizado(true);
+    setEstaPanelLinkedinAbierto(false);
+    setErroresFormulario((estadoActual) => ({
+      ...estadoActual,
+      nombreCompleto: "",
+      profesion: "",
+    }));
+    showFeedback(
+      "Datos de LinkedIn listos para aplicarse cuando guardes los cambios.",
+      "success",
+    );
+  };
+
+  const desvincularCuentaLinkedin = () => {
+    setEstaLinkedinVinculado(false);
+    setLinkedinSincronizado(false);
+    setVistaPreviaLinkedin(null);
+    setFormularioEnlaces((estadoActual) => ({
+      ...estadoActual,
+      linkedinUrl: user?.linkedin_url || "",
+    }));
+    setEstaPanelLinkedinAbierto(false);
+  };
+
+  const conectarGithub = () => {
+    setEstaGithubConectado(true);
+    setUltimaSyncGithub("justo ahora");
+    setReposSeleccionados([1, 2, 3, 4, 5, 6, 7, 8]);
+    setSeleccionTemporalRepos([1, 2, 3, 4, 5, 6, 7, 8]);
+    showFeedback("Cuenta de GitHub conectada con repositorios importados.", "success");
+  };
+
+  const abrirModalRepos = () => {
+    setSeleccionTemporalRepos(reposSeleccionados);
+    setMensajeGithubError("");
+    setEstaModalReposAbierto(true);
+  };
+
+  const cerrarModalRepos = () => {
+    setSeleccionTemporalRepos(reposSeleccionados);
+    setMensajeGithubError("");
+    setBusquedaRepos("");
+    setFiltroRepos("Todos");
+    setOrdenRepos("Más recientes");
+    setEstaModalReposAbierto(false);
+  };
+
+  const alternarSeleccionRepositorio = (repoId) => {
+    setSeleccionTemporalRepos((estadoActual) => {
+      if (estadoActual.includes(repoId)) {
+        setMensajeGithubError("");
+        return estadoActual.filter((id) => id !== repoId);
+      }
+
+      if (estadoActual.length >= 15) {
+        setMensajeGithubError("Solo puedes seleccionar hasta 15 repositorios.");
+        return estadoActual;
+      }
+
+      setMensajeGithubError("");
+      return [...estadoActual, repoId];
+    });
+  };
+
+  const marcarTodosRepositorios = () => {
+    const idsVisibles = repositoriosGestionados.map((repositorio) => repositorio.id);
+
+    if (idsVisibles.length > 15) {
+      setMensajeGithubError(
+        "Se seleccionaron los primeros 15 repositorios. Ajusta filtros si necesitas otros.",
+      );
+      setSeleccionTemporalRepos(idsVisibles.slice(0, 15));
+      return;
+    }
+
+    setMensajeGithubError("");
+    setSeleccionTemporalRepos(idsVisibles);
+  };
+
+  const desmarcarTodosRepositorios = () => {
+    setSeleccionTemporalRepos([]);
+    setMensajeGithubError("");
+  };
+
+  const sincronizarGithubAhora = () => {
+    setUltimaSyncGithub("justo ahora");
+    showFeedback("Repositorios actualizados desde GitHub.", "success");
+  };
+
+  const guardarSeleccionRepositorios = () => {
+    setReposSeleccionados(seleccionTemporalRepos);
+    setUltimaSyncGithub("justo ahora");
+    setEstaModalReposAbierto(false);
+    showFeedback("Selección guardada exitosamente", "success");
   };
 
   const limitarDesplazamiento = (x, y, zoom, contenedor) => {
@@ -597,7 +996,7 @@ function ProfileSettings() {
         <div className="softsave-profile__contact-intro">
           <h2 className="softsave-profile__contact-title">Tu identidad profesional</h2>
           <p className="softsave-profile__contact-text">
-            Mantén tus datos al día y gestiona cómo te ven reclutadores, clientes y equipos.
+            Manten tus datos al dia y gestiona como te ven reclutadores, clientes y equipos.
           </p>
         </div>
 
@@ -612,7 +1011,6 @@ function ProfileSettings() {
           </button>
 
           <button
-            ref={botonEnlacesRef}
             type="button"
             className="softsave-button softsave-button--compact softsave-profile__section-button"
             onClick={abrirModalEnlaces}
@@ -623,59 +1021,179 @@ function ProfileSettings() {
           <button
             type="button"
             className="softsave-button softsave-profile__primary-button"
-            onClick={abrirModalPerfil}
-            title="Editar perfil"
+            onClick={alternarEdicionPerfil}
           >
             Editar perfil
           </button>
         </div>
       </div>
 
-      <div className="softsave-profile__contact-grid">
-        <article className="softsave-profile__contact-item">
-          <span className="softsave-profile__view-label">Nombre completo</span>
-          <p className="softsave-profile__contact-value">
-            {perfilCabecera.nombreCompleto || "Sin registrar"}
-          </p>
-        </article>
+      {completarPerfil ? (
+        <div className="softsave-profile__complete-banner">
+          <Icon path={mdiAlertCircleOutline} size={0.9} />
+          Completa tu información principal para terminar la configuración del perfil.
+        </div>
+      ) : null}
 
-        <article className="softsave-profile__contact-item">
-          <span className="softsave-profile__view-label">Profesión</span>
-          <p className="softsave-profile__contact-value">
-            {perfilCabecera.profesion || "Sin registrar"}
-          </p>
-        </article>
+      <form className="softsave-profile__contact-editor" onSubmit={manejarGuardarCambios}>
+        <div className="softsave-profile__contact-form-grid">
+          <label className="softsave-profile__field">
+            <span className="softsave-profile__label">Nombre completo</span>
+            <input
+              type="text"
+              name="nombreCompleto"
+              value={formularioPerfil.nombreCompleto}
+              onChange={manejarCambioFormulario}
+              readOnly={!estaEditandoPerfil}
+              maxLength={50}
+              className="softsave-input softsave-profile__input"
+              placeholder="Ej. Juan Pérez"
+            />
+            {erroresFormulario.nombreCompleto ? (
+              <span className="error-text softsave-profile__error-text" role="alert">
+                {erroresFormulario.nombreCompleto}
+              </span>
+            ) : null}
+          </label>
 
-        <article className="softsave-profile__contact-item softsave-profile__contact-item--bio">
-          <span className="softsave-profile__view-label">Biografía</span>
-          <p className="softsave-profile__contact-value softsave-profile__contact-value--bio">
-            {perfilCabecera.biografia || "Añade una breve biografía para destacar tu perfil profesional."}
-          </p>
-        </article>
+          <label className="softsave-profile__field">
+            <span className="softsave-profile__label">Profesión / Título</span>
+            <input
+              type="text"
+              name="profesion"
+              value={formularioPerfil.profesion}
+              onChange={manejarCambioFormulario}
+              readOnly={!estaEditandoPerfil}
+              maxLength={100}
+              className="softsave-input softsave-profile__input"
+              placeholder="Ej. Senior Full Stack Engineer"
+            />
+            {erroresFormulario.profesion ? (
+              <span className="error-text softsave-profile__error-text" role="alert">
+                {erroresFormulario.profesion}
+              </span>
+            ) : null}
+          </label>
 
-        <article className="softsave-profile__contact-item softsave-profile__contact-item--links">
-          <span className="softsave-profile__view-label">Redes profesionales</span>
-          {enlacesProfesionales.length > 0 ? (
-            <div className="softsave-profile__links-list">
-              {enlacesProfesionales.map((enlace) => (
-                <a
-                  key={enlace.id}
-                  href={enlace.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="softsave-profile__inline-link"
-                >
-                  <Icon path={enlace.icono} size={0.8} />
-                  <span>{enlace.label}</span>
-                  <Icon path={mdiOpenInNew} size={0.7} />
-                </a>
-              ))}
+          <label className="softsave-profile__field softsave-profile__field--full">
+            <span className="softsave-profile__label">Biografía</span>
+            <textarea
+              name="biografia"
+              value={formularioPerfil.biografia}
+              onChange={manejarCambioFormulario}
+              readOnly={!estaEditandoPerfil}
+              maxLength={1000}
+              className="softsave-input softsave-profile__textarea"
+              placeholder="Cuéntanos sobre tu enfoque, experiencia y tecnologías favoritas."
+            />
+            {erroresFormulario.biografia ? (
+              <span className="error-text softsave-profile__error-text" role="alert">
+                {erroresFormulario.biografia}
+              </span>
+            ) : null}
+          </label>
+        </div>
+
+        {vistaPreviaLinkedin ? (
+          <div className="softsave-profile__sync-preview">
+            <div className="softsave-profile__sync-preview-head">
+              <div>
+                <p className="softsave-profile__sync-preview-title">Cambios listos para sobrescribir</p>
+                <p className="softsave-profile__sync-preview-text">
+                  Esta información fue importada desde LinkedIn y se aplicará al guardar.
+                </p>
+              </div>
+              <span className="softsave-profile__sync-badge">Sincronizado</span>
             </div>
-          ) : (
-            <p className="softsave-profile__contact-value">Sin enlaces registrados</p>
-          )}
-        </article>
-      </div>
+
+            <div className="softsave-profile__sync-preview-grid">
+              <article className="softsave-profile__sync-preview-item">
+                <span className="softsave-profile__view-label">Nombre actual → nuevo</span>
+                <strong>{perfilCabecera.nombreCompleto || "Sin registrar"}</strong>
+                <span>{vistaPreviaLinkedin.nombreCompleto}</span>
+              </article>
+
+              <article className="softsave-profile__sync-preview-item">
+                <span className="softsave-profile__view-label">Titular actual → nuevo</span>
+                <strong>{perfilCabecera.profesion || "Sin registrar"}</strong>
+                <span>{vistaPreviaLinkedin.profesion}</span>
+              </article>
+
+              <article className="softsave-profile__sync-preview-item softsave-profile__sync-preview-item--photo">
+                <span className="softsave-profile__view-label">Miniatura importada</span>
+                <img
+                  src={vistaPreviaLinkedin.fotografia}
+                  alt="Vista previa importada desde LinkedIn"
+                  className="softsave-profile__sync-avatar"
+                />
+              </article>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="softsave-profile__contact-grid">
+          <article className="softsave-profile__contact-item softsave-profile__contact-item--links">
+            <span className="softsave-profile__view-label">Redes profesionales</span>
+            {enlacesProfesionales.length > 0 ? (
+              <div className="softsave-profile__links-list">
+                {enlacesProfesionales.map((enlace) => (
+                  <a
+                    key={enlace.id}
+                    href={enlace.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="softsave-profile__inline-link"
+                  >
+                    <Icon path={enlace.icono} size={0.8} />
+                    <span>{enlace.label}</span>
+                    <Icon path={mdiOpenInNew} size={0.7} />
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="softsave-profile__contact-value">Sin enlaces registrados</p>
+            )}
+          </article>
+        </div>
+
+        <div className="softsave-profile__contact-linkedin-action">
+          <button
+            type="button"
+            className="softsave-profile__secondary-button softsave-profile__secondary-button--linkedin softsave-profile__secondary-button--full"
+            onClick={abrirPanelLinkedin}
+          >
+            <Icon path={mdiLinkedin} size={0.9} />
+            Vincular LinkedIn
+          </button>
+        </div>
+
+        {mensajeGuardadoError ? (
+          <span className="error-text softsave-profile__error-text" role="alert">
+            {mensajeGuardadoError}
+          </span>
+        ) : null}
+
+        {estaEditandoPerfil ? (
+          <div className="softsave-profile__contact-footer">
+            <button
+              type="button"
+              className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
+              onClick={descartarCambiosContacto}
+              disabled={guardandoPerfil}
+            >
+              Descartar cambios
+            </button>
+            <button
+              type="submit"
+              className="softsave-button softsave-button--compact"
+              disabled={guardandoPerfil}
+            >
+              <Icon path={mdiContentSaveOutline} size={0.8} />
+              {guardandoPerfil ? "Guardando..." : "Guardar cambios"}
+            </button>
+          </div>
+        ) : null}
+      </form>
     </section>
   );
 
@@ -684,14 +1202,8 @@ function ProfileSettings() {
       <div className="softsave-profile__section-head">
         <div>
           <div className="softsave-profile__title-with-icon">
-            <Icon
-              path={mdiSchoolOutline}
-              size={0.95}
-              className="softsave-profile__panel-icon"
-            />
-            <h2 className="softsave-profile__form-title">
-              Trayectoria académica
-            </h2>
+            <Icon path={mdiSchoolOutline} size={0.95} className="softsave-profile__panel-icon" />
+            <h2 className="softsave-profile__form-title">Trayectoria académica</h2>
           </div>
           <p className="softsave-profile__form-subtitle">
             Esta sección quedó restaurada como base de navegación del perfil.
@@ -703,8 +1215,7 @@ function ProfileSettings() {
         <div className="softsave-profile__view-row">
           <span className="softsave-profile__view-label">Estado</span>
           <p className="softsave-profile__view-value">
-            La gestión detallada de formación académica vive actualmente en Mi
-            Portafolio.
+            La gestión detallada de formación académica vive actualmente en Mi Portafolio.
           </p>
         </div>
         <div className="softsave-profile__actions">
@@ -721,68 +1232,97 @@ function ProfileSettings() {
   );
 
   const renderizarSeccionGithub = () => (
-    <section className="softsave-profile__form-card">
+    <section className="softsave-profile__form-card softsave-profile__github-section">
       <div className="softsave-profile__section-head">
         <div>
           <div className="softsave-profile__title-with-icon">
-            <Icon
-              path={mdiGithub}
-              size={0.95}
-              className="softsave-profile__panel-icon"
-            />
-            <h2 className="softsave-profile__form-title">
-              Ecosistema de Git Hub
-            </h2>
+            <Icon path={mdiGithub} size={0.95} className="softsave-profile__panel-icon" />
+            <h2 className="softsave-profile__form-title">Ecosistema de Git Hub</h2>
           </div>
           <p className="softsave-profile__form-subtitle">
-            Este espacio reutiliza los enlaces profesionales guardados para
-            mantener consistencia.
+            Importa proyectos desde GitHub y decide cuáles aparecen en tu portafolio.
           </p>
         </div>
 
-        <button
-          type="button"
-          className="softsave-button softsave-button--compact softsave-profile__section-button"
-          onClick={abrirModalEnlaces}
-        >
-          Enlaces profesionales
-        </button>
+        <div className="softsave-profile__contact-actions">
+          <button
+            type="button"
+            className="softsave-profile__secondary-button softsave-profile__secondary-button--pill softsave-profile__privacy-link"
+            onClick={() => navigate("/perfil/privacidad")}
+          >
+            <Icon path={mdiCogOutline} size={0.85} />
+            Configuración de privacidad
+          </button>
+
+          <button
+            type="button"
+            className="softsave-button softsave-button--compact softsave-profile__section-button"
+            onClick={abrirModalEnlaces}
+          >
+            Enlaces profesionales
+          </button>
+        </div>
       </div>
 
-      {user?.github_url ? (
-        <a
-          href={user.github_url}
-          target="_blank"
-          rel="noreferrer"
-          className="softsave-profile__external-card"
-        >
-          <Icon
-            path={mdiGithub}
-            size={1}
-            className="softsave-profile__panel-icon"
-          />
-          <div>
-            <strong>GitHub</strong>
-            <p>{user.github_url}</p>
+      {!estaGithubConectado ? (
+        <div className="softsave-profile__github-connect-card">
+          <div className="softsave-profile__github-connect-icon">
+            <Icon path={mdiSourceBranch} size={1.05} />
           </div>
-          <Icon path={mdiOpenInNew} size={0.9} />
-        </a>
+          <h3 className="softsave-profile__github-connect-title">Actualiza tu Portafolio</h3>
+          <p className="softsave-profile__github-connect-text">
+            Importa nuevos proyectos o actualiza los existentes con un solo clic. Mantén tu
+            presencia profesional al día.
+          </p>
+          <button
+            type="button"
+            className="softsave-button softsave-button--compact"
+            onClick={conectarGithub}
+          >
+            Conectar con GitHub
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
       ) : (
-        <p className="softsave-profile__empty">
-          Todavía no vinculaste tu cuenta de GitHub desde enlaces profesionales.
-        </p>
-      )}
+        <div className="softsave-profile__github-results">
+          <div className="softsave-profile__github-status-bar">
+            <div>
+              <span className="softsave-profile__view-label">Proyectos importados</span>
+              <h3 className="softsave-profile__github-results-title">
+                Selección visible en tu portafolio
+              </h3>
+            </div>
+            <span className="softsave-profile__repo-count-badge">
+              {repositoriosSeleccionados.length} REPOSITORIOS
+            </span>
+          </div>
 
-      <div className="softsave-profile__panel-actions">
-        <button
-          type="button"
-          className="softsave-profile__secondary-button softsave-profile__secondary-button--pill softsave-profile__privacy-link"
-          onClick={() => navigate("/perfil/privacidad")}
-        >
-          <Icon path={mdiCogOutline} size={0.85} />
-          Configuracion de Privacidad
-        </button>
-      </div>
+          <div className="softsave-profile__github-grid">
+            {repositoriosSeleccionados.map((repositorio) => (
+              <article key={repositorio.id} className="softsave-profile__repo-card">
+                <div className="softsave-profile__repo-card-top">
+                  <Icon
+                    path={iconoRepositorio(repositorio)}
+                    size={0.95}
+                    className="softsave-profile__repo-card-icon"
+                  />
+                  <span className="softsave-profile__repo-card-stack">
+                    {repositorio.lenguajes.map(({ nombre }) => nombre).join(" + ")}
+                  </span>
+                </div>
+
+                <h4 className="softsave-profile__repo-card-title">{repositorio.nombre}</h4>
+                <p className="softsave-profile__repo-card-description">{repositorio.descripcion}</p>
+
+                <div className="softsave-profile__repo-card-stats">
+                  <span>☆ {repositorio.estrellas}</span>
+                  <span>⑂ {repositorio.forks}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 
@@ -801,15 +1341,9 @@ function ProfileSettings() {
                     draggable={false}
                   />
                 ) : inicialesPerfil ? (
-                  <span className="softsave-profile__avatar-initials">
-                    {inicialesPerfil}
-                  </span>
+                  <span className="softsave-profile__avatar-initials">{inicialesPerfil}</span>
                 ) : (
-                  <Icon
-                    path={mdiAccount}
-                    size={1.6}
-                    className="softsave-profile__avatar-icon"
-                  />
+                  <Icon path={mdiAccount} size={1.6} className="softsave-profile__avatar-icon" />
                 )}
               </div>
 
@@ -817,7 +1351,7 @@ function ProfileSettings() {
                 type="button"
                 onClick={abrirModalImagen}
                 className="softsave-profile__avatar-button"
-                aria-label="Añadir o actualizar fotografia de perfil"
+                aria-label="Añadir o actualizar fotografía de perfil"
               >
                 <Icon path={mdiPlus} size={0.7} />
               </button>
@@ -831,9 +1365,7 @@ function ProfileSettings() {
                   key={seccion.id}
                   to={seccion.route}
                   className={`softsave-profile__tab ${seccionActiva === seccion.id ? "is-active" : ""}`}
-                  aria-current={
-                    seccionActiva === seccion.id ? "page" : undefined
-                  }
+                  aria-current={seccionActiva === seccion.id ? "page" : undefined}
                 >
                   {seccion.label}
                 </Link>
@@ -851,11 +1383,7 @@ function ProfileSettings() {
       </div>
 
       {estaModalAbierto ? (
-        <div
-          className="softsave-profile__modal-overlay"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="softsave-profile__modal-overlay" role="dialog" aria-modal="true">
           <div className="softsave-profile__modal softsave-profile__modal--editor">
             <header className="softsave-profile__modal-header softsave-profile__modal-header--editor">
               <h3 className="softsave-profile__modal-title">Editar imagen</h3>
@@ -921,13 +1449,8 @@ function ProfileSettings() {
                     }
 
                     evento.preventDefault();
-                    evento.stopPropagation();
-
                     const delta = -evento.deltaY * 0.0015;
-                    const nuevoZoom = Math.min(
-                      2.5,
-                      Math.max(1, zoomImagen + delta),
-                    );
+                    const nuevoZoom = Math.min(2.5, Math.max(1, zoomImagen + delta));
                     const nuevo = limitarDesplazamiento(
                       desplazamientoImagen.x,
                       desplazamientoImagen.y,
@@ -949,17 +1472,10 @@ function ProfileSettings() {
                       onDragStart={(evento) => evento.preventDefault()}
                     />
                   ) : (
-                    <Icon
-                      path={mdiImageOutline}
-                      size={2.2}
-                      className="softsave-profile__panel-icon"
-                    />
+                    <Icon path={mdiImageOutline} size={2.2} className="softsave-profile__panel-icon" />
                   )}
 
-                  <div
-                    className="softsave-profile__editor-mask"
-                    aria-hidden="true"
-                  />
+                  <div className="softsave-profile__editor-mask" aria-hidden="true" />
                 </div>
               </section>
 
@@ -1008,13 +1524,9 @@ function ProfileSettings() {
                     onClick={() => inputImagenRef.current?.click()}
                   >
                     <Icon path={mdiCameraOutline} size={0.8} />
-                    Seleccionar Imagen
+                    Seleccionar imagen
                   </button>
-                  <button
-                    type="button"
-                    className="softsave-button"
-                    onClick={confirmarNuevaImagen}
-                  >
+                  <button type="button" className="softsave-button" onClick={confirmarNuevaImagen}>
                     Guardar cambios
                   </button>
                 </div>
@@ -1033,129 +1545,286 @@ function ProfileSettings() {
         </div>
       ) : null}
 
-      {estaModalPerfilAbierto ? (
-        <div className="softsave-profile__modal-overlay" role="dialog" aria-modal="true">
-          <div className="softsave-profile__modal softsave-profile__modal--portfolio">
-            <header className="softsave-profile__modal-header">
-              <div className="softsave-profile__modal-content">
-                <h3 className="softsave-profile__modal-title">Editar información personal</h3>
-                <p className="softsave-profile__modal-text">
-                  Completa los datos personales manteniendo la misma línea visual del sistema.
-                </p>
+      {estaPanelLinkedinAbierto ? (
+        <div
+          className="softsave-profile__modal-overlay softsave-profile__modal-overlay--linkedin"
+          role="dialog"
+          aria-modal="true"
+        >
+          <aside className="softsave-profile__linkedin-panel">
+            <header className="softsave-profile__linkedin-header">
+              <div>
+                <h3 className="softsave-profile__modal-title">
+                  {estaLinkedinVinculado
+                    ? "Información de Cuenta Vinculada"
+                    : "Vincular cuenta profesional"}
+                </h3>
               </div>
-
-              {!completarPerfil && (
-                <button
-                  type="button"
-                  className="softsave-profile__icon-button"
-                  onClick={cerrarModalPerfil}
-                  aria-label="Cerrar modal"
-                >
-                  <Icon path={mdiClose} size={1} />
-                </button>
-              )}
+              <button
+                type="button"
+                className="softsave-profile__icon-button softsave-profile__icon-button--static"
+                onClick={cerrarPanelLinkedin}
+                aria-label="Cerrar panel de LinkedIn"
+              >
+                <Icon path={mdiClose} size={0.9} />
+              </button>
             </header>
 
-            <form className="softsave-profile__form" onSubmit={manejarGuardarCambios}>
-              <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Nombre Completo</span>
-                <input
-                  type="text"
-                  name="nombreCompleto"
-                  value={formularioPerfil.nombreCompleto}
-                  onChange={manejarCambioFormulario}
-                  maxLength={50}
-                  className="softsave-input softsave-profile__input"
-                  placeholder="Ej. Alejandra García"
-                />
-                {erroresFormulario.nombreCompleto ? (
-                  <span className="error-text softsave-profile__error-text" role="alert">
-                    {erroresFormulario.nombreCompleto}
-                  </span>
+            <div className="softsave-profile__linkedin-brand">
+              <Icon path={mdiLinkedin} size={1.4} className="softsave-profile__linkedin-brand-icon" />
+              <span>LinkedIn</span>
+            </div>
+
+            {!estaLinkedinVinculado ? (
+              <div className="softsave-profile__linkedin-state">
+                <p className="softsave-profile__linkedin-status">
+                  Estado: <strong>Sin vincular</strong>
+                </p>
+                <button
+                  type="button"
+                  className="softsave-profile__linkedin-primary"
+                  onClick={vincularCuentaLinkedin}
+                  disabled={simulandoLinkedin}
+                >
+                  <Icon path={mdiLinkedin} size={0.85} />
+                  {simulandoLinkedin ? "Vinculando..." : "Vincular con LinkedIn"}
+                </button>
+                <p className="softsave-profile__linkedin-helper">
+                  Importa tu foto y titular profesional automáticamente.
+                </p>
+              </div>
+            ) : (
+              <div className="softsave-profile__linkedin-state">
+                <p className="softsave-profile__linkedin-status softsave-profile__linkedin-status--success">
+                  Estado: <strong>Vinculado</strong> <Icon path={mdiCheckCircle} size={0.75} />
+                </p>
+
+                <div className="softsave-profile__linkedin-details">
+                  <div className="softsave-profile__linkedin-field">
+                    <span>Nombre importado:</span>
+                    <strong>{DATOS_LINKEDIN_MOCK.nombreCompleto}</strong>
+                  </div>
+                  <div className="softsave-profile__linkedin-field">
+                    <span>Titular importado:</span>
+                    <strong>{DATOS_LINKEDIN_MOCK.profesion}</strong>
+                  </div>
+                  <div className="softsave-profile__linkedin-field">
+                    <span>Fotografía importada:</span>
+                    <img
+                      src={DATOS_LINKEDIN_MOCK.fotografia}
+                      alt="Foto importada de LinkedIn"
+                      className="softsave-profile__linkedin-photo"
+                    />
+                  </div>
+                </div>
+
+                <div className="softsave-profile__linkedin-preview-callout">
+                  <p>Se sobrescribirán visualmente estos campos del formulario principal:</p>
+                  <ul className="softsave-profile__linkedin-preview-list">
+                    <li>Nombre completo</li>
+                    <li>Titular profesional</li>
+                    <li>Miniatura sugerida</li>
+                  </ul>
+                </div>
+
+                <button
+                  type="button"
+                  className="softsave-profile__linkedin-primary"
+                  onClick={sincronizarDatosLinkedin}
+                >
+                  <Icon path={mdiRefresh} size={0.85} />
+                  Sincronizar Datos
+                </button>
+                <button
+                  type="button"
+                  className="softsave-profile__linkedin-secondary"
+                  onClick={desvincularCuentaLinkedin}
+                >
+                  Desvincular Cuenta
+                </button>
+                {linkedinSincronizado ? (
+                  <p className="softsave-profile__linkedin-helper">
+                    Datos sincronizados localmente. Presiona “Guardar cambios” en el formulario para
+                    persistir nombre y titular.
+                  </p>
                 ) : null}
-              </label>
+              </div>
+            )}
+          </aside>
+        </div>
+      ) : null}
 
-              <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Profesión</span>
-                <input
-                  type="text"
-                  name="profesion"
-                  value={formularioPerfil.profesion}
-                  onChange={manejarCambioFormulario}
-                  maxLength={100}
-                  className="softsave-input softsave-profile__input"
-                  placeholder="Ej. Senior Full Stack Developer"
-                />
-                {erroresFormulario.profesion ? (
-                  <span className="error-text softsave-profile__error-text" role="alert">
-                    {erroresFormulario.profesion}
-                  </span>
-                ) : null}
-              </label>
-
-              <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Biografía</span>
-                <textarea
-                  name="biografia"
-                  value={formularioPerfil.biografia}
-                  onChange={manejarCambioFormulario}
-                  maxLength={1000}
-                  className="softsave-input softsave-profile__textarea"
-                  placeholder="Cuéntanos sobre tu trayectoria, tecnologías favoritas y qué te apasiona construir."
-                />
-                {erroresFormulario.biografia ? (
-                  <span className="error-text softsave-profile__error-text" role="alert">
-                    {erroresFormulario.biografia}
-                  </span>
-                ) : null}
-              </label>
-
-              {mensajeGuardadoError ? (
-                <span className="error-text softsave-profile__error-text" role="alert">
-                  {mensajeGuardadoError}
-                </span>
-              ) : null}
-
-              <div className="softsave-profile__modal-actions">
-                {!completarPerfil && (
+      {estaModalReposAbierto ? (
+        <div className="softsave-profile__modal-overlay" role="dialog" aria-modal="true">
+          <div className="softsave-profile__modal softsave-profile__modal--portfolio">
+            <header className="softsave-profile__github-manager-head">
+              <div>
+                <div className="softsave-profile__github-manager-title-row">
+                  <h3 className="softsave-profile__modal-title">Repositorios de GitHub</h3>
+                  <span className="softsave-profile__github-connection-badge">Conectado</span>
+                </div>
+                <p className="softsave-profile__github-manager-meta">
+                  Usuario: <strong>john-developer</strong> | {totalRepositoriosGithub} repositorios |
+                  Última sync: {ultimaSyncGithub}{" "}
                   <button
                     type="button"
-                    className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
-                    onClick={cerrarModalPerfil}
-                    disabled={guardandoPerfil}
+                    className="softsave-profile__text-link"
+                    onClick={sincronizarGithubAhora}
                   >
-                    Cancelar
+                    Sincronizar ahora
                   </button>
-                )}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="softsave-profile__icon-button softsave-profile__icon-button--static"
+                onClick={cerrarModalRepos}
+                aria-label="Cerrar gestor de repositorios"
+              >
+                <Icon path={mdiClose} size={1} />
+              </button>
+            </header>
+
+            <div className="softsave-profile__github-toolbar">
+              <label className="softsave-profile__search">
+                <span className="softsave-profile__search-icon" aria-hidden="true">
+                  <Icon path={mdiMagnify} size={0.8} />
+                </span>
+                <input
+                  type="search"
+                  className="softsave-input softsave-profile__input"
+                  placeholder="Buscar repositorio..."
+                  value={busquedaRepos}
+                  onChange={(evento) => setBusquedaRepos(evento.target.value)}
+                />
+              </label>
+
+              <select
+                className="softsave-input softsave-profile__input softsave-profile__filter-select"
+                value={filtroRepos}
+                onChange={(evento) => setFiltroRepos(evento.target.value)}
+              >
+                <option>Todos</option>
+                <option>Originales</option>
+                <option>Forks</option>
+              </select>
+
+              <select
+                className="softsave-input softsave-profile__input softsave-profile__filter-select"
+                value={ordenRepos}
+                onChange={(evento) => setOrdenRepos(evento.target.value)}
+              >
+                <option>Más recientes</option>
+                <option>Más populares</option>
+              </select>
+            </div>
+
+            <p className="softsave-profile__github-counter">
+              <strong>{seleccionTemporalRepos.length}</strong> de {totalRepositoriosGithub} repositorios
+              seleccionados (máx. 15)
+            </p>
+
+            {mensajeGithubError ? (
+              <div className="error-alert error-alert--inline" role="alert">
+                {mensajeGithubError}
+              </div>
+            ) : null}
+
+            <div className="softsave-profile__github-list">
+              {repositoriosGestionados.map((repositorio) => {
+                const estaSeleccionado = seleccionTemporalRepos.includes(repositorio.id);
+
+                return (
+                  <article key={repositorio.id} className="softsave-profile__github-row">
+                    <label className="softsave-profile__github-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={estaSeleccionado}
+                        onChange={() => alternarSeleccionRepositorio(repositorio.id)}
+                      />
+                    </label>
+
+                    <div className="softsave-profile__github-row-main">
+                      <div className="softsave-profile__github-row-title">
+                        <strong>{repositorio.nombre}</strong>
+                        {repositorio.esFork ? (
+                          <span className="softsave-profile__fork-badge">FORK</span>
+                        ) : null}
+                      </div>
+
+                      <div className="softsave-profile__github-row-meta">
+                        <div className="softsave-profile__github-tech-list">
+                          {repositorio.lenguajes.map((lenguaje) => (
+                            <span key={`${repositorio.id}-${lenguaje.nombre}`} className="softsave-profile__github-tech">
+                              <span
+                                className="softsave-profile__github-tech-dot"
+                                style={{ backgroundColor: lenguaje.color }}
+                              />
+                              {lenguaje.nombre}
+                            </span>
+                          ))}
+                        </div>
+
+                        <span>★ {repositorio.estrellas}</span>
+                        <span>⑂ {repositorio.forks}</span>
+                        <span>{formatearTiempoRelativo(repositorio.actualizadoDias)}</span>
+                        <a href={repositorio.url} target="_blank" rel="noreferrer">
+                          Ver en GitHub
+                        </a>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div className="softsave-profile__github-manager-actions">
+              <div className="softsave-profile__github-manager-actions-left">
                 <button
-                  type="submit"
-                  className="softsave-button softsave-button--compact"
-                  disabled={guardandoPerfil}
+                  type="button"
+                  className="softsave-profile__secondary-button softsave-profile__secondary-button--outline softsave-profile__secondary-button--toolbar"
+                  onClick={marcarTodosRepositorios}
                 >
-                  <Icon path={mdiContentSaveOutline} size={0.8} />
-                  {guardandoPerfil ? "Guardando..." : "Guardar"}
+                  Marcar todos
+                </button>
+                <button
+                  type="button"
+                  className="softsave-profile__secondary-button softsave-profile__secondary-button--modal softsave-profile__secondary-button--toolbar"
+                  onClick={desmarcarTodosRepositorios}
+                >
+                  Desmarcar todos
                 </button>
               </div>
-            </form>
+
+              <div className="softsave-profile__github-manager-actions-right">
+                <button
+                  type="button"
+                  className="softsave-profile__secondary-button softsave-profile__secondary-button--modal softsave-profile__secondary-button--toolbar"
+                  onClick={cerrarModalRepos}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="softsave-button softsave-button--compact"
+                  onClick={guardarSeleccionRepositorios}
+                >
+                  Guardar selección
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
 
       {estaModalEnlacesAbierto ? (
-        <div
-          className="softsave-profile__modal-overlay"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="softsave-profile__modal-overlay" role="dialog" aria-modal="true">
           <div className="softsave-profile__modal">
             <header className="softsave-profile__modal-header">
               <div className="softsave-profile__modal-content">
-                <h3 className="softsave-profile__modal-title">
-                  Redes profesionales
-                </h3>
+                <h3 className="softsave-profile__modal-title">Redes profesionales</h3>
                 <p className="softsave-profile__modal-text">
-                  Agrega tus enlaces de LinkedIn y GitHub con la misma estética
-                  del perfil.
+                  Agrega tus enlaces de LinkedIn y GitHub manteniendo la misma estética del perfil.
                 </p>
               </div>
 
@@ -1169,10 +1838,7 @@ function ProfileSettings() {
               </button>
             </header>
 
-            <form
-              className="softsave-profile__mini-form"
-              onSubmit={guardarEnlaces}
-            >
+            <form className="softsave-profile__mini-form" onSubmit={guardarEnlaces}>
               <label className="softsave-profile__field">
                 <span className="softsave-profile__label">URL de GitHub</span>
                 <input
@@ -1184,10 +1850,7 @@ function ProfileSettings() {
                   className="softsave-input softsave-profile__input"
                 />
                 {erroresEnlaces.githubUrl ? (
-                  <span
-                    className="error-text softsave-profile__error-text"
-                    role="alert"
-                  >
+                  <span className="error-text softsave-profile__error-text" role="alert">
                     {erroresEnlaces.githubUrl}
                   </span>
                 ) : null}
@@ -1204,20 +1867,14 @@ function ProfileSettings() {
                   className="softsave-input softsave-profile__input"
                 />
                 {erroresEnlaces.linkedinUrl ? (
-                  <span
-                    className="error-text softsave-profile__error-text"
-                    role="alert"
-                  >
+                  <span className="error-text softsave-profile__error-text" role="alert">
                     {erroresEnlaces.linkedinUrl}
                   </span>
                 ) : null}
               </label>
 
               {mensajeEnlacesError ? (
-                <span
-                  className="error-text softsave-profile__error-text"
-                  role="alert"
-                >
+                <span className="error-text softsave-profile__error-text" role="alert">
                   {mensajeEnlacesError}
                 </span>
               ) : null}
