@@ -1314,17 +1314,8 @@
   box-shadow: 0 8px 18px rgba(10, 102, 194, 0.18);
 }
 
-.softsave-profile__modal-overlay--linkedin {
-  justify-content: flex-end;
-  padding-right: 28px;
-}
-
-.softsave-profile__linkedin-panel {
-  width: min(100%, 380px);
-  background-color: var(--color-blanco);
-  border-radius: 24px;
-  padding: 24px;
-  box-shadow: 0 22px 44px rgba(var(--color-negro-rgb), 0.24);
+.softsave-profile__modal--linkedin {
+  width: min(100%, 520px);
   animation: softsave-linkedin-in 0.24s ease;
 }
 
@@ -1765,12 +1756,7 @@
     width: 100%;
   }
 
-  .softsave-profile__modal-overlay--linkedin {
-    justify-content: center;
-    padding-right: var(--softsave-modal-gap);
-  }
-
-  .softsave-profile__linkedin-panel {
+  .softsave-profile__modal--linkedin {
     width: min(100%, 480px);
   }
 }

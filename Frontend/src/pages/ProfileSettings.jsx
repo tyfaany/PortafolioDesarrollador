@@ -35,6 +35,7 @@ import {
   obtenerRepositoriosGithub,
   sincronizarRepositoriosGithub,
   subirFoto,
+  desvincularLinkedIn,
 } from "../services/authService";
 import { extractApiMessageByStatus } from "../utils/apiError";
 import "../styles/ProfileSettings.css";
@@ -87,6 +88,10 @@ function sanitizarTexto(valor) {
   return String(valor || "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function tieneTexto(valor) {
+  return Boolean(sanitizarTexto(valor));
 }
 
 function normalizarProfesion(valor) {
@@ -250,6 +255,7 @@ function ProfileSettings() {
   const [cargandoLinkedin, setCargandoLinkedin] = useState(false);
   const [linkedinSincronizado, setLinkedinSincronizado] = useState(false);
   const [vistaPreviaLinkedin, setVistaPreviaLinkedin] = useState(null);
+  const [fotoLinkedinBloqueada, setFotoLinkedinBloqueada] = useState(false);
   const [estaGithubConectado, setEstaGithubConectado] = useState(false);
   const [ultimaSyncGithub, setUltimaSyncGithub] = useState("hace 2 horas");
   const [busquedaRepos, setBusquedaRepos] = useState("");
@@ -403,6 +409,10 @@ function ProfileSettings() {
       setImagenPerfil(user.profile_photo_url);
     }
   }, [user?.profile_photo_url]);
+
+  useEffect(() => {
+    setFotoLinkedinBloqueada(false);
+  }, [perfilLinkedinImportado?.fotografia]);
 
   useEffect(() => {
     if (!user) {
@@ -840,7 +850,6 @@ function ProfileSettings() {
       const data = respuesta?.data?.data || {};
       const perfil = {
         nombreCompleto: data.nombreCompleto || "",
-        profesion: data.profesion || "",
         fotografia: data.fotografia || FOTO_LINKEDIN_MOCK,
       };
       setPerfilLinkedinImportado(perfil);
@@ -872,34 +881,48 @@ function ProfileSettings() {
       return;
     }
 
-    setFormularioPerfil((estadoActual) => ({
-      ...estadoActual,
-      nombreCompleto: datosLinkedin.nombreCompleto,
-      profesion: datosLinkedin.profesion || "",
-    }));
+    setFormularioPerfil((estadoActual) => {
+      const nombreLinkedin = sanitizarTexto(datosLinkedin.nombreCompleto);
+
+      return {
+        ...estadoActual,
+        // Merge inteligente: solo se toma LinkedIn cuando trae valor.
+        nombreCompleto: tieneTexto(nombreLinkedin)
+          ? nombreLinkedin
+          : estadoActual.nombreCompleto,
+      };
+    });
     setVistaPreviaLinkedin(datosLinkedin);
     setLinkedinSincronizado(true);
-    setEstaPanelLinkedinAbierto(false);
+    if (tieneTexto(datosLinkedin.fotografia)) {
+      setImagenPerfil(datosLinkedin.fotografia);
+    }
     setErroresFormulario((estadoActual) => ({
       ...estadoActual,
       nombreCompleto: "",
-      profesion: "",
     }));
     showFeedback(
-      "Datos de LinkedIn listos para aplicarse cuando guardes los cambios.",
+      "Datos de LinkedIn sincronizados: solo se aplicaron campos con información.",
       "success",
     );
   };
 
-  const desvincularCuentaLinkedin = () => {
-    setPerfilLinkedinImportado(null);
-    setLinkedinSincronizado(false);
-    setVistaPreviaLinkedin(null);
-    setFormularioEnlaces((estadoActual) => ({
-      ...estadoActual,
-      linkedinUrl: user?.linkedin_url || "",
-    }));
-    setEstaPanelLinkedinAbierto(false);
+  const desvincularCuentaLinkedin = async () => {
+    setCargandoLinkedin(true);
+    try {
+      await desvincularLinkedIn();
+      setPerfilLinkedinImportado(null);
+      setLinkedinSincronizado(false);
+      setVistaPreviaLinkedin(null);
+      showFeedback("Cuenta de LinkedIn desvinculada correctamente.", "success");
+    } catch (error) {
+      showFeedback(
+        extractApiMessageByStatus(error, "No se pudo desvincular la cuenta de LinkedIn."),
+        "error",
+      );
+    } finally {
+      setCargandoLinkedin(false);
+    }
   };
 
   const conectarGithub = async () => {
@@ -1561,11 +1584,11 @@ function ProfileSettings() {
       ) : null}
       {estaPanelLinkedinAbierto ? (
         <div
-          className="softsave-profile__modal-overlay softsave-profile__modal-overlay--linkedin"
+          className="softsave-profile__modal-overlay softsave-profile__modal-overlay--centered"
           role="dialog"
           aria-modal="true"
         >
-          <aside className="softsave-profile__linkedin-panel">
+          <div className="softsave-profile__modal softsave-profile__modal--linkedin">
             <header className="softsave-profile__linkedin-header">
               <div>
                 <h3 className="softsave-profile__modal-title">
@@ -1583,31 +1606,6 @@ function ProfileSettings() {
                 <Icon path={mdiClose} size={0.9} />
               </button>
             </header>
-
-            <form
-              className="softsave-profile__form"
-              onSubmit={manejarGuardarCambios}
-            >
-              <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Nombre Completo</span>
-                <input
-                  type="text"
-                  name="nombreCompleto"
-                  value={formularioPerfil.nombreCompleto}
-                  onChange={manejarCambioFormulario}
-                  maxLength={50}
-                  className="softsave-input softsave-profile__input"
-                  placeholder="Ej. Alejandra García"
-                />
-                {erroresFormulario.nombreCompleto ? (
-                  <span
-                    className="error-text softsave-profile__error-text"
-                    role="alert"
-                  >
-                    {erroresFormulario.nombreCompleto}
-                  </span>
-                ) : null}
-              </label>
 
             <div className="softsave-profile__linkedin-brand">
               <Icon path={mdiLinkedin} size={1.4} className="softsave-profile__linkedin-brand-icon" />
@@ -1629,7 +1627,7 @@ function ProfileSettings() {
                   Vincular con LinkedIn
                 </button>
                 <p className="softsave-profile__linkedin-helper">
-                  Importa tu foto y titular profesional automáticamente.
+                  Importa tu nombre y foto de perfil automáticamente.
                 </p>
               </div>
             ) : (
@@ -1644,26 +1642,18 @@ function ProfileSettings() {
                     <strong>{perfilLinkedinImportado?.nombreCompleto || "Sin datos"}</strong>
                   </div>
                   <div className="softsave-profile__linkedin-field">
-                    <span>Titular importado:</span>
-                    <strong>{perfilLinkedinImportado?.profesion || "Sin datos"}</strong>
-                  </div>
-                  <div className="softsave-profile__linkedin-field">
                     <span>Fotografía importada:</span>
                     <img
-                      src={perfilLinkedinImportado?.fotografia || FOTO_LINKEDIN_MOCK}
+                      src={
+                        fotoLinkedinBloqueada
+                          ? FOTO_LINKEDIN_MOCK
+                          : (perfilLinkedinImportado?.fotografia || FOTO_LINKEDIN_MOCK)
+                      }
                       alt="Foto importada de LinkedIn"
                       className="softsave-profile__linkedin-photo"
+                      onError={() => setFotoLinkedinBloqueada(true)}
                     />
                   </div>
-                </div>
-
-                <div className="softsave-profile__linkedin-preview-callout">
-                  <p>Se sobrescribirán visualmente estos campos del formulario principal:</p>
-                  <ul className="softsave-profile__linkedin-preview-list">
-                    <li>Nombre completo</li>
-                    <li>Titular profesional</li>
-                    <li>Miniatura sugerida</li>
-                  </ul>
                 </div>
 
                 <button
@@ -1684,117 +1674,13 @@ function ProfileSettings() {
                 </button>
                 {linkedinSincronizado ? (
                   <p className="softsave-profile__linkedin-helper">
-                    Datos sincronizados localmente. Presiona “Guardar cambios” en el formulario para
-                    persistir nombre y titular.
+                    Se conservaron tus datos actuales donde LinkedIn no tenía información. Presiona
+                    “Guardar cambios” en “Editar perfil” para persistir.
                   </p>
                 ) : null}
               </div>
             )}
-
-              <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Profesión</span>
-                <input
-                  type="text"
-                  name="profesion"
-                  value={formularioPerfil.profesion}
-                  onChange={manejarCambioFormulario}
-                  maxLength={100}
-                  className="softsave-input softsave-profile__input"
-                  placeholder="Ej. Senior Full Stack Developer"
-                />
-                {erroresFormulario.profesion ? (
-                  <span
-                    className="error-text softsave-profile__error-text"
-                    role="alert"
-                  >
-                    {erroresFormulario.profesion}
-                  </span>
-                ) : null}
-              </label>
-
-              <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Biografía</span>
-                <textarea
-                  name="biografia"
-                  value={formularioPerfil.biografia}
-                  onChange={manejarCambioFormulario}
-                  maxLength={1000}
-                  className="softsave-input softsave-profile__textarea"
-                  placeholder="Cuéntanos sobre tu trayectoria, tecnologías favoritas y qué te apasiona construir."
-                />
-                {erroresFormulario.biografia ? (
-                  <span
-                    className="error-text softsave-profile__error-text"
-                    role="alert"
-                  >
-                    {erroresFormulario.biografia}
-                  </span>
-                ) : null}
-              </label>
-
-              <label className="softsave-profile__field">
-                <span className="softsave-profile__label">URL de GitHub</span>
-                <input
-                  type="url"
-                  name="githubUrl"
-                  value={formularioPerfil.githubUrl}
-                  onChange={manejarCambioFormulario}
-                  className="softsave-input softsave-profile__input"
-                  placeholder="https://github.com/tu-usuario"
-                />
-                {erroresFormulario.githubUrl ? (
-                  <span className="error-text softsave-profile__error-text" role="alert">
-                    {erroresFormulario.githubUrl}
-                  </span>
-                ) : null}
-              </label>
-
-              <label className="softsave-profile__field">
-                <span className="softsave-profile__label">URL de LinkedIn</span>
-                <input
-                  type="url"
-                  name="linkedinUrl"
-                  value={formularioPerfil.linkedinUrl}
-                  onChange={manejarCambioFormulario}
-                  className="softsave-input softsave-profile__input"
-                  placeholder="https://www.linkedin.com/in/tu-perfil"
-                />
-                {erroresFormulario.linkedinUrl ? (
-                  <span className="error-text softsave-profile__error-text" role="alert">
-                    {erroresFormulario.linkedinUrl}
-                  </span>
-                ) : null}
-              </label>
-
-              {mensajeGuardadoError ? (
-                <span
-                  className="error-text softsave-profile__error-text"
-                  role="alert"
-                >
-                  {mensajeGuardadoError}
-                </span>
-              ) : null}
-
-              <div className="softsave-profile__modal-actions">
-                {!completarPerfil ? (
-                  <button
-                    type="button"
-                    className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
-                    onClick={cerrarPanelLinkedin}
-                  >
-                    Cancelar
-                  </button>
-                ) : null}
-                <button
-                  type="submit"
-                  className="softsave-button softsave-button--compact"
-                  disabled={guardandoPerfil}
-                >
-                  {guardandoPerfil ? "Guardando..." : "Guardar cambios"}
-                </button>
-              </div>
-            </form>
-          </aside>
+          </div>
         </div>
       ) : null}
 

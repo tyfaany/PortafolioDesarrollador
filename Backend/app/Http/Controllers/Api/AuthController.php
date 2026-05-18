@@ -271,16 +271,33 @@ class AuthController extends Controller
         }
 
         $fotografia = $socialAccount->avatar ?: $user->profile_photo_url;
-        $profesion = $user->profession ?: null;
 
         return response()->json([
             'status' => 'success',
             'message' => 'Perfil de LinkedIn obtenido correctamente.',
             'data' => [
                 'nombreCompleto' => $user->name,
-                'profesion' => $profesion,
                 'fotografia' => $fotografia,
             ],
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
+    }
+
+    /**
+     * Desvincular cuenta de LinkedIn del usuario autenticado.
+     */
+    public function unlinkLinkedIn(Request $request)
+    {
+        $user = $request->user();
+
+        $eliminadas = SocialAccount::where('user_id', $user->id)
+            ->where('provider', 'linkedin')
+            ->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => $eliminadas > 0
+                ? 'Cuenta de LinkedIn desvinculada correctamente.'
+                : 'No habia una cuenta de LinkedIn vinculada.',
         ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
@@ -312,7 +329,17 @@ class AuthController extends Controller
 
             // Ya existe → login directo
             $user = $socialAccount->user;
+            $avatarActualizado = $linkedinUser->getAvatar();
 
+            if (!empty($avatarActualizado)) {
+                $socialAccount->avatar = $avatarActualizado;
+                $socialAccount->save();
+            }
+
+            if (!empty($avatarActualizado) && empty($user->profile_photo)) {
+                $user->profile_photo = $avatarActualizado;
+                $user->save();
+            }
         } else {
 
             // 2️⃣ Buscar usuario por email
@@ -328,12 +355,19 @@ class AuthController extends Controller
             }
 
             // 4️⃣ Crear registro en social_accounts
+            $avatarLinkedin = $linkedinUser->getAvatar();
+
             SocialAccount::create([
                 'user_id' => $user->id,
                 'provider' => 'linkedin',
                 'provider_id' => $linkedinUser->getId(),
-                'avatar' => $linkedinUser->getAvatar(),
+                'avatar' => $avatarLinkedin,
             ]);
+
+            if (!empty($avatarLinkedin) && empty($user->profile_photo)) {
+                $user->profile_photo = $avatarLinkedin;
+                $user->save();
+            }
         }
 
         // 5️⃣ Generar token
