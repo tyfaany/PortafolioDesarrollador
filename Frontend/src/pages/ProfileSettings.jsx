@@ -29,6 +29,7 @@ import PrivacySettingsPanel from "../components/PrivacySettingsPanel";
 import {
   actualizarPerfil,
   guardarSeleccionRepositorios as guardarSeleccionRepositoriosApi,
+  obtenerPerfilLinkedIn,
   obtenerRepositoriosGithub,
   sincronizarRepositoriosGithub,
   subirFoto,
@@ -57,14 +58,6 @@ const FOTO_LINKEDIN_MOCK = `data:image/svg+xml;utf8,${encodeURIComponent(`
     <path d="M28 108c5-22 20-34 36-34s31 12 36 34" fill="#f4f7f6"/>
   </svg>
 `)}`;
-
-const DATOS_LINKEDIN_MOCK = {
-  nombreCompleto: "Juan Pérez (LinkedIn)",
-  profesion: "Senior Full Stack Engineer at TechCorp",
-  fotografia: FOTO_LINKEDIN_MOCK,
-  linkedinUrl: "https://www.linkedin.com/in/juan-perez-dev",
-};
-
 
 function obtenerIniciales(nombreCompleto) {
   return String(nombreCompleto || "")
@@ -243,7 +236,8 @@ function ProfileSettings() {
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
   const [guardandoEnlaces, setGuardandoEnlaces] = useState(false);
   const [estaEditandoPerfil, setEstaEditandoPerfil] = useState(false);
-  const [estaLinkedinVinculado, setEstaLinkedinVinculado] = useState(false);
+  const [perfilLinkedinImportado, setPerfilLinkedinImportado] = useState(null);
+  const [cargandoLinkedin, setCargandoLinkedin] = useState(false);
   const [linkedinSincronizado, setLinkedinSincronizado] = useState(false);
   const [vistaPreviaLinkedin, setVistaPreviaLinkedin] = useState(null);
   const [estaGithubConectado, setEstaGithubConectado] = useState(false);
@@ -287,6 +281,7 @@ function ProfileSettings() {
     [user],
   );
   const vistaPreviaModal = imagenTemporal || imagenPerfil;
+  const estaLinkedinVinculado = Boolean(perfilLinkedinImportado);
   const totalRepositoriosGithub = reposGithub.length;
   const repositoriosSeleccionados = useMemo(
     () => reposGithub.filter((repo) => reposSeleccionados.includes(repo.id)),
@@ -745,6 +740,7 @@ function ProfileSettings() {
 
   const abrirPanelLinkedin = () => {
     setEstaPanelLinkedinAbierto(true);
+    void cargarPerfilLinkedinVinculado(true);
   };
 
   const cerrarPanelLinkedin = () => {
@@ -759,13 +755,51 @@ function ProfileSettings() {
     window.location.href = `${backendBaseUrl}/api/auth/linkedin/redirect`;
   };
 
-  const sincronizarDatosLinkedin = () => {
+  const cargarPerfilLinkedinVinculado = async (silencioso = false) => {
+    setCargandoLinkedin(true);
+    try {
+      const respuesta = await obtenerPerfilLinkedIn();
+      const data = respuesta?.data?.data || {};
+      const perfil = {
+        nombreCompleto: data.nombreCompleto || "",
+        profesion: data.profesion || "",
+        fotografia: data.fotografia || FOTO_LINKEDIN_MOCK,
+      };
+      setPerfilLinkedinImportado(perfil);
+      return perfil;
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        setPerfilLinkedinImportado(null);
+        if (!silencioso) {
+          showFeedback("No tienes una cuenta de LinkedIn vinculada.", "warning");
+        }
+        return null;
+      }
+
+      if (!silencioso) {
+        showFeedback(
+          extractApiMessageByStatus(error, "No se pudieron obtener los datos de LinkedIn."),
+          "error",
+        );
+      }
+      return null;
+    } finally {
+      setCargandoLinkedin(false);
+    }
+  };
+
+  const sincronizarDatosLinkedin = async () => {
+    const datosLinkedin = await cargarPerfilLinkedinVinculado();
+    if (!datosLinkedin) {
+      return;
+    }
+
     setFormularioPerfil((estadoActual) => ({
       ...estadoActual,
-      nombreCompleto: DATOS_LINKEDIN_MOCK.nombreCompleto,
-      profesion: DATOS_LINKEDIN_MOCK.profesion,
+      nombreCompleto: datosLinkedin.nombreCompleto,
+      profesion: datosLinkedin.profesion || "",
     }));
-    setVistaPreviaLinkedin(DATOS_LINKEDIN_MOCK);
+    setVistaPreviaLinkedin(datosLinkedin);
     setLinkedinSincronizado(true);
     setEstaPanelLinkedinAbierto(false);
     setErroresFormulario((estadoActual) => ({
@@ -780,7 +814,7 @@ function ProfileSettings() {
   };
 
   const desvincularCuentaLinkedin = () => {
-    setEstaLinkedinVinculado(false);
+    setPerfilLinkedinImportado(null);
     setLinkedinSincronizado(false);
     setVistaPreviaLinkedin(null);
     setFormularioEnlaces((estadoActual) => ({
@@ -1565,6 +1599,7 @@ function ProfileSettings() {
                   type="button"
                   className="softsave-profile__linkedin-primary"
                   onClick={vincularCuentaLinkedin}
+                  disabled={cargandoLinkedin}
                 >
                   <Icon path={mdiLinkedin} size={0.85} />
                   Vincular con LinkedIn
@@ -1582,16 +1617,16 @@ function ProfileSettings() {
                 <div className="softsave-profile__linkedin-details">
                   <div className="softsave-profile__linkedin-field">
                     <span>Nombre importado:</span>
-                    <strong>{DATOS_LINKEDIN_MOCK.nombreCompleto}</strong>
+                    <strong>{perfilLinkedinImportado?.nombreCompleto || "Sin datos"}</strong>
                   </div>
                   <div className="softsave-profile__linkedin-field">
                     <span>Titular importado:</span>
-                    <strong>{DATOS_LINKEDIN_MOCK.profesion}</strong>
+                    <strong>{perfilLinkedinImportado?.profesion || "Sin datos"}</strong>
                   </div>
                   <div className="softsave-profile__linkedin-field">
                     <span>Fotografía importada:</span>
                     <img
-                      src={DATOS_LINKEDIN_MOCK.fotografia}
+                      src={perfilLinkedinImportado?.fotografia || FOTO_LINKEDIN_MOCK}
                       alt="Foto importada de LinkedIn"
                       className="softsave-profile__linkedin-photo"
                     />
@@ -1611,9 +1646,10 @@ function ProfileSettings() {
                   type="button"
                   className="softsave-profile__linkedin-primary"
                   onClick={sincronizarDatosLinkedin}
+                  disabled={cargandoLinkedin}
                 >
                   <Icon path={mdiRefresh} size={0.85} />
-                  Sincronizar Datos
+                  {cargandoLinkedin ? "Sincronizando..." : "Sincronizar Datos"}
                 </button>
                 <button
                   type="button"
