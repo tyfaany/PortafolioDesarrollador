@@ -789,48 +789,14 @@ function ProfileSettings() {
     }
   };
 
-  const abrirModalPerfil = () => {
-    setFormularioPerfil({
-      nombreCompleto: perfilCabecera.nombreCompleto,
-      profesion: perfilCabecera.profesion,
-      biografia: perfilCabecera.biografia,
+  const abrirModalEnlaces = () => {
+    setFormularioEnlaces({
       githubUrl: user?.github_url || "",
       linkedinUrl: user?.linkedin_url || "",
     });
-    setErroresFormulario({});
-    setMensajeGuardadoError("");
-    setMensajeGuardadoExito("");
-    setEstaModalPerfilAbierto(true);
-  };
-
-  const cerrarModalPerfil = () => {
-    if (completarPerfil) {
-      const nombreLimpio = sanitizarTexto(formularioPerfil.nombreCompleto);
-      const profesionLimpia = sanitizarTexto(formularioPerfil.profesion);
-      if (!nombreLimpio || !profesionLimpia) {
-        setErroresFormulario((prev) => ({
-          ...prev,
-          ...(!nombreLimpio && { nombreCompleto: "El nombre es obligatorio." }),
-          ...(!profesionLimpia && {
-            profesion: "La profesión es obligatoria.",
-          }),
-        }));
-        return;
-      }
-    }
-
-    if (guardandoPerfil) {
-      return;
-    }
-
-    setFormularioPerfil({
-      nombreCompleto: perfilCabecera.nombreCompleto,
-      profesion: perfilCabecera.profesion,
-      biografia: perfilCabecera.biografia,
-    });
-    setErroresFormulario({});
-    setMensajeGuardadoError("");
-    setEstaModalPerfilAbierto(false);
+    setErroresEnlaces({});
+    setMensajeEnlacesError("");
+    setEstaModalEnlacesAbierto(true);
   };
 
   const cerrarModalEnlaces = () => {
@@ -963,12 +929,6 @@ function ProfileSettings() {
     setReposSeleccionados([1, 2, 3, 4, 5, 6, 7, 8]);
     setSeleccionTemporalRepos([1, 2, 3, 4, 5, 6, 7, 8]);
     showFeedback("Cuenta de GitHub conectada con repositorios importados.", "success");
-  };
-
-  const abrirModalRepos = () => {
-    setSeleccionTemporalRepos(reposSeleccionados);
-    setMensajeGithubError("");
-    setEstaModalReposAbierto(true);
   };
 
   const cerrarModalRepos = () => {
