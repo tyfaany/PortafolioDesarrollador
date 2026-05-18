@@ -251,6 +251,39 @@ class AuthController extends Controller
             ], 500, [], JSON_INVALID_UTF8_SUBSTITUTE);
         }
     }
+
+    /**
+     * Obtener datos de perfil importables desde una cuenta LinkedIn vinculada.
+     */
+    public function getLinkedInProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $socialAccount = SocialAccount::where('user_id', $user->id)
+            ->where('provider', 'linkedin')
+            ->first();
+
+        if (! $socialAccount) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No tienes una cuenta de LinkedIn vinculada.',
+            ], 404, [], JSON_INVALID_UTF8_SUBSTITUTE);
+        }
+
+        $fotografia = $socialAccount->avatar ?: $user->profile_photo_url;
+        $profesion = $user->profession ?: null;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Perfil de LinkedIn obtenido correctamente.',
+            'data' => [
+                'nombreCompleto' => $user->name,
+                'profesion' => $profesion,
+                'fotografia' => $fotografia,
+            ],
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
+    }
+
     /**
      * Autenticación y Registro con LinkedIn vía API (Postman/Frontend)
      */
