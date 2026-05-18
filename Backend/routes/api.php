@@ -62,4 +62,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Ruta para guardar la selección de repositorios a mostrar
     Route::put('/user/github/repositories/selection', [GithubController::class, 'saveSelection']);
+    Route::get('/user/linkedin/profile', [AuthController::class, 'getLinkedInProfile']);
 });
