@@ -27,8 +27,10 @@ import useAuth from "../hooks/useAuth";
 import useFeedback from "../hooks/useFeedback";
 import PrivacySettingsPanel from "../components/PrivacySettingsPanel";
 import {
+  actualizarContacto,
   actualizarPerfil,
   guardarSeleccionRepositorios as guardarSeleccionRepositoriosApi,
+  obtenerContacto,
   obtenerPerfilLinkedIn,
   obtenerRepositoriosGithub,
   sincronizarRepositoriosGithub,
@@ -93,6 +95,14 @@ function normalizarProfesion(valor) {
 
 function esProfesionValida(valor) {
   return /^(?=.*\p{L})[\p{L}\p{N}]+(?:[ .,&()/-][\p{L}\p{N}]+)*$/u.test(valor);
+}
+
+function esEmailValido(valor) {
+  if (!valor) {
+    return true;
+  }
+
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor);
 }
 
 function normalizarEnlacesProfesionales(user) {
@@ -223,6 +233,7 @@ function ProfileSettings() {
   });
 
   const [estaModalAbierto, setEstaModalAbierto] = useState(false);
+  const [estaModalPerfilAbierto, setEstaModalPerfilAbierto] = useState(false);
   const [estaModalEnlacesAbierto, setEstaModalEnlacesAbierto] = useState(false);
   const [estaPanelLinkedinAbierto, setEstaPanelLinkedinAbierto] = useState(false);
   const [estaModalReposAbierto, setEstaModalReposAbierto] = useState(false);
@@ -235,7 +246,6 @@ function ProfileSettings() {
   const [mensajeGithubError, setMensajeGithubError] = useState("");
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
   const [guardandoEnlaces, setGuardandoEnlaces] = useState(false);
-  const [estaEditandoPerfil, setEstaEditandoPerfil] = useState(false);
   const [perfilLinkedinImportado, setPerfilLinkedinImportado] = useState(null);
   const [cargandoLinkedin, setCargandoLinkedin] = useState(false);
   const [linkedinSincronizado, setLinkedinSincronizado] = useState(false);
@@ -264,6 +274,10 @@ function ProfileSettings() {
     biografia: user?.biography || "",
     githubUrl: user?.github_url || "",
     linkedinUrl: user?.linkedin_url || "",
+    telefono: user?.phone || "",
+    movil: user?.mobile || "",
+    correoContacto: user?.contact_email || "",
+    direccion: user?.address || "",
   });
   const [formularioEnlaces, setFormularioEnlaces] = useState({
     githubUrl: user?.github_url || "",
@@ -346,6 +360,7 @@ function ProfileSettings() {
   useEffect(() => {
     const algunModalAbierto =
       estaModalAbierto ||
+      estaModalPerfilAbierto ||
       estaModalEnlacesAbierto ||
       estaPanelLinkedinAbierto ||
       estaModalReposAbierto;
@@ -362,6 +377,7 @@ function ProfileSettings() {
     };
   }, [
     estaModalAbierto,
+    estaModalPerfilAbierto,
     estaModalEnlacesAbierto,
     estaPanelLinkedinAbierto,
     estaModalReposAbierto,
@@ -378,7 +394,7 @@ function ProfileSettings() {
 
   useEffect(() => {
     if (completarPerfil) {
-      setEstaEditandoPerfil(true);
+      setEstaModalPerfilAbierto(true);
     }
   }, [completarPerfil]);
 
@@ -412,6 +428,37 @@ function ProfileSettings() {
   }, [user]);
 
   useEffect(() => {
+    const cargarContacto = async () => {
+      if (!user) {
+        return;
+      }
+
+      try {
+        const respuesta = await obtenerContacto();
+        const contacto = respuesta?.data || {};
+
+        setFormularioPerfil((estadoActual) => ({
+          ...estadoActual,
+          telefono: contacto.phone || "",
+          movil: contacto.mobile || "",
+          correoContacto: contacto.contact_email || "",
+          direccion: contacto.address || "",
+        }));
+      } catch {
+        setFormularioPerfil((estadoActual) => ({
+          ...estadoActual,
+          telefono: user?.phone || "",
+          movil: user?.mobile || "",
+          correoContacto: user?.contact_email || "",
+          direccion: user?.address || "",
+        }));
+      }
+    };
+
+    void cargarContacto();
+  }, [user]);
+
+  useEffect(() => {
     if (seccionActiva !== "github" || !estaGithubConectado) {
       return;
     }
@@ -439,6 +486,10 @@ function ProfileSettings() {
     const nombreLimpio = sanitizarTexto(formularioPerfil.nombreCompleto);
     const profesionLimpia = sanitizarTexto(formularioPerfil.profesion);
     const biografiaLimpia = sanitizarTexto(formularioPerfil.biografia);
+    const telefonoLimpio = sanitizarTexto(formularioPerfil.telefono);
+    const movilLimpio = sanitizarTexto(formularioPerfil.movil);
+    const correoContactoLimpio = sanitizarTexto(formularioPerfil.correoContacto);
+    const direccionLimpia = sanitizarTexto(formularioPerfil.direccion);
     const githubError = validarUrlProfesional(formularioPerfil.githubUrl, "GitHub");
     const linkedinError = validarUrlProfesional(formularioPerfil.linkedinUrl, "LinkedIn");
 
@@ -458,6 +509,21 @@ function ProfileSettings() {
 
     if (biografiaLimpia.length > 1000) {
       nuevosErrores.biografia = "La biografía debe tener máximo 1000 caracteres.";
+    }
+    if (telefonoLimpio.length > 20) {
+      nuevosErrores.telefono = "El teléfono debe tener máximo 20 caracteres.";
+    }
+    if (movilLimpio.length > 20) {
+      nuevosErrores.movil = "El móvil debe tener máximo 20 caracteres.";
+    }
+    if (correoContactoLimpio && !esEmailValido(correoContactoLimpio)) {
+      nuevosErrores.correoContacto = "Ingresa un correo válido.";
+    }
+    if (correoContactoLimpio.length > 255) {
+      nuevosErrores.correoContacto = "El correo debe tener máximo 255 caracteres.";
+    }
+    if (direccionLimpia.length > 255) {
+      nuevosErrores.direccion = "La dirección debe tener máximo 255 caracteres.";
     }
     if (githubError) {
       nuevosErrores.githubUrl = githubError;
@@ -484,12 +550,18 @@ function ProfileSettings() {
       github_url: sanitizarTexto(formularioPerfil.githubUrl) || null,
       linkedin_url: sanitizarTexto(formularioPerfil.linkedinUrl) || null,
     };
+    const payloadContacto = {
+      phone: sanitizarTexto(formularioPerfil.telefono) || null,
+      mobile: sanitizarTexto(formularioPerfil.movil) || null,
+      contact_email: sanitizarTexto(formularioPerfil.correoContacto) || null,
+      address: sanitizarTexto(formularioPerfil.direccion) || null,
+    };
 
     setGuardandoPerfil(true);
     setMensajeGuardadoError("");
 
     try {
-      await actualizarPerfil(payloadPerfil);
+      await Promise.all([actualizarPerfil(payloadPerfil), actualizarContacto(payloadContacto)]);
       await refreshUser();
       setPerfilCabecera({
         nombreCompleto: payloadPerfil.name,
@@ -498,7 +570,7 @@ function ProfileSettings() {
         githubUrl: payloadPerfil.github_url || "",
         linkedinUrl: payloadPerfil.linkedin_url || "",
       });
-      setEstaEditandoPerfil(false);
+      setEstaModalPerfilAbierto(false);
       setVistaPreviaLinkedin(null);
       setLinkedinSincronizado(false);
       setMensajeGuardadoExito("Información actualizada correctamente");
@@ -515,28 +587,34 @@ function ProfileSettings() {
     }
   };
 
-  const descartarCambiosContacto = () => {
+  const abrirModalPerfil = () => {
     setFormularioPerfil({
       nombreCompleto: perfilCabecera.nombreCompleto,
       profesion: perfilCabecera.profesion,
       biografia: perfilCabecera.biografia,
+      githubUrl: user?.github_url || "",
+      linkedinUrl: user?.linkedin_url || "",
+      telefono: user?.phone || "",
+      movil: user?.mobile || "",
+      correoContacto: user?.contact_email || "",
+      direccion: user?.address || "",
     });
-    setEstaEditandoPerfil(Boolean(completarPerfil));
+    setErroresFormulario({});
+    setMensajeGuardadoError("");
+    setMensajeGuardadoExito("");
+    setEstaModalPerfilAbierto(true);
+  };
+
+  const cerrarModalPerfil = () => {
+    if (guardandoPerfil) {
+      return;
+    }
+
     setVistaPreviaLinkedin(null);
     setLinkedinSincronizado(false);
     setErroresFormulario({});
     setMensajeGuardadoError("");
-  };
-
-  const alternarEdicionPerfil = () => {
-    if (estaEditandoPerfil) {
-      descartarCambiosContacto();
-      return;
-    }
-
-    setEstaEditandoPerfil(true);
-    setErroresFormulario({});
-    setMensajeGuardadoError("");
+    setEstaModalPerfilAbierto(false);
   };
 
   const abrirModalImagen = () => {
@@ -960,32 +1038,24 @@ function ProfileSettings() {
         <div className="softsave-profile__contact-intro">
           <h2 className="softsave-profile__contact-title">Tu identidad profesional</h2>
           <p className="softsave-profile__contact-text">
-            Manten tus datos al dia y gestiona como te ven reclutadores, clientes y equipos.
+            Mantén tus datos al día y gestiona cómo te ven reclutadores, clientes y equipos.
           </p>
         </div>
 
         <div className="softsave-profile__contact-actions">
           <button
             type="button"
-            className="softsave-profile__secondary-button softsave-profile__secondary-button--pill softsave-profile__privacy-link"
-            onClick={() => navigate("/perfil/privacidad")}
+            className="softsave-profile__secondary-button softsave-profile__secondary-button--linkedin"
+            onClick={abrirPanelLinkedin}
           >
-            <Icon path={mdiCogOutline} size={0.85} />
-            Configuracion de Privacidad
-          </button>
-
-          <button
-            type="button"
-            className="softsave-button softsave-button--compact softsave-profile__section-button"
-            onClick={abrirModalEnlaces}
-          >
-            Enlaces profesionales
+            <Icon path={mdiLinkedin} size={0.85} />
+            Vincular con LinkedIn
           </button>
 
           <button
             type="button"
             className="softsave-button softsave-profile__primary-button"
-            onClick={alternarEdicionPerfil}
+            onClick={abrirModalPerfil}
           >
             Editar perfil
           </button>
@@ -999,165 +1069,60 @@ function ProfileSettings() {
         </div>
       ) : null}
 
-      <form className="softsave-profile__contact-editor" onSubmit={manejarGuardarCambios}>
-        <div className="softsave-profile__contact-form-grid">
-          <label className="softsave-profile__field">
-            <span className="softsave-profile__label">Nombre completo</span>
-            <input
-              type="text"
-              name="nombreCompleto"
-              value={formularioPerfil.nombreCompleto}
-              onChange={manejarCambioFormulario}
-              readOnly={!estaEditandoPerfil}
-              maxLength={50}
-              className="softsave-input softsave-profile__input"
-              placeholder="Ej. Juan Pérez"
-            />
-            {erroresFormulario.nombreCompleto ? (
-              <span className="error-text softsave-profile__error-text" role="alert">
-                {erroresFormulario.nombreCompleto}
-              </span>
-            ) : null}
-          </label>
-
-          <label className="softsave-profile__field">
-            <span className="softsave-profile__label">Profesión / Título</span>
-            <input
-              type="text"
-              name="profesion"
-              value={formularioPerfil.profesion}
-              onChange={manejarCambioFormulario}
-              readOnly={!estaEditandoPerfil}
-              maxLength={100}
-              className="softsave-input softsave-profile__input"
-              placeholder="Ej. Senior Full Stack Engineer"
-            />
-            {erroresFormulario.profesion ? (
-              <span className="error-text softsave-profile__error-text" role="alert">
-                {erroresFormulario.profesion}
-              </span>
-            ) : null}
-          </label>
-
-          <label className="softsave-profile__field softsave-profile__field--full">
-            <span className="softsave-profile__label">Biografía</span>
-            <textarea
-              name="biografia"
-              value={formularioPerfil.biografia}
-              onChange={manejarCambioFormulario}
-              readOnly={!estaEditandoPerfil}
-              maxLength={1000}
-              className="softsave-input softsave-profile__textarea"
-              placeholder="Cuéntanos sobre tu enfoque, experiencia y tecnologías favoritas."
-            />
-            {erroresFormulario.biografia ? (
-              <span className="error-text softsave-profile__error-text" role="alert">
-                {erroresFormulario.biografia}
-              </span>
-            ) : null}
-          </label>
-        </div>
-
-        {vistaPreviaLinkedin ? (
-          <div className="softsave-profile__sync-preview">
-            <div className="softsave-profile__sync-preview-head">
-              <div>
-                <p className="softsave-profile__sync-preview-title">Cambios listos para sobrescribir</p>
-                <p className="softsave-profile__sync-preview-text">
-                  Esta información fue importada desde LinkedIn y se aplicará al guardar.
-                </p>
-              </div>
-              <span className="softsave-profile__sync-badge">Sincronizado</span>
+      <div className="softsave-profile__contact-grid">
+        <article className="softsave-profile__contact-item">
+          <span className="softsave-profile__view-label">Nombre completo</span>
+          <p className="softsave-profile__contact-value">{perfilCabecera.nombreCompleto || "Sin registrar"}</p>
+        </article>
+        <article className="softsave-profile__contact-item">
+          <span className="softsave-profile__view-label">Profesión</span>
+          <p className="softsave-profile__contact-value">{perfilCabecera.profesion || "Sin registrar"}</p>
+        </article>
+        <article className="softsave-profile__contact-item softsave-profile__contact-item--bio">
+          <span className="softsave-profile__view-label">Biografía</span>
+          <p className="softsave-profile__contact-value softsave-profile__contact-value--bio">
+            {perfilCabecera.biografia || "Añade una breve biografía para destacar tu perfil profesional."}
+          </p>
+        </article>
+        <article className="softsave-profile__contact-item">
+          <span className="softsave-profile__view-label">Teléfono</span>
+          <p className="softsave-profile__contact-value">{formularioPerfil.telefono || "Sin registrar"}</p>
+        </article>
+        <article className="softsave-profile__contact-item">
+          <span className="softsave-profile__view-label">Móvil</span>
+          <p className="softsave-profile__contact-value">{formularioPerfil.movil || "Sin registrar"}</p>
+        </article>
+        <article className="softsave-profile__contact-item">
+          <span className="softsave-profile__view-label">Correo de contacto</span>
+          <p className="softsave-profile__contact-value">{formularioPerfil.correoContacto || "Sin registrar"}</p>
+        </article>
+        <article className="softsave-profile__contact-item">
+          <span className="softsave-profile__view-label">Dirección</span>
+          <p className="softsave-profile__contact-value">{formularioPerfil.direccion || "Sin registrar"}</p>
+        </article>
+        <article className="softsave-profile__contact-item softsave-profile__contact-item--links">
+          <span className="softsave-profile__view-label">Redes profesionales</span>
+          {enlacesProfesionales.length > 0 ? (
+            <div className="softsave-profile__links-list">
+              {enlacesProfesionales.map((enlace) => (
+                <a
+                  key={enlace.id}
+                  href={enlace.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="softsave-profile__inline-link"
+                >
+                  <Icon path={enlace.icono} size={0.8} />
+                  <span>{enlace.label}</span>
+                  <Icon path={mdiOpenInNew} size={0.7} />
+                </a>
+              ))}
             </div>
-
-            <div className="softsave-profile__sync-preview-grid">
-              <article className="softsave-profile__sync-preview-item">
-                <span className="softsave-profile__view-label">Nombre actual → nuevo</span>
-                <strong>{perfilCabecera.nombreCompleto || "Sin registrar"}</strong>
-                <span>{vistaPreviaLinkedin.nombreCompleto}</span>
-              </article>
-
-              <article className="softsave-profile__sync-preview-item">
-                <span className="softsave-profile__view-label">Titular actual → nuevo</span>
-                <strong>{perfilCabecera.profesion || "Sin registrar"}</strong>
-                <span>{vistaPreviaLinkedin.profesion}</span>
-              </article>
-
-              <article className="softsave-profile__sync-preview-item softsave-profile__sync-preview-item--photo">
-                <span className="softsave-profile__view-label">Miniatura importada</span>
-                <img
-                  src={vistaPreviaLinkedin.fotografia}
-                  alt="Vista previa importada desde LinkedIn"
-                  className="softsave-profile__sync-avatar"
-                />
-              </article>
-            </div>
-          </div>
-        ) : null}
-
-        <div className="softsave-profile__contact-grid">
-          <article className="softsave-profile__contact-item softsave-profile__contact-item--links">
-            <span className="softsave-profile__view-label">Redes profesionales</span>
-            {enlacesProfesionales.length > 0 ? (
-              <div className="softsave-profile__links-list">
-                {enlacesProfesionales.map((enlace) => (
-                  <a
-                    key={enlace.id}
-                    href={enlace.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="softsave-profile__inline-link"
-                  >
-                    <Icon path={enlace.icono} size={0.8} />
-                    <span>{enlace.label}</span>
-                    <Icon path={mdiOpenInNew} size={0.7} />
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <p className="softsave-profile__contact-value">Sin enlaces registrados</p>
-            )}
-          </article>
-        </div>
-
-        <div className="softsave-profile__contact-linkedin-action">
-          <button
-            type="button"
-            className="softsave-profile__secondary-button softsave-profile__secondary-button--linkedin softsave-profile__secondary-button--full"
-            onClick={abrirPanelLinkedin}
-          >
-            <Icon path={mdiLinkedin} size={0.9} />
-            Vincular LinkedIn
-          </button>
-        </div>
-
-        {mensajeGuardadoError ? (
-          <span className="error-text softsave-profile__error-text" role="alert">
-            {mensajeGuardadoError}
-          </span>
-        ) : null}
-
-        {estaEditandoPerfil ? (
-          <div className="softsave-profile__contact-footer">
-            <button
-              type="button"
-              className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
-              onClick={descartarCambiosContacto}
-              disabled={guardandoPerfil}
-            >
-              Descartar cambios
-            </button>
-            <button
-              type="submit"
-              className="softsave-button softsave-button--compact"
-              disabled={guardandoPerfil}
-            >
-              <Icon path={mdiContentSaveOutline} size={0.8} />
-              {guardandoPerfil ? "Guardando..." : "Guardar cambios"}
-            </button>
-          </div>
-        ) : null}
-      </form>
+          ) : (
+            <p className="softsave-profile__contact-value">Sin enlaces registrados</p>
+          )}
+        </article>
+      </div>
     </section>
   );
 
@@ -1208,15 +1173,6 @@ function ProfileSettings() {
           </p>
         </div>
         <div className="softsave-profile__contact-actions">
-          <button
-            type="button"
-            className="softsave-profile__secondary-button softsave-profile__secondary-button--pill softsave-profile__privacy-link"
-            onClick={() => navigate("/perfil/privacidad")}
-          >
-            <Icon path={mdiCogOutline} size={0.85} />
-            Configuración de privacidad
-          </button>
-
           <button
             type="button"
             className="softsave-button softsave-button--compact softsave-profile__section-button"
@@ -1517,24 +1473,92 @@ function ProfileSettings() {
           </div>
         </div>
       ) : null}
-{/* 
       {estaModalPerfilAbierto ? (
-        <div
-          className="softsave-profile__modal-overlay"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="softsave-profile__modal-overlay" role="dialog" aria-modal="true">
           <div className="softsave-profile__modal softsave-profile__modal--portfolio">
             <header className="softsave-profile__modal-header">
               <div className="softsave-profile__modal-content">
-                <h3 className="softsave-profile__modal-title">
-                  Editar información personal
-                </h3>
+                <h3 className="softsave-profile__modal-title">Editar información personal</h3>
                 <p className="softsave-profile__modal-text">
                   {completarPerfil
                     ? "Para continuar debes completar tu nombre y profesión."
                     : "Completa los datos personales manteniendo la misma línea visual del sistema."}
-                </p> */}
+                </p>
+              </div>
+              {!completarPerfil ? (
+                <button
+                  type="button"
+                  className="softsave-profile__icon-button"
+                  onClick={cerrarModalPerfil}
+                  aria-label="Cerrar modal"
+                >
+                  <Icon path={mdiClose} size={1} />
+                </button>
+              ) : null}
+            </header>
+
+            <form className="softsave-profile__form" onSubmit={manejarGuardarCambios}>
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">Nombre Completo</span>
+                <input type="text" name="nombreCompleto" value={formularioPerfil.nombreCompleto} onChange={manejarCambioFormulario} maxLength={50} className="softsave-input softsave-profile__input" placeholder="Ej. Alejandra García" />
+                {erroresFormulario.nombreCompleto ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.nombreCompleto}</span> : null}
+              </label>
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">Profesión</span>
+                <input type="text" name="profesion" value={formularioPerfil.profesion} onChange={manejarCambioFormulario} maxLength={100} className="softsave-input softsave-profile__input" placeholder="Ej. Senior Full Stack Engineer" />
+                {erroresFormulario.profesion ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.profesion}</span> : null}
+              </label>
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">Biografía</span>
+                <textarea name="biografia" value={formularioPerfil.biografia} onChange={manejarCambioFormulario} maxLength={1000} className="softsave-input softsave-profile__textarea" placeholder="Cuéntanos sobre tu enfoque, experiencia y tecnologías favoritas." />
+                {erroresFormulario.biografia ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.biografia}</span> : null}
+              </label>
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">Teléfono</span>
+                <input type="tel" name="telefono" value={formularioPerfil.telefono} onChange={manejarCambioFormulario} maxLength={20} className="softsave-input softsave-profile__input" placeholder="Ej. +591 2 1234567" />
+                {erroresFormulario.telefono ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.telefono}</span> : null}
+              </label>
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">Móvil</span>
+                <input type="tel" name="movil" value={formularioPerfil.movil} onChange={manejarCambioFormulario} maxLength={20} className="softsave-input softsave-profile__input" placeholder="Ej. +591 71234567" />
+                {erroresFormulario.movil ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.movil}</span> : null}
+              </label>
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">Correo de contacto</span>
+                <input type="email" name="correoContacto" value={formularioPerfil.correoContacto} onChange={manejarCambioFormulario} maxLength={255} className="softsave-input softsave-profile__input" placeholder="ejemplo@correo.com" />
+                {erroresFormulario.correoContacto ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.correoContacto}</span> : null}
+              </label>
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">Dirección</span>
+                <input type="text" name="direccion" value={formularioPerfil.direccion} onChange={manejarCambioFormulario} maxLength={255} className="softsave-input softsave-profile__input" placeholder="Ciudad, país" />
+                {erroresFormulario.direccion ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.direccion}</span> : null}
+              </label>
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">URL de GitHub</span>
+                <input type="url" name="githubUrl" value={formularioPerfil.githubUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://github.com/tu-usuario" />
+                {erroresFormulario.githubUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.githubUrl}</span> : null}
+              </label>
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">URL de LinkedIn</span>
+                <input type="url" name="linkedinUrl" value={formularioPerfil.linkedinUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://www.linkedin.com/in/tu-perfil" />
+                {erroresFormulario.linkedinUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.linkedinUrl}</span> : null}
+              </label>
+              {mensajeGuardadoError ? <span className="error-text softsave-profile__error-text" role="alert">{mensajeGuardadoError}</span> : null}
+              <div className="softsave-profile__modal-actions">
+                {!completarPerfil ? (
+                  <button type="button" className="softsave-profile__secondary-button softsave-profile__secondary-button--modal" onClick={cerrarModalPerfil} disabled={guardandoPerfil}>
+                    Cancelar
+                  </button>
+                ) : null}
+                <button type="submit" className="softsave-button softsave-button--compact" disabled={guardandoPerfil}>
+                  <Icon path={mdiContentSaveOutline} size={0.8} />
+                  {guardandoPerfil ? "Guardando..." : "Guardar"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
       {estaPanelLinkedinAbierto ? (
         <div
           className="softsave-profile__modal-overlay softsave-profile__modal-overlay--linkedin"

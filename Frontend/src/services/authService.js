@@ -44,6 +44,8 @@ export const subirFoto = async (archivo) => {
 };
 
 export const actualizarPerfil = (datos) => api.put('/user/update', datos);
+export const obtenerContacto = () => api.get('/user/contact');
+export const actualizarContacto = (datos) => api.put('/user/contact', datos);
 
 export const obtenerEstudios = () => api.get('/studies');
 
