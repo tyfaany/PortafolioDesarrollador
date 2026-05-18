@@ -135,3 +135,11 @@ export const obtenerTecnologias = () => api.get('/project-technologies');
 export const obtenerPrivacidad = () => api.get('/user/privacy');
 
 export const actualizarPrivacidad = (data) => api.put('/user/privacy', data);
+
+export const sincronizarRepositoriosGithub = (githubUsername) =>
+  api.post('/user/github/sync', { github_username: githubUsername });
+
+export const obtenerRepositoriosGithub = () => api.get('/user/github/repositories');
+
+export const guardarSeleccionRepositorios = (selectedIds) =>
+  api.put('/user/github/repositories/selection', { selected_repos: selectedIds });
