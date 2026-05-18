@@ -243,7 +243,6 @@ function ProfileSettings() {
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
   const [guardandoEnlaces, setGuardandoEnlaces] = useState(false);
   const [estaEditandoPerfil, setEstaEditandoPerfil] = useState(false);
-  const [simulandoLinkedin, setSimulandoLinkedin] = useState(false);
   const [estaLinkedinVinculado, setEstaLinkedinVinculado] = useState(false);
   const [linkedinSincronizado, setLinkedinSincronizado] = useState(false);
   const [vistaPreviaLinkedin, setVistaPreviaLinkedin] = useState(null);
@@ -749,22 +748,15 @@ function ProfileSettings() {
   };
 
   const cerrarPanelLinkedin = () => {
-    if (!simulandoLinkedin) {
-      setEstaPanelLinkedinAbierto(false);
-    }
+    setEstaPanelLinkedinAbierto(false);
   };
 
   const vincularCuentaLinkedin = () => {
-    setSimulandoLinkedin(true);
-
-    window.setTimeout(() => {
-      setEstaLinkedinVinculado(true);
-      setSimulandoLinkedin(false);
-      setFormularioEnlaces((estadoActual) => ({
-        ...estadoActual,
-        linkedinUrl: DATOS_LINKEDIN_MOCK.linkedinUrl,
-      }));
-    }, 900);
+    const apiBaseUrl = String(import.meta.env.VITE_LARAVEL_API_URL || "");
+    const backendBaseUrl = apiBaseUrl.endsWith("/api")
+      ? apiBaseUrl.slice(0, -4)
+      : apiBaseUrl;
+    window.location.href = `${backendBaseUrl}/api/auth/linkedin/redirect`;
   };
 
   const sincronizarDatosLinkedin = () => {
@@ -1573,10 +1565,9 @@ function ProfileSettings() {
                   type="button"
                   className="softsave-profile__linkedin-primary"
                   onClick={vincularCuentaLinkedin}
-                  disabled={simulandoLinkedin}
                 >
                   <Icon path={mdiLinkedin} size={0.85} />
-                  {simulandoLinkedin ? "Vinculando..." : "Vincular con LinkedIn"}
+                  Vincular con LinkedIn
                 </button>
                 <p className="softsave-profile__linkedin-helper">
                   Importa tu foto y titular profesional automáticamente.
