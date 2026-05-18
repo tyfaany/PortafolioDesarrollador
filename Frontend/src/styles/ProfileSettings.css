@@ -1162,3 +1162,615 @@
     min-height: 42px;
   }
 }
+
+.softsave-profile__secondary-button--outline {
+  border: 1.5px solid rgba(var(--color-primario-rgb), 0.26);
+  background-color: var(--color-blanco);
+  color: var(--color-texto);
+  box-shadow: 0 10px 20px rgba(var(--color-texto-rgb), 0.06);
+}
+
+.softsave-profile__secondary-button--toolbar {
+  min-width: 150px;
+}
+
+.softsave-profile__secondary-button--linkedin {
+  border: 1.5px solid rgba(10, 102, 194, 0.22);
+  background: linear-gradient(180deg, rgba(10, 102, 194, 0.12), rgba(10, 102, 194, 0.04));
+  color: #0a66c2;
+  border-radius: 12px;
+  padding: 11px 16px;
+}
+
+.softsave-profile__contact-editor {
+  display: grid;
+  gap: 18px;
+}
+
+.softsave-profile__contact-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.softsave-profile__field--full {
+  grid-column: 1 / -1;
+}
+
+.softsave-profile__contact-form-grid .softsave-profile__contact-item {
+  min-height: 0;
+}
+
+.softsave-profile__contact-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.softsave-profile__contact-linkedin-action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.softsave-profile__secondary-button--full {
+  min-width: 220px;
+}
+
+.softsave-profile__complete-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background-color: rgba(var(--color-primario-rgb), 0.1);
+  color: var(--color-texto);
+  font-weight: 600;
+}
+
+.softsave-profile__sync-preview {
+  border-radius: 18px;
+  border: 1px solid rgba(10, 102, 194, 0.16);
+  background: linear-gradient(180deg, rgba(10, 102, 194, 0.08), rgba(var(--color-blanco-rgb), 0.96));
+  padding: 18px;
+}
+
+.softsave-profile__sync-preview-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.softsave-profile__sync-preview-title,
+.softsave-profile__sync-preview-text {
+  margin: 0;
+}
+
+.softsave-profile__sync-preview-title {
+  font-weight: 700;
+}
+
+.softsave-profile__sync-preview-text {
+  color: var(--color-texto-suave);
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.softsave-profile__sync-badge,
+.softsave-profile__repo-count-badge,
+.softsave-profile__github-connection-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.softsave-profile__sync-badge {
+  background-color: rgba(10, 102, 194, 0.14);
+  color: #0a66c2;
+}
+
+.softsave-profile__sync-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.softsave-profile__sync-preview-item {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 14px;
+  background-color: var(--color-blanco);
+  border: 1px solid rgba(var(--color-texto-rgb), 0.08);
+}
+
+.softsave-profile__sync-preview-item strong {
+  font-size: 0.92rem;
+}
+
+.softsave-profile__sync-preview-item span:last-child {
+  color: #0a66c2;
+  font-weight: 600;
+}
+
+.softsave-profile__sync-preview-item--photo {
+  justify-items: start;
+}
+
+.softsave-profile__sync-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow: 0 8px 18px rgba(10, 102, 194, 0.18);
+}
+
+.softsave-profile__modal-overlay--linkedin {
+  justify-content: flex-end;
+  padding-right: 28px;
+}
+
+.softsave-profile__linkedin-panel {
+  width: min(100%, 380px);
+  background-color: var(--color-blanco);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 22px 44px rgba(var(--color-negro-rgb), 0.24);
+  animation: softsave-linkedin-in 0.24s ease;
+}
+
+@keyframes softsave-linkedin-in {
+  from {
+    opacity: 0;
+    transform: translate3d(20px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.softsave-profile__linkedin-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.softsave-profile__icon-button--static {
+  position: static;
+  flex-shrink: 0;
+}
+
+.softsave-profile__linkedin-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-titulos);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.softsave-profile__linkedin-brand-icon {
+  color: #0a66c2;
+}
+
+.softsave-profile__linkedin-state {
+  display: grid;
+  gap: 14px;
+}
+
+.softsave-profile__linkedin-status {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.softsave-profile__linkedin-status--success {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-texto);
+}
+
+.softsave-profile__linkedin-primary {
+  border: none;
+  border-radius: 12px;
+  min-height: 48px;
+  background: linear-gradient(180deg, #0a66c2 0%, #084c92 100%);
+  color: var(--color-blanco);
+  font-family: var(--font-titulos);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 12px 22px rgba(10, 102, 194, 0.24);
+}
+
+.softsave-profile__linkedin-secondary {
+  border: 1.5px solid rgba(var(--color-primario-rgb), 0.32);
+  border-radius: 12px;
+  min-height: 48px;
+  background-color: var(--color-blanco);
+  color: var(--color-primario);
+  font-family: var(--font-titulos);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.softsave-profile__linkedin-helper {
+  margin: 0;
+  color: var(--color-texto-suave);
+  line-height: 1.5;
+}
+
+.softsave-profile__linkedin-details {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  background-color: rgba(var(--color-texto-rgb), 0.03);
+  border: 1px solid rgba(var(--color-texto-rgb), 0.08);
+}
+
+.softsave-profile__linkedin-field {
+  display: grid;
+  gap: 4px;
+}
+
+.softsave-profile__linkedin-field span {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-texto-suave);
+}
+
+.softsave-profile__linkedin-photo {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.softsave-profile__linkedin-preview-callout {
+  border-radius: 14px;
+  background-color: rgba(var(--color-primario-rgb), 0.08);
+  padding: 14px;
+  color: var(--color-texto);
+}
+
+.softsave-profile__linkedin-preview-callout p {
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+
+.softsave-profile__linkedin-preview-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-texto-suave);
+}
+
+.softsave-profile__github-section {
+  display: grid;
+  gap: 22px;
+}
+
+.softsave-profile__github-connect-card {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: 42px 24px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top center, rgba(var(--color-primario-rgb), 0.12), transparent 48%),
+    var(--color-blanco);
+  border: 1px solid rgba(var(--color-texto-rgb), 0.06);
+  box-shadow: 0 18px 34px rgba(var(--color-texto-rgb), 0.08);
+}
+
+.softsave-profile__github-connect-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background-color: rgba(var(--color-primario-rgb), 0.14);
+  color: var(--color-primario);
+}
+
+.softsave-profile__github-connect-title,
+.softsave-profile__github-results-title {
+  margin: 0;
+}
+
+.softsave-profile__github-connect-text {
+  margin: 0;
+  max-width: 58ch;
+  color: var(--color-texto-suave);
+}
+
+.softsave-profile__github-results {
+  display: grid;
+  gap: 18px;
+}
+
+.softsave-profile__github-status-bar,
+.softsave-profile__github-manager-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.softsave-profile__repo-count-badge {
+  background-color: rgba(10, 102, 194, 0.12);
+  color: #0a66c2;
+}
+
+.softsave-profile__github-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.softsave-profile__repo-card {
+  border-radius: 18px;
+  padding: 18px;
+  background-color: var(--color-blanco);
+  border: 1px solid rgba(var(--color-texto-rgb), 0.08);
+  box-shadow: 0 14px 30px rgba(var(--color-texto-rgb), 0.06);
+  display: grid;
+  gap: 14px;
+}
+
+.softsave-profile__repo-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.softsave-profile__repo-card-icon {
+  color: #0a66c2;
+}
+
+.softsave-profile__repo-card-stack {
+  color: var(--color-texto-suave);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.softsave-profile__repo-card-title,
+.softsave-profile__repo-card-description {
+  margin: 0;
+}
+
+.softsave-profile__repo-card-description {
+  color: var(--color-texto-suave);
+  line-height: 1.55;
+}
+
+.softsave-profile__repo-card-stats {
+  display: flex;
+  gap: 14px;
+  color: var(--color-texto-suave);
+  font-size: 0.9rem;
+}
+
+.softsave-profile__github-manager-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.softsave-profile__github-connection-badge {
+  background-color: rgba(var(--color-exito-rgb), 0.14);
+  color: var(--color-exito);
+}
+
+.softsave-profile__github-manager-meta {
+  margin: 6px 0 0;
+  color: var(--color-texto-suave);
+}
+
+.softsave-profile__text-link {
+  border: none;
+  background: transparent;
+  color: var(--color-primario);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.softsave-profile__github-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px 180px;
+  gap: 12px;
+}
+
+.softsave-profile__search {
+  position: relative;
+  display: block;
+}
+
+.softsave-profile__search .softsave-input {
+  padding-left: 42px;
+}
+
+.softsave-profile__search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-texto-suave);
+  display: inline-flex;
+}
+
+.softsave-profile__filter-select {
+  min-height: 50px;
+}
+
+.softsave-profile__github-counter {
+  margin: 14px 0 8px;
+  color: var(--color-texto);
+}
+
+.softsave-profile__github-counter strong {
+  color: var(--color-primario);
+}
+
+.softsave-profile__github-list {
+  display: grid;
+  gap: 12px;
+  max-height: 460px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.softsave-profile__github-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(var(--color-texto-rgb), 0.08);
+  background-color: rgba(var(--color-texto-rgb), 0.02);
+}
+
+.softsave-profile__github-checkbox {
+  padding-top: 2px;
+}
+
+.softsave-profile__github-checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primario);
+}
+
+.softsave-profile__github-row-main {
+  display: grid;
+  gap: 8px;
+}
+
+.softsave-profile__github-row-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.softsave-profile__fork-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 8px;
+  background-color: rgba(var(--color-texto-rgb), 0.08);
+  color: var(--color-texto-suave);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.softsave-profile__github-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--color-texto-suave);
+}
+
+.softsave-profile__github-row-meta a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--color-texto-rgb), 0.12);
+  background-color: var(--color-blanco);
+  color: var(--color-texto);
+  font-weight: 600;
+}
+
+.softsave-profile__github-tech-list {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.softsave-profile__github-tech {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.softsave-profile__github-tech-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.softsave-profile__github-manager-actions,
+.softsave-profile__github-manager-actions-left,
+.softsave-profile__github-manager-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.softsave-profile__github-manager-actions {
+  justify-content: space-between;
+  margin-top: 18px;
+}
+
+@media (max-width: 768px) {
+  .softsave-profile__contact-form-grid,
+  .softsave-profile__sync-preview-grid,
+  .softsave-profile__github-grid,
+  .softsave-profile__github-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .softsave-profile__contact-footer,
+  .softsave-profile__github-manager-actions,
+  .softsave-profile__github-manager-actions-left,
+  .softsave-profile__github-manager-actions-right {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .softsave-profile__contact-linkedin-action {
+    justify-content: stretch;
+  }
+
+  .softsave-profile__secondary-button--full {
+    width: 100%;
+  }
+
+  .softsave-profile__modal-overlay--linkedin {
+    justify-content: center;
+    padding-right: var(--softsave-modal-gap);
+  }
+
+  .softsave-profile__linkedin-panel {
+    width: min(100%, 480px);
+  }
+}

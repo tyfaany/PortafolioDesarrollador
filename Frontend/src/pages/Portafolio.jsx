@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Icon from '@mdi/react';
 import { mdiChevronUp, mdiPlus } from '@mdi/js';
 import AcademicExperienceSection from '../components/AcademicExperienceSection';
+import GitHubRepoSelectionManager from '../components/GitHubRepoSelectionManager';
 import ProjectForm from '../components/ProjectForm';
 import ProjectList from '../components/ProjectList';
 import PortfolioPersonalInfoCard from '../components/PortfolioPersonalInfoCard';
@@ -82,6 +83,7 @@ function Portfolio() {
             aria-labelledby={tabIdActiva}
             className="softsave-portafolio-stack"
           >
+<<<<<<< HEAD
             <section className="softsave-projects-card softsave-projects-card--composer">
               <div className="softsave-projects-card__header">
                 <div className="softsave-projects-card__title-wrap">
@@ -112,6 +114,13 @@ function Portfolio() {
 
             <ProjectList
               refreshKey={refreshProjectsKey}
+=======
+            <GitHubRepoSelectionManager />
+            <ProjectForm
+              mode={modoProyecto}
+              initialData={modoProyecto === 'create' ? PROJECT_DRAFT : PROJECT_SAMPLE}
+              onSwitchMode={setModoProyecto}
+>>>>>>> origin/josue-cuarto-sprint
             />
           </section>
         )}

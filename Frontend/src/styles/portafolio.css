@@ -633,6 +633,178 @@
   cursor: not-allowed;
 }
 
+.softsave-portafolio-github-manager {
+  background-color: var(--color-blanco);
+  border: 1px solid var(--color-borde-tarjeta);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 14px 28px rgba(var(--color-texto-rgb), 0.08);
+}
+
+.softsave-portafolio-github-manager__head {
+  display: grid;
+  gap: 8px;
+}
+
+.softsave-portafolio-github-manager__title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.softsave-portafolio-github-manager__title {
+  margin: 0;
+  font-family: var(--font-titulos);
+  font-size: 1.5rem;
+}
+
+.softsave-portafolio-github-manager__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background-color: rgba(var(--color-exito-rgb), 0.14);
+  color: var(--color-exito);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.softsave-portafolio-github-manager__meta {
+  margin: 0;
+  color: var(--color-texto-suave);
+}
+
+.softsave-portafolio-github-manager__sync {
+  border: none;
+  background: transparent;
+  color: var(--color-primario);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.softsave-portafolio-github-manager__toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px 180px;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.softsave-portafolio-github-manager__counter {
+  margin: 14px 0 8px;
+}
+
+.softsave-portafolio-github-manager__counter strong {
+  color: var(--color-primario);
+}
+
+.softsave-portafolio-github-manager__list {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.softsave-portafolio-github-manager__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(var(--color-texto-rgb), 0.08);
+  background-color: rgba(var(--color-texto-rgb), 0.02);
+}
+
+.softsave-portafolio-github-manager__checkbox {
+  padding-top: 2px;
+}
+
+.softsave-portafolio-github-manager__checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primario);
+}
+
+.softsave-portafolio-github-manager__row-main {
+  display: grid;
+  gap: 8px;
+}
+
+.softsave-portafolio-github-manager__row-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.softsave-portafolio-github-manager__fork {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 8px;
+  background-color: rgba(var(--color-texto-rgb), 0.08);
+  color: var(--color-texto-suave);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.softsave-portafolio-github-manager__row-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--color-texto-suave);
+}
+
+.softsave-portafolio-github-manager__row-meta a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--color-texto-rgb), 0.12);
+  background-color: var(--color-blanco);
+  color: var(--color-texto);
+  font-weight: 600;
+}
+
+.softsave-portafolio-github-manager__tech-list {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.softsave-portafolio-github-manager__tech {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.softsave-portafolio-github-manager__tech-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.softsave-portafolio-github-manager__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.softsave-portafolio-github-manager__actions-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 768px) {
   .softsave-portafolio-shell {
     padding: 18px 12px 24px;
@@ -780,7 +952,8 @@
   .softsave-portafolio-job-form__date-grid,
   .softsave-portafolio-skills__table-head,
   .softsave-portafolio-skills__row,
-  .softsave-portafolio-skills__form-grid {
+  .softsave-portafolio-skills__form-grid,
+  .softsave-portafolio-github-manager__toolbar {
     grid-template-columns: 1fr;
   }
 
@@ -839,6 +1012,12 @@
 
   .softsave-portafolio-skills__footer .softsave-button {
     width: 100%;
+  }
+
+  .softsave-portafolio-github-manager__actions,
+  .softsave-portafolio-github-manager__actions-group {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
