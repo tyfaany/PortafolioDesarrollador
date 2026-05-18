@@ -26,8 +26,13 @@ import {
 import useAuth from "../hooks/useAuth";
 import useFeedback from "../hooks/useFeedback";
 import PrivacySettingsPanel from "../components/PrivacySettingsPanel";
-import { actualizarPerfil, subirFoto } from "../services/authService";
-import { GITHUB_REPOSITORIES_MOCK } from "../mocks/githubRepositories";
+import {
+  actualizarPerfil,
+  guardarSeleccionRepositorios as guardarSeleccionRepositoriosApi,
+  obtenerRepositoriosGithub,
+  sincronizarRepositoriosGithub,
+  subirFoto,
+} from "../services/authService";
 import { extractApiMessageByStatus } from "../utils/apiError";
 import "../styles/ProfileSettings.css";
 import "../styles/ProjectsPrivacyViews.css";
@@ -152,6 +157,46 @@ function formatearTiempoRelativo(dias) {
   return `hace ${meses} ${meses === 1 ? "mes" : "meses"}`;
 }
 
+function extraerUsernameGithub(githubUrl) {
+  const url = String(githubUrl || "").trim();
+  if (!url) {
+    return "";
+  }
+
+  const coincidencia = url.match(/github\.com\/([^/?#]+)/i);
+  return coincidencia?.[1] || "";
+}
+
+function normalizarRepositorioGithub(repo) {
+  if (
+    repo &&
+    Object.prototype.hasOwnProperty.call(repo, "name") &&
+    Object.prototype.hasOwnProperty.call(repo, "stars_count")
+  ) {
+    return {
+      id: repo.id,
+      nombre: repo.name || "Repositorio sin nombre",
+      descripcion: repo.description || "Sin descripción disponible.",
+      lenguajes: repo.language
+        ? [{ nombre: repo.language, color: "#6b7280" }]
+        : [{ nombre: "Sin lenguaje", color: "#9ca3af" }],
+      estrellas: Number(repo.stars_count || 0),
+      forks: Number(repo.forks_count || 0),
+      actualizadoDias: repo.pushed_at
+        ? Math.max(1, Math.round((Date.now() - new Date(repo.pushed_at).getTime()) / 86400000))
+        : 999,
+      esFork: Boolean(repo.is_fork),
+      url: repo.html_url || "#",
+      isVisible: Boolean(repo.is_visible),
+    };
+  }
+
+  return {
+    ...repo,
+    isVisible: true,
+  };
+}
+
 function iconoRepositorio(repositorio) {
   if (repositorio.lenguajes.some(({ nombre }) => nombre === "Python")) {
     return mdiConsoleLine;
@@ -207,8 +252,10 @@ function ProfileSettings() {
   const [busquedaRepos, setBusquedaRepos] = useState("");
   const [filtroRepos, setFiltroRepos] = useState("Todos");
   const [ordenRepos, setOrdenRepos] = useState("Más recientes");
-  const [reposSeleccionados, setReposSeleccionados] = useState([1, 2, 3, 4, 5, 6, 7, 8]);
-  const [seleccionTemporalRepos, setSeleccionTemporalRepos] = useState([1, 2, 7, 8]);
+  const [reposGithub, setReposGithub] = useState([]);
+  const [cargandoReposGithub, setCargandoReposGithub] = useState(false);
+  const [reposSeleccionados, setReposSeleccionados] = useState([]);
+  const [seleccionTemporalRepos, setSeleccionTemporalRepos] = useState([]);
   const [imagenTemporal, setImagenTemporal] = useState("");
   const [imagenPerfil, setImagenPerfil] = useState(user?.profile_photo_url || "");
   const [zoomImagen, setZoomImagen] = useState(1);
@@ -241,15 +288,15 @@ function ProfileSettings() {
     [user],
   );
   const vistaPreviaModal = imagenTemporal || imagenPerfil;
-  const totalRepositoriosGithub = GITHUB_REPOSITORIES_MOCK.length;
+  const totalRepositoriosGithub = reposGithub.length;
   const repositoriosSeleccionados = useMemo(
-    () => GITHUB_REPOSITORIES_MOCK.filter((repo) => reposSeleccionados.includes(repo.id)),
-    [reposSeleccionados],
+    () => reposGithub.filter((repo) => reposSeleccionados.includes(repo.id)),
+    [reposGithub, reposSeleccionados],
   );
   const repositoriosGestionados = useMemo(() => {
     const termino = sanitizarTexto(busquedaRepos).toLowerCase();
 
-    return [...GITHUB_REPOSITORIES_MOCK]
+    return [...reposGithub]
       .filter((repositorio) => {
         const coincideBusqueda =
           !termino ||
@@ -270,7 +317,37 @@ function ProfileSettings() {
 
         return a.actualizadoDias - b.actualizadoDias;
       });
-  }, [busquedaRepos, filtroRepos, ordenRepos]);
+  }, [busquedaRepos, filtroRepos, ordenRepos, reposGithub]);
+
+  const cargarRepositoriosGithub = async () => {
+    setCargandoReposGithub(true);
+    setMensajeGithubError("");
+
+    try {
+      const respuesta = await obtenerRepositoriosGithub();
+      const repositoriosNormalizados = Array.isArray(respuesta?.data)
+        ? respuesta.data.map(normalizarRepositorioGithub)
+        : [];
+      const visibles = repositoriosNormalizados
+        .filter((repo) => repo.isVisible)
+        .map((repo) => repo.id);
+
+      setReposGithub(repositoriosNormalizados);
+      setReposSeleccionados(visibles);
+      setSeleccionTemporalRepos(visibles);
+      setEstaGithubConectado(repositoriosNormalizados.length > 0);
+    } catch (error) {
+      setMensajeGithubError(
+        extractApiMessageByStatus(error, "No se pudieron cargar tus repositorios de GitHub."),
+      );
+      setReposGithub([]);
+      setReposSeleccionados([]);
+      setSeleccionTemporalRepos([]);
+      setEstaGithubConectado(false);
+    } finally {
+      setCargandoReposGithub(false);
+    }
+  };
 
   useEffect(() => {
     const algunModalAbierto =
@@ -337,10 +414,16 @@ function ProfileSettings() {
       linkedinUrl: user.linkedin_url || "",
     });
 
-    if (user.github_url) {
-      setEstaGithubConectado(true);
-    }
+    setEstaGithubConectado(Boolean(user.github_url));
   }, [user]);
+
+  useEffect(() => {
+    if (seccionActiva !== "github" || !estaGithubConectado) {
+      return;
+    }
+
+    cargarRepositoriosGithub();
+  }, [seccionActiva, estaGithubConectado]);
 
   const manejarCambioFormulario = (evento) => {
     const { name, value } = evento.target;
@@ -715,12 +798,28 @@ function ProfileSettings() {
     setEstaPanelLinkedinAbierto(false);
   };
 
-  const conectarGithub = () => {
-    setEstaGithubConectado(true);
-    setUltimaSyncGithub("justo ahora");
-    setReposSeleccionados([1, 2, 3, 4, 5, 6, 7, 8]);
-    setSeleccionTemporalRepos([1, 2, 3, 4, 5, 6, 7, 8]);
-    showFeedback("Cuenta de GitHub conectada con repositorios importados.", "success");
+  const conectarGithub = async () => {
+    const githubUsername = extraerUsernameGithub(user?.github_url);
+    if (!githubUsername) {
+      setMensajeGithubError("Primero agrega una URL de GitHub válida en Enlaces profesionales.");
+      return;
+    }
+
+    setCargandoReposGithub(true);
+    setMensajeGithubError("");
+    try {
+      await sincronizarRepositoriosGithub(githubUsername);
+      setEstaGithubConectado(true);
+      setUltimaSyncGithub("justo ahora");
+      await cargarRepositoriosGithub();
+      showFeedback("Cuenta de GitHub conectada con repositorios importados.", "success");
+    } catch (error) {
+      setMensajeGithubError(
+        extractApiMessageByStatus(error, "No se pudo conectar con GitHub en este momento."),
+      );
+    } finally {
+      setCargandoReposGithub(false);
+    }
   };
 
   const cerrarModalRepos = () => {
@@ -769,16 +868,46 @@ function ProfileSettings() {
     setMensajeGithubError("");
   };
 
-  const sincronizarGithubAhora = () => {
-    setUltimaSyncGithub("justo ahora");
-    showFeedback("Repositorios actualizados desde GitHub.", "success");
+  const sincronizarGithubAhora = async () => {
+    const githubUsername = extraerUsernameGithub(user?.github_url);
+    if (!githubUsername) {
+      setMensajeGithubError("No se pudo obtener el usuario de GitHub desde tu perfil.");
+      return;
+    }
+
+    setCargandoReposGithub(true);
+    setMensajeGithubError("");
+    try {
+      await sincronizarRepositoriosGithub(githubUsername);
+      setUltimaSyncGithub("justo ahora");
+      await cargarRepositoriosGithub();
+      showFeedback("Repositorios actualizados desde GitHub.", "success");
+    } catch (error) {
+      setMensajeGithubError(
+        extractApiMessageByStatus(error, "No se pudieron actualizar los repositorios."),
+      );
+    } finally {
+      setCargandoReposGithub(false);
+    }
   };
 
-  const guardarSeleccionRepositorios = () => {
-    setReposSeleccionados(seleccionTemporalRepos);
-    setUltimaSyncGithub("justo ahora");
-    setEstaModalReposAbierto(false);
-    showFeedback("Selección guardada exitosamente", "success");
+  const guardarSeleccionRepositorios = async () => {
+    setCargandoReposGithub(true);
+    setMensajeGithubError("");
+    try {
+      await guardarSeleccionRepositoriosApi(seleccionTemporalRepos);
+      setReposSeleccionados(seleccionTemporalRepos);
+      setUltimaSyncGithub("justo ahora");
+      setEstaModalReposAbierto(false);
+      await cargarRepositoriosGithub();
+      showFeedback("Selección guardada exitosamente", "success");
+    } catch (error) {
+      setMensajeGithubError(
+        extractApiMessageByStatus(error, "No se pudo guardar la selección de repositorios."),
+      );
+    } finally {
+      setCargandoReposGithub(false);
+    }
   };
 
   const limitarDesplazamiento = (x, y, zoom, contenedor) => {
@@ -1100,9 +1229,19 @@ function ProfileSettings() {
                 Selección visible en tu portafolio
               </h3>
             </div>
-            <span className="softsave-profile__repo-count-badge">
-              {repositoriosSeleccionados.length} REPOSITORIOS
-            </span>
+            <div className="softsave-profile__github-manager-actions-right">
+              <span className="softsave-profile__repo-count-badge">
+                {repositoriosSeleccionados.length} REPOSITORIOS
+              </span>
+              <button
+                type="button"
+                className="softsave-button softsave-button--compact"
+                onClick={() => setEstaModalReposAbierto(true)}
+                disabled={cargandoReposGithub}
+              >
+                Gestionar selección
+              </button>
+            </div>
           </div>
 
           <div className="softsave-profile__github-grid">
@@ -1618,7 +1757,7 @@ function ProfileSettings() {
                   <span className="softsave-profile__github-connection-badge">Conectado</span>
                 </div>
                 <p className="softsave-profile__github-manager-meta">
-                  Usuario: <strong>john-developer</strong> | {totalRepositoriosGithub} repositorios |
+                  Usuario: <strong>{extraerUsernameGithub(user?.github_url) || "sin-usuario"}</strong> | {totalRepositoriosGithub} repositorios |
                   Última sync: {ultimaSyncGithub}{" "}
                   <button
                     type="button"
