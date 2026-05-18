@@ -27,6 +27,7 @@ import useAuth from "../hooks/useAuth";
 import useFeedback from "../hooks/useFeedback";
 import PrivacySettingsPanel from "../components/PrivacySettingsPanel";
 import { actualizarPerfil, subirFoto } from "../services/authService";
+import { GITHUB_REPOSITORIES_MOCK } from "../mocks/githubRepositories";
 import { extractApiMessageByStatus } from "../utils/apiError";
 import "../styles/ProfileSettings.css";
 import "../styles/ProjectsPrivacyViews.css";
@@ -59,215 +60,6 @@ const DATOS_LINKEDIN_MOCK = {
   linkedinUrl: "https://www.linkedin.com/in/juan-perez-dev",
 };
 
-const REPOSITORIOS_GITHUB_MOCK = [
-  {
-    id: 1,
-    nombre: "SoftSave-Engine",
-    descripcion: "Motor de renderizado asíncrono diseñado para aplicaciones de portafolio editorial.",
-    lenguajes: [
-      { nombre: "TypeScript", color: "#3178c6" },
-      { nombre: "JavaScript", color: "#f1c40f" },
-    ],
-    estrellas: 128,
-    forks: 14,
-    actualizadoDias: 2,
-    esFork: false,
-    url: "https://github.com/john-developer/SoftSave-Engine",
-  },
-  {
-    id: 2,
-    nombre: "Auto-Editorial-ML",
-    descripcion: "Pipeline de machine learning para clasificar estilos visuales en diseños editoriales.",
-    lenguajes: [{ nombre: "Python", color: "#3776ab" }],
-    estrellas: 84,
-    forks: 5,
-    actualizadoDias: 5,
-    esFork: false,
-    url: "https://github.com/john-developer/Auto-Editorial-ML",
-  },
-  {
-    id: 3,
-    nombre: "Bento-UI-Library",
-    descripcion: "Biblioteca de componentes React con patrón Bento Grid para layouts modernos.",
-    lenguajes: [
-      { nombre: "React", color: "#61dafb" },
-      { nombre: "CSS", color: "#2965f1" },
-    ],
-    estrellas: 256,
-    forks: 32,
-    actualizadoDias: 8,
-    esFork: false,
-    url: "https://github.com/john-developer/Bento-UI-Library",
-  },
-  {
-    id: 4,
-    nombre: "Secure-Vault-API",
-    descripcion: "Microservicio de alta seguridad para la gestión de secretos y claves de integración.",
-    lenguajes: [{ nombre: "Go", color: "#00add8" }],
-    estrellas: 42,
-    forks: 2,
-    actualizadoDias: 13,
-    esFork: false,
-    url: "https://github.com/john-developer/Secure-Vault-API",
-  },
-  {
-    id: 5,
-    nombre: "Fast-Buffer-Queue",
-    descripcion: "Implementación de bajo nivel de colas de mensajes circulares para tiempo real.",
-    lenguajes: [{ nombre: "Rust", color: "#b7410e" }],
-    estrellas: 310,
-    forks: 45,
-    actualizadoDias: 18,
-    esFork: false,
-    url: "https://github.com/john-developer/Fast-Buffer-Queue",
-  },
-  {
-    id: 6,
-    nombre: "Minimal-Design-System",
-    descripcion: "Sistema de diseño utilitario centrado en tipografía, escala y espaciado.",
-    lenguajes: [
-      { nombre: "CSS", color: "#2965f1" },
-      { nombre: "HTML", color: "#e34c26" },
-    ],
-    estrellas: 192,
-    forks: 18,
-    actualizadoDias: 26,
-    esFork: false,
-    url: "https://github.com/john-developer/Minimal-Design-System",
-  },
-  {
-    id: 7,
-    nombre: "portfolio-builder",
-    descripcion: "Generador visual para portafolios profesionales con secciones dinámicas.",
-    lenguajes: [{ nombre: "React", color: "#61dafb" }],
-    estrellas: 8,
-    forks: 1,
-    actualizadoDias: 5,
-    esFork: false,
-    url: "https://github.com/john-developer/portfolio-builder",
-  },
-  {
-    id: 8,
-    nombre: "e-commerce-app",
-    descripcion: "Frontend de comercio electrónico con carrito, catálogo y panel administrativo.",
-    lenguajes: [{ nombre: "JavaScript", color: "#f1c40f" }],
-    estrellas: 12,
-    forks: 3,
-    actualizadoDias: 2,
-    esFork: false,
-    url: "https://github.com/john-developer/e-commerce-app",
-  },
-  {
-    id: 9,
-    nombre: "learning-python",
-    descripcion: "Colección de ejercicios y notebooks para practicar automatización y scraping.",
-    lenguajes: [{ nombre: "Python", color: "#3776ab" }],
-    estrellas: 0,
-    forks: 0,
-    actualizadoDias: 180,
-    esFork: false,
-    url: "https://github.com/john-developer/learning-python",
-  },
-  {
-    id: 10,
-    nombre: "fork-awesome-lib",
-    descripcion: "Fork experimental de una librería JS con mejoras de accesibilidad y performance.",
-    lenguajes: [{ nombre: "JavaScript", color: "#f1c40f" }],
-    estrellas: 250,
-    forks: 45,
-    actualizadoDias: 90,
-    esFork: true,
-    url: "https://github.com/john-developer/fork-awesome-lib",
-  },
-  {
-    id: 11,
-    nombre: "vue-analytics-hub",
-    descripcion: "Dashboard analítico reutilizable para monitoreo de métricas de producto.",
-    lenguajes: [{ nombre: "Vue", color: "#42b883" }],
-    estrellas: 67,
-    forks: 11,
-    actualizadoDias: 11,
-    esFork: false,
-    url: "https://github.com/john-developer/vue-analytics-hub",
-  },
-  {
-    id: 12,
-    nombre: "angular-workspace-pro",
-    descripcion: "Monorepo Angular con microfrontends y módulos compartidos para empresas.",
-    lenguajes: [{ nombre: "Angular", color: "#dd0031" }],
-    estrellas: 145,
-    forks: 20,
-    actualizadoDias: 47,
-    esFork: false,
-    url: "https://github.com/john-developer/angular-workspace-pro",
-  },
-  {
-    id: 13,
-    nombre: "node-stream-lab",
-    descripcion: "Laboratorio de procesamiento de streams con Node.js para ingestión masiva.",
-    lenguajes: [{ nombre: "Node.js", color: "#68a063" }],
-    estrellas: 88,
-    forks: 16,
-    actualizadoDias: 31,
-    esFork: false,
-    url: "https://github.com/john-developer/node-stream-lab",
-  },
-  {
-    id: 14,
-    nombre: "storybook-showcase",
-    descripcion: "Showcase de patrones UI documentados con historias reutilizables.",
-    lenguajes: [{ nombre: "Storybook", color: "#ff4785" }],
-    estrellas: 33,
-    forks: 4,
-    actualizadoDias: 21,
-    esFork: false,
-    url: "https://github.com/john-developer/storybook-showcase",
-  },
-  {
-    id: 15,
-    nombre: "design-tokens-sync",
-    descripcion: "Sincronizador de design tokens entre Figma, CSS variables y apps web.",
-    lenguajes: [{ nombre: "TypeScript", color: "#3178c6" }],
-    estrellas: 119,
-    forks: 17,
-    actualizadoDias: 14,
-    esFork: false,
-    url: "https://github.com/john-developer/design-tokens-sync",
-  },
-  {
-    id: 16,
-    nombre: "openapi-mock-studio",
-    descripcion: "Toolkit para generar mocks tipados a partir de especificaciones OpenAPI.",
-    lenguajes: [{ nombre: "TypeScript", color: "#3178c6" }],
-    estrellas: 58,
-    forks: 9,
-    actualizadoDias: 9,
-    esFork: false,
-    url: "https://github.com/john-developer/openapi-mock-studio",
-  },
-  {
-    id: 17,
-    nombre: "next-landing-experiments",
-    descripcion: "Colección de landings experimentales con animación editorial y pruebas A/B.",
-    lenguajes: [{ nombre: "Next.js", color: "#111111" }],
-    estrellas: 96,
-    forks: 13,
-    actualizadoDias: 6,
-    esFork: false,
-    url: "https://github.com/john-developer/next-landing-experiments",
-  },
-  {
-    id: 18,
-    nombre: "cli-devstack-tools",
-    descripcion: "Utilidades de línea de comandos para acelerar tareas comunes de desarrollo.",
-    lenguajes: [{ nombre: "Node.js", color: "#68a063" }],
-    estrellas: 23,
-    forks: 3,
-    actualizadoDias: 120,
-    esFork: false,
-    url: "https://github.com/john-developer/cli-devstack-tools",
-  },
-];
 
 function obtenerIniciales(nombreCompleto) {
   return String(nombreCompleto || "")
@@ -449,15 +241,15 @@ function ProfileSettings() {
     [user],
   );
   const vistaPreviaModal = imagenTemporal || imagenPerfil;
-  const totalRepositoriosGithub = REPOSITORIOS_GITHUB_MOCK.length;
+  const totalRepositoriosGithub = GITHUB_REPOSITORIES_MOCK.length;
   const repositoriosSeleccionados = useMemo(
-    () => REPOSITORIOS_GITHUB_MOCK.filter((repo) => reposSeleccionados.includes(repo.id)),
+    () => GITHUB_REPOSITORIES_MOCK.filter((repo) => reposSeleccionados.includes(repo.id)),
     [reposSeleccionados],
   );
   const repositoriosGestionados = useMemo(() => {
     const termino = sanitizarTexto(busquedaRepos).toLowerCase();
 
-    return [...REPOSITORIOS_GITHUB_MOCK]
+    return [...GITHUB_REPOSITORIES_MOCK]
       .filter((repositorio) => {
         const coincideBusqueda =
           !termino ||
