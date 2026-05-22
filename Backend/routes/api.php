@@ -24,6 +24,7 @@ Route::get('/users/{id}/contact', [UserController::class, 'showPublicContact']);
 Route::get('/users/{user}/profile', [UserController::class, 'showPublicProfile']);
 Route::get('/project-technologies', [ProjectTechnologyController::class, 'index']);
 Route::get('/users/{user}/projects', [ProjectController::class, 'indexPublic']);
+Route::get('profiles', [UserController::class, 'indexPublicProfilesFull']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user', [AuthController::class, 'updatePassword']);
