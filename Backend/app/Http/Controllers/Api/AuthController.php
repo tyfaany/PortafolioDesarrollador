@@ -277,7 +277,7 @@ class AuthController extends Controller
             'status' => 'success',
             'message' => 'Perfil de LinkedIn obtenido correctamente.',
             'data' => [
-                'nombreCompleto' => $user->name,
+                'nombreCompleto' => $socialAccount->full_name ?: $user->name,
                 'fotografia' => $fotografia,
             ],
         ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
@@ -334,8 +334,12 @@ class AuthController extends Controller
 
             if (!empty($avatarActualizado)) {
                 $socialAccount->avatar = $avatarActualizado;
-                $socialAccount->save();
             }
+            $nombreActualizado = $linkedinUser->getName();
+            if (!empty($nombreActualizado)) {
+                $socialAccount->full_name = $nombreActualizado;
+            }
+            $socialAccount->save();
 
             if (!empty($avatarActualizado) && empty($user->profile_photo)) {
                 $user->profile_photo = $avatarActualizado;
@@ -364,6 +368,7 @@ class AuthController extends Controller
                 'provider' => 'linkedin',
                 'provider_id' => $linkedinUser->getId(),
                 'avatar' => $avatarLinkedin,
+                'full_name' => $linkedinUser->getName(),
             ]);
 
             if (!empty($avatarLinkedin) && empty($user->profile_photo)) {

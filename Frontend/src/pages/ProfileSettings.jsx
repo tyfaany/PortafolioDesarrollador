@@ -882,17 +882,16 @@ function ProfileSettings() {
       return;
     }
 
-    setFormularioPerfil((estadoActual) => {
-      const nombreLinkedin = sanitizarTexto(datosLinkedin.nombreCompleto);
+    const nombreLinkedin = sanitizarTexto(datosLinkedin.nombreCompleto);
+    const nombreFinal = tieneTexto(nombreLinkedin)
+      ? nombreLinkedin
+      : formularioPerfil.nombreCompleto;
+    const formularioSincronizado = {
+      ...formularioPerfil,
+      nombreCompleto: nombreFinal,
+    };
 
-      return {
-        ...estadoActual,
-        // Merge inteligente: solo se toma LinkedIn cuando trae valor.
-        nombreCompleto: tieneTexto(nombreLinkedin)
-          ? nombreLinkedin
-          : estadoActual.nombreCompleto,
-      };
-    });
+    setFormularioPerfil(formularioSincronizado);
     setVistaPreviaLinkedin(datosLinkedin);
     setLinkedinSincronizado(true);
     if (tieneTexto(datosLinkedin.fotografia)) {
@@ -902,10 +901,32 @@ function ProfileSettings() {
       ...estadoActual,
       nombreCompleto: "",
     }));
-    showFeedback(
-      "Datos de LinkedIn sincronizados: solo se aplicaron campos con información.",
-      "success",
-    );
+
+    const payloadPerfil = {
+      name: sanitizarTexto(formularioSincronizado.nombreCompleto),
+      profession: sanitizarTexto(formularioSincronizado.profesion) || null,
+      biography: sanitizarTexto(formularioSincronizado.biografia) || null,
+      github_url: sanitizarTexto(formularioSincronizado.githubUrl) || null,
+      linkedin_url: sanitizarTexto(formularioSincronizado.linkedinUrl) || null,
+    };
+
+    try {
+      await actualizarPerfil(payloadPerfil);
+      await refreshUser();
+      setPerfilCabecera((estadoActual) => ({
+        ...estadoActual,
+        nombreCompleto: payloadPerfil.name,
+      }));
+      showFeedback(
+        "Datos de LinkedIn sincronizados y guardados correctamente.",
+        "success",
+      );
+    } catch (error) {
+      showFeedback(
+        extractApiMessageByStatus(error, "Se importaron datos de LinkedIn, pero no se pudieron guardar."),
+        "error",
+      );
+    }
   };
 
   const desvincularCuentaLinkedin = async () => {
