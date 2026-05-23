@@ -297,6 +297,78 @@
   color: var(--color-texto-suave);
 }
 
+.softsave-profile__linkedin-toggles {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+
+.softsave-profile__linkedin-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  color: var(--color-texto);
+  font-size: 0.9rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.softsave-profile__linkedin-toggle input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.softsave-profile__linkedin-toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background-color: rgba(var(--color-texto-rgb), 0.25);
+  border: 1px solid rgba(var(--color-texto-rgb), 0.2);
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.softsave-profile__linkedin-toggle-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background-color: var(--color-blanco);
+  box-shadow: 0 1px 4px rgba(var(--color-negro-rgb), 0.24);
+  transition: transform 0.18s ease;
+}
+
+.softsave-profile__linkedin-toggle input[type="checkbox"]:checked + .softsave-profile__linkedin-toggle-switch {
+  background-color: var(--color-primario);
+  border-color: var(--color-primario);
+}
+
+.softsave-profile__linkedin-toggle input[type="checkbox"]:checked + .softsave-profile__linkedin-toggle-switch::after {
+  transform: translateX(20px);
+}
+
+.softsave-profile__linkedin-toggle input[type="checkbox"]:focus-visible + .softsave-profile__linkedin-toggle-switch {
+  outline: 2px solid rgba(var(--color-primario-rgb), 0.38);
+  outline-offset: 2px;
+}
+
+.softsave-profile__linkedin-toggle-text {
+  line-height: 1.4;
+}
+
+.softsave-profile__linkedin-secondary--quiet {
+  border: 1px dashed rgba(var(--color-texto-rgb), 0.35);
+  background-color: rgba(var(--color-texto-rgb), 0.05);
+  color: var(--color-texto);
+}
+
 .softsave-profile__field {
   display: flex;
   flex-direction: column;
@@ -1336,7 +1408,7 @@
 }
 
 .softsave-profile__modal--linkedin {
-  width: min(100%, 520px);
+  width: min(100%, 620px);
   animation: softsave-linkedin-in 0.24s ease;
 }
 
@@ -1356,7 +1428,7 @@
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 8px;
 }
 
 .softsave-profile__icon-button--static {
@@ -1371,7 +1443,7 @@
   font-family: var(--font-titulos);
   font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .softsave-profile__linkedin-brand-icon {
@@ -1380,7 +1452,7 @@
 
 .softsave-profile__linkedin-state {
   display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .softsave-profile__linkedin-status {
@@ -1411,6 +1483,13 @@
   box-shadow: 0 12px 22px rgba(10, 102, 194, 0.24);
 }
 
+.softsave-profile__linkedin-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+  filter: grayscale(0.1);
+}
+
 .softsave-profile__linkedin-secondary {
   border: 1.5px solid rgba(var(--color-primario-rgb), 0.32);
   border-radius: 12px;
@@ -1437,6 +1516,24 @@
   border: 1px solid rgba(var(--color-texto-rgb), 0.08);
 }
 
+.softsave-profile__linkedin-details-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--color-texto-suave);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(var(--color-texto-rgb), 0.1);
+}
+
+.softsave-profile__linkedin-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
 .softsave-profile__linkedin-field {
   display: grid;
   gap: 4px;
@@ -1453,6 +1550,20 @@
   height: 60px;
   border-radius: 16px;
   object-fit: cover;
+}
+
+.softsave-profile__linkedin-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.softsave-profile__linkedin-actions .softsave-profile__linkedin-primary,
+.softsave-profile__linkedin-actions .softsave-profile__linkedin-secondary {
+  min-height: 52px;
+  padding: 0 14px;
+  white-space: nowrap;
 }
 
 .softsave-profile__linkedin-preview-callout {
@@ -1798,6 +1909,10 @@
   }
 
   .softsave-profile__modal--linkedin {
-    width: min(100%, 480px);
+    width: min(100%, 560px);
+  }
+
+  .softsave-profile__linkedin-actions {
+    grid-template-columns: 1fr;
   }
 }

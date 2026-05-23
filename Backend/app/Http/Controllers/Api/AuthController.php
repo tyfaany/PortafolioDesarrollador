@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\SocialAccount;
+use Laravel\Sanctum\PersonalAccessToken;
 
 
 class AuthController extends Controller
@@ -265,10 +266,23 @@ class AuthController extends Controller
             ->first();
 
         if (! $socialAccount) {
+            if ($user->linkedin_linked) {
+                $user->linkedin_linked = false;
+                $user->save();
+            }
+
             return response()->json([
-                'status' => 'error',
+                'status' => 'success',
                 'message' => 'No tienes una cuenta de LinkedIn vinculada.',
-            ], 404, [], JSON_INVALID_UTF8_SUBSTITUTE);
+                'data' => [
+                    'linked' => false,
+                ],
+            ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
+        }
+
+        if (! $user->linkedin_linked) {
+            $user->linkedin_linked = true;
+            $user->save();
         }
 
         $fotografia = $socialAccount->avatar ?: $user->profile_photo_url;
@@ -277,6 +291,7 @@ class AuthController extends Controller
             'status' => 'success',
             'message' => 'Perfil de LinkedIn obtenido correctamente.',
             'data' => [
+                'linked' => true,
                 'nombreCompleto' => $socialAccount->full_name ?: $user->name,
                 'fotografia' => $fotografia,
             ],
@@ -294,6 +309,11 @@ class AuthController extends Controller
             ->where('provider', 'linkedin')
             ->delete();
 
+        if ($eliminadas > 0) {
+            $user->linkedin_linked = false;
+            $user->save();
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => $eliminadas > 0
@@ -303,14 +323,79 @@ class AuthController extends Controller
     }
 
     /**
+     * Sincronizar manualmente datos seleccionados desde LinkedIn.
+     */
+    public function syncLinkedInData(Request $request)
+    {
+        $user = $request->user();
+
+        $payload = $request->validate([
+            'import_name' => 'required|boolean',
+            'import_photo' => 'required|boolean',
+        ]);
+
+        $socialAccount = SocialAccount::where('user_id', $user->id)
+            ->where('provider', 'linkedin')
+            ->first();
+
+        if (! $socialAccount) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No tienes una cuenta de LinkedIn vinculada.',
+            ], 404, [], JSON_INVALID_UTF8_SUBSTITUTE);
+        }
+
+        $cambiosAplicados = [];
+        $debeGuardar = false;
+
+        if ($payload['import_name'] && !empty($socialAccount->full_name)) {
+            $user->name = $socialAccount->full_name;
+            $cambiosAplicados[] = 'nombre';
+            $debeGuardar = true;
+        }
+
+        if ($payload['import_photo'] && !empty($socialAccount->avatar)) {
+            $user->profile_photo = $socialAccount->avatar;
+            $cambiosAplicados[] = 'foto';
+            $debeGuardar = true;
+        }
+
+        if ($debeGuardar) {
+            $user->save();
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => empty($cambiosAplicados)
+                ? 'Cuenta vinculada en modo silencioso. No se aplicaron cambios visuales.'
+                : 'Sincronización completada: se actualizaron '.implode(' y ', $cambiosAplicados).'.',
+            'data' => [
+                'applied' => $cambiosAplicados,
+                'linked' => true,
+                'user' => $user->fresh(),
+            ],
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
+    }
+
+    /**
      * Autenticación y Registro con LinkedIn vía API (Postman/Frontend)
      */
      public function redirect()
     {
-        return Socialite::driver('linkedin-openid')
+        $linkToken = request()->query('link_token');
+        $state = $linkToken
+            ? base64_encode(json_encode(['link_token' => $linkToken], JSON_INVALID_UTF8_SUBSTITUTE))
+            : null;
+
+        $driver = Socialite::driver('linkedin-openid')
             ->scopes(['openid', 'profile', 'email'])
-            ->stateless()
-            ->redirect();
+            ->stateless();
+
+        if (!empty($state)) {
+            $driver->with(['state' => $state]);
+        }
+
+        return $driver->redirect();
     }
 
     public function handleLinkedInCallback()
@@ -321,15 +406,42 @@ class AuthController extends Controller
             ->stateless()
             ->user();
 
+        $statePayload = null;
+        $stateRaw = request()->query('state');
+        if (!empty($stateRaw)) {
+            $decoded = base64_decode($stateRaw, true);
+            if ($decoded !== false) {
+                $json = json_decode($decoded, true);
+                if (is_array($json)) {
+                    $statePayload = $json;
+                }
+            }
+        }
+
+        $linkedSessionUser = null;
+        $linkToken = $statePayload['link_token'] ?? null;
+        if (!empty($linkToken)) {
+            $accessToken = PersonalAccessToken::findToken($linkToken);
+            if ($accessToken && $accessToken->tokenable instanceof User) {
+                $linkedSessionUser = $accessToken->tokenable;
+            }
+        }
+
         // 1️⃣ Buscar si ya existe esta cuenta social
         $socialAccount = SocialAccount::where('provider', 'linkedin')
             ->where('provider_id', $linkedinUser->getId())
             ->first();
 
         if ($socialAccount) {
+            // Ya existe: si el callback venía de una sesión autenticada, no permitimos
+            // "robar" una cuenta social ya vinculada a otro usuario.
+            if ($linkedSessionUser && $socialAccount->user_id !== $linkedSessionUser->id) {
+                return redirect()->away(
+                    env('FRONTEND_URL') . '/auth/callback?error=' . urlencode('Esta cuenta de LinkedIn ya está vinculada a otro usuario.')
+                );
+            }
 
-            // Ya existe → login directo
-            $user = $socialAccount->user;
+            $user = $linkedSessionUser ?: $socialAccount->user;
             $avatarActualizado = $linkedinUser->getAvatar();
 
             if (!empty($avatarActualizado)) {
@@ -343,15 +455,21 @@ class AuthController extends Controller
 
             if (!empty($avatarActualizado) && empty($user->profile_photo)) {
                 $user->profile_photo = $avatarActualizado;
-                $user->save();
             }
+            $user->linkedin_linked = true;
+            $user->save();
         } else {
 
-            // 2️⃣ Buscar usuario por email
-            $user = User::where('email', $linkedinUser->getEmail())->first();
+            // 2️⃣ Si viene de sesión iniciada, vinculamos a ese usuario.
+            $user = $linkedSessionUser;
+
+            // 3️⃣ Si no viene sesión iniciada, buscamos por email.
+            if (!$user) {
+                $user = User::where('email', $linkedinUser->getEmail())->first();
+            }
 
             if (!$user) {
-                // 3️⃣ Si no existe → crear usuario nuevo
+                // 4️⃣ Si no existe → crear usuario nuevo
                 $user = User::create([
                     'name' => $linkedinUser->getName(),
                     'email' => $linkedinUser->getEmail(),
@@ -360,7 +478,7 @@ class AuthController extends Controller
                 ]);
             }
 
-            // 4️⃣ Crear registro en social_accounts
+            // 5️⃣ Crear registro en social_accounts
             $avatarLinkedin = $linkedinUser->getAvatar();
 
             SocialAccount::create([
@@ -373,8 +491,9 @@ class AuthController extends Controller
 
             if (!empty($avatarLinkedin) && empty($user->profile_photo)) {
                 $user->profile_photo = $avatarLinkedin;
-                $user->save();
             }
+            $user->linkedin_linked = true;
+            $user->save();
         }
 
         // 5️⃣ Generar token

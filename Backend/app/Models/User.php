@@ -21,6 +21,7 @@ class User extends Authenticatable
         'biography',
         'github_url',
         'linkedin_url',
+        'linkedin_linked',
         'profile_photo',
         'profile_completed',
         'phone',
@@ -65,6 +66,7 @@ class User extends Authenticatable
         'show_skills' => 'boolean',
         'show_social_links' => 'boolean',
         'show_profile_photo' => 'boolean',
+        'linkedin_linked' => 'boolean',
     ];
 
     /*
