@@ -242,21 +242,59 @@
   resize: vertical;
 }
 
-.softsave-project-form__textarea .ql-toolbar {
+.softsave-project-form__toolbar {
   border-radius: 12px 12px 0 0;
   border: 1.5px solid var(--color-borde-input);
   border-bottom: none;
+  padding: 8px 10px;
+}
+
+.softsave-project-form__toolbar .ql-formats {
+  margin-right: 8px;
+}
+
+.softsave-project-form__toolbar .ql-formats:last-child {
+  margin-right: 0;
+}
+
+.softsave-project-form__toolbar button {
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+}
+
+.softsave-project-form__toolbar .ql-sizeDecrease svg,
+.softsave-project-form__toolbar .ql-sizeIncrease svg {
+  width: 16px;
+  height: 16px;
 }
 
 .softsave-project-form__textarea .ql-container {
   border: 1.5px solid var(--color-borde-input);
   border-radius: 0 0 12px 12px;
+}
+
+.softsave-project-form__textarea.softsave-project-form__textarea--compact .ql-container {
   min-height: 180px;
+}
+
+.softsave-project-form__textarea.softsave-project-form__textarea--expanded .ql-container {
+  min-height: 320px;
 }
 
 .softsave-project-form__textarea .ql-editor {
   min-height: 140px;
   padding: 14px;
+}
+
+.softsave-project-form__textarea.softsave-project-form__textarea--compact .ql-editor {
+  min-height: 140px;
+  max-height: 180px;
+}
+
+.softsave-project-form__textarea.softsave-project-form__textarea--expanded .ql-editor {
+  min-height: 280px;
+  max-height: 320px;
 }
 
 .softsave-project-form__textarea .ql-editor p {

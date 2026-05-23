@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import Icon from '@mdi/react';
@@ -7,6 +7,8 @@ import {
   mdiCheckCircleOutline,
   mdiClose,
   mdiFileDocumentOutline,
+  mdiFormatFontSizeDecrease,
+  mdiFormatFontSizeIncrease,
   mdiImageOutline,
   mdiPencilOutline,
   mdiPlus,
@@ -250,14 +252,28 @@ function ProjectForm({
   const [imageRemoved, setImageRemoved] = useState(false);
   const [technologySuggestions, setTechnologySuggestions] = useState(TECHNOLOGY_SUGGESTIONS);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const editorToolbarId = useId().replace(/:/g, '');
   const quillModules = useMemo(() => ({
-    toolbar: [
-      [{ size: ['small', false, 'large', 'huge'] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      ['clean'],
-    ],
-  }), []);
+    toolbar: {
+      container: `#${editorToolbarId}`,
+      handlers: {
+        sizeDecrease() {
+          const sizes = ['small', false, 'large', 'huge'];
+          const currentSize = this.quill.getFormat().size ?? false;
+          const currentIndex = sizes.findIndex((size) => size === currentSize);
+          const nextIndex = currentIndex <= 0 ? 0 : currentIndex - 1;
+          this.quill.format('size', sizes[nextIndex] || false);
+        },
+        sizeIncrease() {
+          const sizes = ['small', false, 'large', 'huge'];
+          const currentSize = this.quill.getFormat().size ?? false;
+          const currentIndex = sizes.findIndex((size) => size === currentSize);
+          const nextIndex = currentIndex < 0 ? 2 : Math.min(currentIndex + 1, sizes.length - 1);
+          this.quill.format('size', sizes[nextIndex] || false);
+        },
+      },
+    },
+  }), [editorToolbarId]);
   const quillFormats = [
     'size',
     'bold',
@@ -266,6 +282,7 @@ function ProjectForm({
     'strike',
     'list',
     'bullet',
+    'script',
   ];
   const [isDirty, setIsDirty] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
@@ -694,22 +711,46 @@ function ProjectForm({
           {errors.title ? <span className="error-text">{errors.title}</span> : null}
         </label>
 
-        <label className="softsave-project-form__field">
+        <div className="softsave-project-form__field">
           <span className="softsave-project-form__label">Descripcion *</span>
+          <div id={editorToolbarId} className="ql-toolbar ql-snow softsave-project-form__toolbar">
+            <span className="ql-formats">
+              <button type="button" className="ql-bold" aria-label="Negrita" />
+              <button type="button" className="ql-italic" aria-label="Cursiva" />
+              <button type="button" className="ql-underline" aria-label="Subrayado" />
+              <button type="button" className="ql-strike" aria-label="Tachado" />
+            </span>
+            <span className="ql-formats">
+              <button type="button" className="ql-list" value="ordered" aria-label="Lista ordenada" />
+              <button type="button" className="ql-list" value="bullet" aria-label="Lista con viñetas" />
+            </span>
+            <span className="ql-formats">
+              <button type="button" className="ql-script" value="sub" aria-label="Subindice" />
+              <button type="button" className="ql-script" value="super" aria-label="Superindice" />
+            </span>
+            <span className="ql-formats">
+              <button type="button" className="ql-sizeDecrease" aria-label="Reducir tamano de texto">
+                <Icon path={mdiFormatFontSizeDecrease} size={0.78} />
+              </button>
+              <button type="button" className="ql-sizeIncrease" aria-label="Aumentar tamano de texto">
+                <Icon path={mdiFormatFontSizeIncrease} size={0.78} />
+              </button>
+            </span>
+          </div>
           <ReactQuill
             theme="snow"
             value={formData.description}
             onChange={(value) => updateField('description', value)}
             modules={quillModules}
             formats={quillFormats}
-            className="softsave-project-form__textarea"
+            className="softsave-project-form__textarea softsave-project-form__textarea--compact"
             placeholder="Describe tu proyecto... (min. 20, max. 500 caracteres)"
           />
           <span className="softsave-project-form__hint">
             {formData.description.replace(/<[^>]+>/g, '').trim().length}/500
           </span>
           {errors.description ? <span className="error-text">{errors.description}</span> : null}
-        </label>
+        </div>
 
         <div className="softsave-project-form__field">
           <span className="softsave-project-form__label">Tecnologias utilizadas *</span>
