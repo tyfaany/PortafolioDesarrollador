@@ -144,70 +144,111 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
     }
 
     return response()->json($data);
+    
 }
+
+Public function indexPublicProfilesFull(Request $request)
+    {
+        // 1. Capturamos cuántos usuarios queremos por página desde la URL (ej: ?per_page=5).
+        // Si el frontend no lo envía, por defecto listará 10 usuarios.
+        $perPage = $request->query('per_page', 10);
+
+        // 2. Hacemos la consulta paginada a la Base de Datos trayendo las relaciones con 'with'
+        $users = User::with([
+                'projects.technologies',
+                'studies',
+                'jobs',
+                'skills',
+                'softSkills'
+            ])
+            ->where('profile_completed', true) // Solo usuarios con perfil completado
+            ->latest() // Los registros más recientes primero
+            ->paginate($perPage);
+
+        // 3. Recorremos la lista de usuarios de la página actual y les aplicamos tu filtro de privacidad
+        $users->getCollection()->transform(function ($user) {
+            return $this->filterProfilePrivacy($user);
+        });
+
+        // 4. Devolvemos la estructura de paginación completa en JSON
+        return response()->json($users, 200);
+    }
+
 
    public function showPublicProfile(User $user)
 {
-    $user->load([
-        'projects.technologies',
-        'studies',
-        'jobs',
-        'skills',
-        'softSkills',
-    ]);
+  // 1. Cargamos todas las relaciones de este usuario de forma eficiente
+        $user->load([
+            'projects.technologies',
+            'studies',
+            'jobs',
+            'skills',
+            'softSkills',
+        ]);
 
-    $profile = [
-        'id' => $user->id,
-        'name' => $user->name,
-        'profession' => $user->profession,
-    ];
+        // 2. Pasamos el usuario por el filtro de privacidad común
+        $profile = $this->filterProfilePrivacy($user);
 
-    if ($user->show_bio) {
-        $profile['biography'] = $user->biography;
-    }
-
-    if ($user->show_social_links) {
-        $profile['github_url'] = $user->github_url;
-        $profile['linkedin_url'] = $user->linkedin_url;
-    }
-
-    if ($user->show_profile_photo) {
-        $profile['profile_photo_url'] = $user->profile_photo_url;
-    }
-
-    if ($user->show_phone) {
-        $profile['phone'] = $user->phone;
-    }
-
-    if ($user->show_mobile) {
-        $profile['mobile'] = $user->mobile;
-    }
-
-    if ($user->show_contact_email) {
-        $profile['contact_email'] = $user->contact_email;
-    }
-
-    if ($user->show_address) {
-        $profile['address'] = $user->address;
-    }
-
-    if ($user->show_studies) {
-        $profile['studies'] = $user->studies;
-    }
-
-    if ($user->show_jobs) {
-        $profile['jobs'] = $user->jobs;
-    }
-
-    if ($user->show_skills) {
-        $profile['skills'] = $user->skills;
-        $profile['soft_skills'] = $user->softSkills;
-    }
-
-    $profile['projects'] = $user->projects
-        ->where('is_public', true)
-        ->values();
-
-    return response()->json($profile, 200);
+        // 3. Devolvemos la respuesta
+        return response()->json($profile, 200);
 }
+private function filterProfilePrivacy(User $user): array
+    {
+        // Datos básicos que siempre son visibles
+        $profile = [
+            'id'         => $user->id,
+            'name'       => $user->name,
+            'profession' => $user->profession,
+        ];
+
+        // Filtros de privacidad condicionales basados en tu modelo
+        if ($user->show_bio) {
+            $profile['biography'] = $user->biography;
+        }
+
+        if ($user->show_social_links) {
+            $profile['github_url']   = $user->github_url;
+            $profile['linkedin_url'] = $user->linkedin_url;
+        }
+
+        if ($user->show_profile_photo) {
+            $profile['profile_photo_url'] = $user->profile_photo_url;
+        }
+
+        if ($user->show_phone) {
+            $profile['phone'] = $user->phone;
+        }
+
+        if ($user->show_mobile) {
+            $profile['mobile'] = $user->mobile;
+        }
+
+        if ($user->show_contact_email) {
+            $profile['contact_email'] = $user->contact_email;
+        }
+
+        if ($user->show_address) {
+            $profile['address'] = $user->address;
+        }
+
+        if ($user->show_studies) {
+            $profile['studies'] = $user->studies;
+        }
+
+        if ($user->show_jobs) {
+            $profile['jobs'] = $user->jobs;
+        }
+
+        if ($user->show_skills) {
+            $profile['skills']      = $user->skills;
+            $profile['soft_skills'] = $user->softSkills;
+        }
+
+        // Filtrado individual de proyectos públicos
+        $profile['projects'] = $user->projects
+            ->where('is_public', true)
+            ->values();
+
+        return $profile;
+    }
 }
