@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import Icon from '@mdi/react';
+import { mdiClose } from '@mdi/js';
 import PropTypes from 'prop-types';
 import ProjectCard from './ProjectCard';
 import ProjectForm from './ProjectForm';
@@ -184,6 +186,14 @@ function ProjectList({ refreshKey = 0 }) {
                     <p className="softsave-project-modal__subtitle">
                       Actualiza la informacion detallada de tu trabajo para el portafolio.
                     </p>
+                    <button
+                      type="button"
+                      className="softsave-project-modal__close"
+                      onClick={() => setExpandedEditId(null)}
+                      aria-label="Cerrar modal de editar proyecto"
+                    >
+                      <Icon path={mdiClose} size={0.8} />
+                    </button>
                   </header>
                   <ProjectForm
                     mode="edit"

@@ -288,6 +288,18 @@ function ProjectForm({
   const [isDirty, setIsDirty] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
   const { showFeedback } = useFeedback();
+  const fechaActualIso = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
+  const fechaInicioMax = fechaActualIso;
+  const fechaFinMax = fechaActualIso;
+  const fechaFinMin = useMemo(() => (
+    formData.startDate && formData.startDate <= fechaActualIso ? formData.startDate : fechaActualIso
+  ), [formData.startDate, fechaActualIso]);
 
   useEffect(() => {
     const nextState = mode === 'edit' && project
@@ -489,8 +501,12 @@ function ProjectForm({
       nextErrors.technologies = 'Debes seleccionar entre 1 y 15 tecnologias.';
     }
 
-    // Backend allows nullable dates; keep only logical validation when both are present.
-
+    if (formData.startDate && formData.startDate > fechaActualIso) {
+      nextErrors.startDate = 'La fecha de inicio no puede ser posterior a la fecha actual.';
+    }
+    if (!formData.inProgress && formData.endDate && formData.endDate > fechaActualIso) {
+      nextErrors.endDate = 'La fecha de fin no puede ser posterior a la fecha actual.';
+    }
     if (formData.startDate && formData.endDate && formData.startDate > formData.endDate) {
       nextErrors.endDate = 'La fecha de inicio no puede ser mayor a la fecha fin.';
     }
@@ -893,6 +909,7 @@ function ProjectForm({
               type="date"
               className="softsave-input"
               value={formData.startDate}
+              max={fechaInicioMax}
               onChange={(event) => updateField('startDate', event.target.value)}
             />
             {!useModalLayout ? <span className="softsave-project-form__hint">DD/MM/AAAA</span> : null}
@@ -935,6 +952,8 @@ function ProjectForm({
                 type="date"
                 className="softsave-input"
                 value={formData.endDate}
+                min={fechaFinMin}
+                max={fechaFinMax}
                 onChange={(event) => updateField('endDate', event.target.value)}
               />
             )}

@@ -859,6 +859,7 @@
 }
 
 .softsave-project-modal__header {
+  position: relative;
   padding: 18px 18px 12px;
   border-bottom: 1px solid rgba(var(--color-texto-rgb), 0.09);
 }
@@ -872,6 +873,36 @@
   margin: 6px 0 0;
   color: var(--color-texto-suave);
   font-size: 0.9rem;
+}
+
+.softsave-project-modal__close {
+  position: absolute;
+  top: 24px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--color-texto-rgb), 0.12);
+  background: rgba(var(--color-texto-rgb), 0.06);
+  color: var(--color-texto);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.softsave-project-modal__close:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(var(--color-primario-rgb), 0.1);
+  border-color: rgba(var(--color-primario-rgb), 0.35);
+  color: var(--color-primario);
+  box-shadow: 0 6px 14px rgba(var(--color-texto-rgb), 0.12);
+}
+
+.softsave-project-modal__close:focus-visible {
+  outline: 2px solid rgba(var(--color-primario-rgb), 0.45);
+  outline-offset: 2px;
 }
 
 .softsave-projects-card--modal {
@@ -1110,6 +1141,11 @@
 
   .softsave-project-modal__header {
     padding: 14px 14px 10px;
+  }
+
+  .softsave-project-modal__close {
+    top: 17px;
+    right: 9px;
   }
 
   .softsave-project-modal__title {

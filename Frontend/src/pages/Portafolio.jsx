@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Icon from '@mdi/react';
-import { mdiPlus } from '@mdi/js';
+import { mdiClose, mdiPlus } from '@mdi/js';
 import AcademicExperienceSection from '../components/AcademicExperienceSection';
 import ProjectForm from '../components/ProjectForm';
 import ProjectList from '../components/ProjectList';
@@ -116,6 +116,14 @@ function Portfolio() {
                     <p className="softsave-project-modal__subtitle">
                       Actualiza la informacion detallada de tu trabajo para el portafolio.
                     </p>
+                    <button
+                      type="button"
+                      className="softsave-project-modal__close"
+                      onClick={() => setIsCreateModalOpen(false)}
+                      aria-label="Cerrar modal de agregar proyecto"
+                    >
+                      <Icon path={mdiClose} size={0.8} />
+                    </button>
                   </header>
 
                   <ProjectForm
