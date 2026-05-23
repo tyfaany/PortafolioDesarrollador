@@ -673,6 +673,18 @@
   width: min(100%, 460px);
 }
 
+.softsave-profile__modal--confirm .softsave-profile__modal-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.softsave-profile__modal--confirm .softsave-profile__modal-actions .softsave-profile__secondary-button--modal,
+.softsave-profile__modal--confirm .softsave-profile__modal-actions .softsave-button {
+  width: 100%;
+  min-height: 48px;
+}
+
 .softsave-profile__modal--editor {
   width: min(100%, 860px);
   padding: 0;
