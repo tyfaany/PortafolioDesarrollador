@@ -674,21 +674,43 @@
 
 .softsave-projects-card__summary {
   display: grid;
-  gap: 12px;
+  gap: 6px;
   min-width: 0;
 }
 
-.softsave-projects-card__summary p {
+.softsave-projects-card__summary .softsave-projects-card__header {
+  margin-bottom: 2px;
+}
+
+.softsave-projects-card__description {
   margin: 0;
   color: var(--color-texto);
   line-height: 1.45;
-  white-space: nowrap;
+  min-height: 2.9em;
+}
+
+.softsave-projects-card__description--rich {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.softsave-projects-card__description--rich p,
+.softsave-projects-card__description--rich ul,
+.softsave-projects-card__description--rich ol {
+  margin: 0;
+}
+
+.softsave-projects-card__description--rich p:last-child,
+.softsave-projects-card__description--rich ul:last-child,
+.softsave-projects-card__description--rich ol:last-child {
+  margin-bottom: 0;
 }
 
 .softsave-projects-card .softsave-project-form__hint {
-  margin-top: 4px;
+  margin: 4px 0 0;
+  line-height: 1.25;
 }
 
 .softsave-projects-card__links {
@@ -696,6 +718,7 @@
   flex-wrap: wrap;
   gap: 12px;
   font-size: 0.86rem;
+  margin-top: 2px;
 }
 
 .softsave-projects-card__links a {
