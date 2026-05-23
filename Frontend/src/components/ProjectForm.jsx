@@ -236,6 +236,7 @@ function ProjectForm({
   showModeActions = true,
   onCancel = () => {},
   showHeader = true,
+  useModalLayout = false,
 }) {
   const [formData, setFormData] = useState(() => (
     mode === 'edit' && project ? mapProjectToFormState(project) : createInitialFormState(initialData)
@@ -654,7 +655,7 @@ function ProjectForm({
   };
 
   return (
-    <section className="softsave-projects-card">
+    <section className={`softsave-projects-card ${useModalLayout ? 'softsave-projects-card--modal' : ''}`}>
       {showHeader ? (
         <div className="softsave-projects-card__header">
           <div className="softsave-projects-card__title-wrap">
@@ -698,7 +699,9 @@ function ProjectForm({
 
       <form className="softsave-project-form" onSubmit={handleSubmit} noValidate>
         <label className="softsave-project-form__field">
-          <span className="softsave-project-form__label">Titulo del proyecto *</span>
+          <span className="softsave-project-form__label">
+            {useModalLayout ? 'Nombre del proyecto *' : 'Titulo del proyecto *'}
+          </span>
           <input
             type="text"
             className="softsave-input"
@@ -712,7 +715,9 @@ function ProjectForm({
         </label>
 
         <div className="softsave-project-form__field">
-          <span className="softsave-project-form__label">Descripcion *</span>
+          <span className="softsave-project-form__label">
+            {useModalLayout ? 'Descripcion detallada *' : 'Descripcion *'}
+          </span>
           <div id={editorToolbarId} className="ql-toolbar ql-snow softsave-project-form__toolbar">
             <span className="ql-formats">
               <button type="button" className="ql-bold" aria-label="Negrita" />
@@ -894,66 +899,79 @@ function ProjectForm({
               value={formData.startDate}
               onChange={(event) => updateField('startDate', event.target.value)}
             />
-            <span className="softsave-project-form__hint">DD/MM/AAAA</span>
+            {!useModalLayout ? <span className="softsave-project-form__hint">DD/MM/AAAA</span> : null}
             {errors.startDate ? <span className="error-text">{errors.startDate}</span> : null}
           </label>
 
           <div className="softsave-project-form__field">
-            <span className="softsave-project-form__label">Fecha fin</span>
-            <input
-              type="date"
-              className="softsave-input"
-              value={formData.endDate}
-              disabled={formData.inProgress}
-              onChange={(event) => updateField('endDate', event.target.value)}
-            />
-            <label className="softsave-project-form__checkbox">
+            <div className="softsave-project-form__end-header">
+              <span className="softsave-project-form__label">Fecha fin</span>
+              <label className="softsave-project-form__checkbox softsave-project-form__checkbox--project-end">
+                <input
+                  type="checkbox"
+                  checked={formData.inProgress}
+                  onChange={(event) => {
+                    const checked = event.target.checked;
+                    setFormData((current) => ({
+                      ...current,
+                      inProgress: checked,
+                      endDate: checked ? '' : current.endDate,
+                    }));
+                    setErrors((current) => ({
+                      ...current,
+                      endDate: '',
+                    }));
+                  }}
+                />
+                En progreso
+              </label>
+            </div>
+            {formData.inProgress ? (
               <input
-                type="checkbox"
-                checked={formData.inProgress}
-                onChange={(event) => {
-                  const checked = event.target.checked;
-                  setFormData((current) => ({
-                    ...current,
-                    inProgress: checked,
-                    endDate: checked ? '' : current.endDate,
-                  }));
-                  setErrors((current) => ({
-                    ...current,
-                    endDate: '',
-                  }));
-                }}
+                type="text"
+                className="softsave-input"
+                value="Presente"
+                readOnly
+                aria-label="Estado de fecha fin"
               />
-              En progreso
-            </label>
-            <span className="softsave-project-form__hint">DD/MM/AAAA</span>
+            ) : (
+              <input
+                type="date"
+                className="softsave-input"
+                value={formData.endDate}
+                onChange={(event) => updateField('endDate', event.target.value)}
+              />
+            )}
+            {!useModalLayout ? <span className="softsave-project-form__hint">DD/MM/AAAA</span> : null}
             {errors.endDate ? <span className="error-text">{errors.endDate}</span> : null}
           </div>
         </div>
 
-        <label className="softsave-project-form__field">
-          <span className="softsave-project-form__label">URL demo</span>
-          <input
-            type="url"
-            className="softsave-input"
-            value={formData.demoUrl}
-            placeholder="https://mi-demo.com/proyecto"
-            onChange={(event) => updateField('demoUrl', event.target.value)}
-          />
-          {errors.demoUrl ? <span className="error-text">{errors.demoUrl}</span> : null}
-        </label>
+        <div className={`softsave-project-form__url-grid ${useModalLayout ? 'is-modal' : ''}`}>
+          <label className="softsave-project-form__field">
+            <span className="softsave-project-form__label">URL demo</span>
+            <input
+              type="url"
+              className="softsave-input"
+              value={formData.demoUrl}
+              placeholder="https://mi-demo.com/proyecto"
+              onChange={(event) => updateField('demoUrl', event.target.value)}
+            />
+            {errors.demoUrl ? <span className="error-text">{errors.demoUrl}</span> : null}
+          </label>
 
-        <label className="softsave-project-form__field">
-          <span className="softsave-project-form__label">URL repositorio</span>
-          <input
-            type="url"
-            className="softsave-input"
-            value={formData.repositoryUrl}
-            placeholder="https://github.com/usuario/repositorio"
-            onChange={(event) => updateField('repositoryUrl', event.target.value)}
-          />
-          {errors.repositoryUrl ? <span className="error-text">{errors.repositoryUrl}</span> : null}
-        </label>
+          <label className="softsave-project-form__field">
+            <span className="softsave-project-form__label">URL repositorio</span>
+            <input
+              type="url"
+              className="softsave-input"
+              value={formData.repositoryUrl}
+              placeholder="https://github.com/usuario/repositorio"
+              onChange={(event) => updateField('repositoryUrl', event.target.value)}
+            />
+            {errors.repositoryUrl ? <span className="error-text">{errors.repositoryUrl}</span> : null}
+          </label>
+        </div>
 
         <div className="softsave-project-form__field">
           <span className="softsave-project-form__label">Visibilidad</span>
@@ -1101,6 +1119,7 @@ ProjectForm.propTypes = {
   showModeActions: PropTypes.bool,
   onCancel: PropTypes.func,
   showHeader: PropTypes.bool,
+  useModalLayout: PropTypes.bool,
 };
 
 export default ProjectForm;

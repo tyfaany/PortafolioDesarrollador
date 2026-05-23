@@ -463,12 +463,40 @@
   gap: 16px;
 }
 
+.softsave-project-form__url-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.softsave-project-form__url-grid.is-modal {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .softsave-project-form__checkbox {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-weight: 500;
   color: var(--color-texto);
+}
+
+.softsave-project-form__end-header {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: nowrap;
+  min-height: 0;
+  padding-right: 170px;
+}
+
+.softsave-project-form__checkbox--project-end {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin-left: 0;
 }
 
 .softsave-project-form__checkbox input,
@@ -809,6 +837,183 @@
   color: var(--color-error);
 }
 
+.softsave-project-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background-color: rgba(var(--color-texto-rgb), 0.22);
+  backdrop-filter: blur(2px);
+}
+
+.softsave-project-modal {
+  width: min(820px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(var(--color-texto-rgb), 0.12);
+  background-color: var(--color-blanco);
+  box-shadow: 0 20px 40px rgba(var(--color-texto-rgb), 0.18);
+}
+
+.softsave-project-modal__header {
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid rgba(var(--color-texto-rgb), 0.09);
+}
+
+.softsave-project-modal__title {
+  margin: 0;
+  font-size: 1.9rem;
+}
+
+.softsave-project-modal__subtitle {
+  margin: 6px 0 0;
+  color: var(--color-texto-suave);
+  font-size: 0.9rem;
+}
+
+.softsave-projects-card--modal {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 16px 18px 18px;
+  background: transparent;
+}
+
+.softsave-projects-card--modal .softsave-project-form {
+  gap: 14px;
+}
+
+.softsave-projects-card--modal .softsave-project-form__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.softsave-projects-card--modal .softsave-project-form__field {
+  gap: 6px;
+}
+
+.softsave-projects-card--modal .softsave-input {
+  min-height: 38px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.softsave-projects-card--modal .softsave-project-form__toolbar {
+  border: 1px solid rgba(var(--color-texto-rgb), 0.16);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 5px 6px;
+  background-color: #fafafa;
+}
+
+.softsave-projects-card--modal .softsave-project-form__toolbar .ql-formats {
+  margin-right: 4px;
+}
+
+.softsave-projects-card--modal .softsave-project-form__toolbar button {
+  width: 24px;
+  height: 24px;
+  padding: 3px;
+}
+
+.softsave-projects-card--modal .softsave-project-form__textarea .ql-container {
+  border: 1px solid rgba(var(--color-texto-rgb), 0.16);
+  border-radius: 0 0 8px 8px;
+}
+
+.softsave-projects-card--modal .softsave-project-form__textarea.softsave-project-form__textarea--compact .ql-container {
+  min-height: 120px;
+}
+
+.softsave-projects-card--modal .softsave-project-form__textarea.softsave-project-form__textarea--compact .ql-editor {
+  min-height: 90px;
+  max-height: 130px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+}
+
+.softsave-projects-card--modal .softsave-project-form__chips {
+  gap: 6px;
+}
+
+.softsave-projects-card--modal .softsave-project-form__chip {
+  min-height: 30px;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+}
+
+.softsave-projects-card--modal .softsave-project-form__chip-remove {
+  width: 16px;
+  height: 16px;
+}
+
+.softsave-projects-card--modal .softsave-project-form__image-current {
+  padding: 8px 10px;
+  border: 1px solid rgba(var(--color-texto-rgb), 0.12);
+  border-radius: 8px;
+  background-color: #f7f8fa;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+.softsave-projects-card--modal .softsave-project-form__upload-box {
+  min-height: 56px;
+  padding: 10px 12px;
+  border: 1px solid rgba(var(--color-texto-rgb), 0.14);
+  border-style: solid;
+  border-radius: 8px;
+  background-color: #f7f8fa;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.softsave-projects-card--modal .softsave-project-form__upload-box strong {
+  font-size: 0.85rem;
+}
+
+.softsave-projects-card--modal .softsave-project-form__upload-box span {
+  font-size: 0.78rem;
+}
+
+.softsave-projects-card--modal .softsave-project-form__image-thumb {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+}
+
+.softsave-projects-card--modal .softsave-project-form__image-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.76rem;
+}
+
+.softsave-projects-card--modal .softsave-project-form__image-meta strong {
+  font-size: 0.84rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.softsave-projects-card--modal .softsave-project-form__mini-button {
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-size: 0.82rem;
+}
+
+.softsave-projects-card--modal .softsave-project-form__hint {
+  font-size: 0.74rem;
+}
+
 @media (max-width: 768px) {
   .softsave-workspace {
     padding: 18px 12px 30px;
@@ -862,9 +1067,26 @@
   }
 
   .softsave-project-form__grid,
+  .softsave-project-form__url-grid,
   .softsave-project-form__tech-editor,
   .softsave-privacy__general-actions {
     grid-template-columns: 1fr;
+  }
+
+  .softsave-project-form__end-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding-right: 0;
+    min-height: auto;
+  }
+
+  .softsave-project-form__checkbox--project-end {
+    position: static;
+    margin-top: 0;
+    line-height: 1.2;
   }
 
   .softsave-project-form__footer {
@@ -874,6 +1096,32 @@
   .softsave-projects-card__links {
     flex-direction: column;
     gap: 4px;
+  }
+
+  .softsave-project-modal__overlay {
+    padding: 10px;
+  }
+
+  .softsave-project-modal {
+    width: 100%;
+    max-height: calc(100dvh - 20px);
+    border-radius: 12px;
+  }
+
+  .softsave-project-modal__header {
+    padding: 14px 14px 10px;
+  }
+
+  .softsave-project-modal__title {
+    font-size: 1.4rem;
+  }
+
+  .softsave-projects-card--modal {
+    padding: 12px 14px 14px;
+  }
+
+  .softsave-projects-card--modal .softsave-project-form__image-current {
+    flex-wrap: wrap;
   }
 
   .softsave-project-form__cancel,
