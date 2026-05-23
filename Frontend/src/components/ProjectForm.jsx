@@ -501,12 +501,18 @@ function ProjectForm({
       nextErrors.technologies = 'Debes seleccionar entre 1 y 15 tecnologias.';
     }
 
-    if (formData.startDate && formData.startDate > fechaActualIso) {
+    if (!formData.startDate) {
+      nextErrors.startDate = 'La fecha de inicio es obligatoria.';
+    } else if (formData.startDate > fechaActualIso) {
       nextErrors.startDate = 'La fecha de inicio no puede ser posterior a la fecha actual.';
     }
-    if (!formData.inProgress && formData.endDate && formData.endDate > fechaActualIso) {
+
+    if (!formData.inProgress && !formData.endDate) {
+      nextErrors.endDate = 'La fecha de fin es obligatoria.';
+    } else if (!formData.inProgress && formData.endDate > fechaActualIso) {
       nextErrors.endDate = 'La fecha de fin no puede ser posterior a la fecha actual.';
     }
+
     if (formData.startDate && formData.endDate && formData.startDate > formData.endDate) {
       nextErrors.endDate = 'La fecha de inicio no puede ser mayor a la fecha fin.';
     }
@@ -581,6 +587,12 @@ function ProjectForm({
 
         if (backendErrors.image?.[0]) {
           nextErrors.image = backendErrors.image[0];
+        }
+        if (backendErrors.start_date?.[0]) {
+          nextErrors.startDate = backendErrors.start_date[0];
+        }
+        if (backendErrors.end_date?.[0]) {
+          nextErrors.endDate = backendErrors.end_date[0];
         }
 
         setErrors((current) => ({
@@ -904,7 +916,7 @@ function ProjectForm({
 
         <div className="softsave-project-form__grid">
           <label className="softsave-project-form__field">
-            <span className="softsave-project-form__label">Fecha inicio</span>
+            <span className="softsave-project-form__label">Fecha inicio *</span>
             <input
               type="date"
               className="softsave-input"
@@ -918,7 +930,7 @@ function ProjectForm({
 
           <div className="softsave-project-form__field">
             <div className="softsave-project-form__end-header">
-              <span className="softsave-project-form__label">Fecha fin</span>
+              <span className="softsave-project-form__label">Fecha fin *</span>
               <label className="softsave-project-form__checkbox softsave-project-form__checkbox--project-end">
                 <input
                   type="checkbox"

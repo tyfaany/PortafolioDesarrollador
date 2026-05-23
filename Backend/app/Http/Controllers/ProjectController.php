@@ -52,8 +52,8 @@ class ProjectController extends Controller
             'technologies' => 'required|array|min:1|max:15', // Selector múltiple, mín 1, máx 15[cite: 2]
             'technologies.*' => 'exists:project_technologies,id', // Verifica que las tecnologías existan en el catálogo
             'image' => 'nullable|image|mimes:jpeg,png|max:10240', // Formato JPEG/PNG, máx 10MB[cite: 2]
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
+            'start_date' => 'required|date',
+            'end_date' => 'required_unless:is_in_progress,1|date',
             'is_in_progress' => 'boolean',
             'demo_url' => 'nullable|url|max:2048', // URLs válidas[cite: 2]
             'repo_url' => 'nullable|url|max:2048', // URLs válidas[cite: 2]
@@ -155,8 +155,8 @@ class ProjectController extends Controller
             'technologies' => 'required|array|min:1|max:15',
             'technologies.*' => 'exists:project_technologies,id',
             'image' => 'nullable|image|mimes:jpeg,png|max:10240',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
+            'start_date' => 'required|date',
+            'end_date' => 'required_unless:is_in_progress,1|date',
             'is_in_progress' => 'boolean',
             'demo_url' => 'nullable|url|max:2048',
             'repo_url' => 'nullable|url|max:2048',
