@@ -15,6 +15,7 @@ class Project extends Model
         'name',
         'description',
         'image_path',
+        'image_original_name',
         'start_date',
         'end_date',
         'is_in_progress',

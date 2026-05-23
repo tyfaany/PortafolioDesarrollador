@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Icon from '@mdi/react';
-import { mdiChevronUp, mdiPlus } from '@mdi/js';
+import { mdiClose, mdiPlus } from '@mdi/js';
 import AcademicExperienceSection from '../components/AcademicExperienceSection';
 import ProjectForm from '../components/ProjectForm';
 import ProjectList from '../components/ProjectList';
@@ -32,14 +32,14 @@ const PROJECT_DRAFT = {
 
 function Portfolio() {
   const [tabActiva, setTabActiva] = useState('general');
-  const [isCreateExpanded, setIsCreateExpanded] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [refreshProjectsKey, setRefreshProjectsKey] = useState(0);
   const panelIdActivo = `portafolio-panel-${tabActiva}`;
   const tabIdActiva = `portafolio-tab-${tabActiva}`;
 
   const handleProjectSaved = () => {
     setRefreshProjectsKey((current) => current + 1);
-    setIsCreateExpanded(false);
+    setIsCreateModalOpen(false);
   };
 
   return (
@@ -91,28 +91,53 @@ function Portfolio() {
                 <button
                   type="button"
                   className="softsave-project-form__mini-button"
-                  onClick={() => setIsCreateExpanded((current) => !current)}
+                  onClick={() => setIsCreateModalOpen(true)}
                 >
-                  <Icon path={isCreateExpanded ? mdiChevronUp : mdiPlus} size={0.8} />
-                  {isCreateExpanded ? 'Cerrar' : 'Nuevo'}
+                  <Icon path={mdiPlus} size={0.8} />
+                  Nuevo
                 </button>
               </div>
-
-              {isCreateExpanded ? (
-                <ProjectForm
-                  mode="create"
-                  initialData={PROJECT_DRAFT}
-                  onProjectSaved={handleProjectSaved}
-                  showModeActions={false}
-                  onCancel={() => setIsCreateExpanded(false)}
-                  showHeader={false}
-                />
-              ) : null}
             </section>
 
             <ProjectList
               refreshKey={refreshProjectsKey}
             />
+
+            {isCreateModalOpen ? (
+              <div
+                className="softsave-project-modal__overlay"
+                role="dialog"
+                aria-modal="true"
+                onClick={() => setIsCreateModalOpen(false)}
+              >
+                <div className="softsave-project-modal" onClick={(event) => event.stopPropagation()}>
+                  <header className="softsave-project-modal__header">
+                    <h3 className="softsave-project-modal__title">Agregar proyecto</h3>
+                    <p className="softsave-project-modal__subtitle">
+                      Actualiza la informacion detallada de tu trabajo para el portafolio.
+                    </p>
+                    <button
+                      type="button"
+                      className="softsave-project-modal__close"
+                      onClick={() => setIsCreateModalOpen(false)}
+                      aria-label="Cerrar modal de agregar proyecto"
+                    >
+                      <Icon path={mdiClose} size={0.8} />
+                    </button>
+                  </header>
+
+                  <ProjectForm
+                    mode="create"
+                    initialData={PROJECT_DRAFT}
+                    onProjectSaved={handleProjectSaved}
+                    showModeActions={false}
+                    onCancel={() => setIsCreateModalOpen(false)}
+                    showHeader={false}
+                    useModalLayout
+                  />
+                </div>
+              </div>
+            ) : null}
           </section>
         )}
       </div>

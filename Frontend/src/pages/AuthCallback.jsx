@@ -1,15 +1,24 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
+import useFeedback from '../hooks/useFeedback';
 
 function AuthCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
+  const { showFeedback } = useFeedback();
 
   useEffect(() => {
     const procesarCallback = async () => {
       const token = searchParams.get('token');
+      const error = searchParams.get('error');
+
+      if (error) {
+        showFeedback(error, 'error');
+        navigate('/perfil/contacto', { replace: true });
+        return;
+      }
 
       if (!token) {
         navigate('/login', { replace: true });
@@ -30,7 +39,7 @@ function AuthCallback() {
     };
 
     procesarCallback();
-  }, [navigate, refreshUser, searchParams]);
+  }, [navigate, refreshUser, searchParams, showFeedback]);
 
   return <p>Procesando autenticacion...</p>;
 }

@@ -147,4 +147,5 @@ export const guardarSeleccionRepositorios = (selectedIds) =>
   api.put('/user/github/repositories/selection', { selected_repos: selectedIds });
 
 export const obtenerPerfilLinkedIn = () => api.get('/user/linkedin/profile');
+export const sincronizarDatosLinkedIn = (options) => api.post('/user/linkedin/sync', options);
 export const desvincularLinkedIn = () => api.delete('/user/linkedin/unlink');

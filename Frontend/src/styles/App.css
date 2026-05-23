@@ -97,12 +97,19 @@
 }
 
 html {
-  scrollbar-gutter: stable;
+  min-height: 100%;
+  width: 100%;
+  background:
+    radial-gradient(circle at top right, rgba(var(--color-primario-rgb), 0.14), transparent 24%),
+    linear-gradient(180deg, var(--color-fondo-gradiente-inicio) 0%, var(--color-fondo-gradiente-fin) 100%);
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  min-height: 100%;
+  width: 100%;
+  overflow-x: hidden;
   overflow-y: auto;
   font-family: var(--font-principal);
   font-size: var(--font-size-base);
@@ -113,14 +120,13 @@ body {
   color: var(--color-texto);
 }
 
-body > div {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+#root {
+  display: block;
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
-  padding: var(--spacing-lg);
-  background-color: var(--color-fondo);
+  max-width: none;
+  background: transparent;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -159,18 +165,21 @@ img {
 
 /* 5. UTILIDADES GLOBALES */
 .softsave-app-shell {
+  display: block;
+  margin: 0;
+  padding: 0;
   width: 100%;
-  padding-top: 6rem;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: none;
+  overflow-x: hidden;
+  background: transparent;
 }
 
 
 /* 6. RESPONSIVE */
 @media (max-width: 768px) {
-  body > div {
-    padding: var(--spacing-md);
-  }
-
-  .softsave-app-shell {
-    padding-top: 5.2rem;
+  #root {
+    min-height: 100vh;
   }
 }

@@ -52,8 +52,8 @@ class ProjectController extends Controller
             'technologies' => 'required|array|min:1|max:15', // Selector múltiple, mín 1, máx 15[cite: 2]
             'technologies.*' => 'exists:project_technologies,id', // Verifica que las tecnologías existan en el catálogo
             'image' => 'nullable|image|mimes:jpeg,png|max:10240', // Formato JPEG/PNG, máx 10MB[cite: 2]
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
+            'start_date' => 'required|date',
+            'end_date' => 'required_unless:is_in_progress,1|date',
             'is_in_progress' => 'boolean',
             'demo_url' => 'nullable|url|max:2048', // URLs válidas[cite: 2]
             'repo_url' => 'nullable|url|max:2048', // URLs válidas[cite: 2]
@@ -79,9 +79,12 @@ class ProjectController extends Controller
 
             // 2. Procesamiento de la Imagen
             $imagePath = null;
+            $imageOriginalName = null;
             if ($request->hasFile('image')) {
                 // Guarda la imagen en storage/app/public/projects
-                $imagePath = $request->file('image')->store('projects', 'public');
+                $imageFile = $request->file('image');
+                $imagePath = $imageFile->store('projects', 'public');
+                $imageOriginalName = $imageFile->getClientOriginalName();
             }
 
             // 3. Crear el Registro del Proyecto
@@ -97,6 +100,10 @@ class ProjectController extends Controller
 
             if ($this->hasProjectColumn('image_path')) {
                 $projectData['image_path'] = $imagePath;
+            }
+
+            if ($this->hasProjectColumn('image_original_name')) {
+                $projectData['image_original_name'] = $imageOriginalName;
             }
 
             if ($this->hasProjectColumn('is_in_progress')) {
@@ -148,8 +155,8 @@ class ProjectController extends Controller
             'technologies' => 'required|array|min:1|max:15',
             'technologies.*' => 'exists:project_technologies,id',
             'image' => 'nullable|image|mimes:jpeg,png|max:10240',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
+            'start_date' => 'required|date',
+            'end_date' => 'required_unless:is_in_progress,1|date',
             'is_in_progress' => 'boolean',
             'demo_url' => 'nullable|url|max:2048',
             'repo_url' => 'nullable|url|max:2048',
@@ -179,7 +186,12 @@ class ProjectController extends Controller
                     Storage::disk('public')->delete($project->image_path);
                 }
                 // Guardamos la nueva imagen
-                $project->image_path = $request->file('image')->store('projects', 'public');
+                $imageFile = $request->file('image');
+                $project->image_path = $imageFile->store('projects', 'public');
+
+                if ($this->hasProjectColumn('image_original_name')) {
+                    $project->image_original_name = $imageFile->getClientOriginalName();
+                }
             }
 
             // Actualizamos los campos de texto y fechas

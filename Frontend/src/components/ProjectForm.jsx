@@ -1,10 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import Icon from '@mdi/react';
 import PropTypes from 'prop-types';
 import {
   mdiCheckCircleOutline,
   mdiClose,
   mdiFileDocumentOutline,
+  mdiFormatFontSizeDecrease,
+  mdiFormatFontSizeIncrease,
   mdiImageOutline,
   mdiPencilOutline,
   mdiPlus,
@@ -118,7 +122,7 @@ function mapProjectToFormState(project) {
     demoUrl: project.demo_url || '',
     repositoryUrl: project.repo_url || '',
     visibility: project.is_public ? 'public' : 'private',
-    currentImageName: project.image_path ? String(project.image_path).split('/').pop() : '',
+    currentImageName: project.image_original_name || (project.image_path ? String(project.image_path).split('/').pop() : ''),
     currentImagePreview: resolveProjectImageUrl(project.image_url || project.image_path || ''),
   };
 }
@@ -232,6 +236,7 @@ function ProjectForm({
   showModeActions = true,
   onCancel = () => {},
   showHeader = true,
+  useModalLayout = false,
 }) {
   const [formData, setFormData] = useState(() => (
     mode === 'edit' && project ? mapProjectToFormState(project) : createInitialFormState(initialData)
@@ -248,9 +253,53 @@ function ProjectForm({
   const [imageRemoved, setImageRemoved] = useState(false);
   const [technologySuggestions, setTechnologySuggestions] = useState(TECHNOLOGY_SUGGESTIONS);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const editorToolbarId = useId().replace(/:/g, '');
+  const quillModules = useMemo(() => ({
+    toolbar: {
+      container: `#${editorToolbarId}`,
+      handlers: {
+        sizeDecrease() {
+          const sizes = ['small', false, 'large', 'huge'];
+          const currentSize = this.quill.getFormat().size ?? false;
+          const currentIndex = sizes.findIndex((size) => size === currentSize);
+          const nextIndex = currentIndex <= 0 ? 0 : currentIndex - 1;
+          this.quill.format('size', sizes[nextIndex] || false);
+        },
+        sizeIncrease() {
+          const sizes = ['small', false, 'large', 'huge'];
+          const currentSize = this.quill.getFormat().size ?? false;
+          const currentIndex = sizes.findIndex((size) => size === currentSize);
+          const nextIndex = currentIndex < 0 ? 2 : Math.min(currentIndex + 1, sizes.length - 1);
+          this.quill.format('size', sizes[nextIndex] || false);
+        },
+      },
+    },
+  }), [editorToolbarId]);
+  const quillFormats = [
+    'size',
+    'bold',
+    'italic',
+    'underline',
+    'strike',
+    'list',
+    'bullet',
+    'script',
+  ];
   const [isDirty, setIsDirty] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
   const { showFeedback } = useFeedback();
+  const fechaActualIso = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
+  const fechaInicioMax = fechaActualIso;
+  const fechaFinMax = fechaActualIso;
+  const fechaFinMin = useMemo(() => (
+    formData.startDate && formData.startDate <= fechaActualIso ? formData.startDate : fechaActualIso
+  ), [formData.startDate, fechaActualIso]);
 
   useEffect(() => {
     const nextState = mode === 'edit' && project
@@ -438,7 +487,7 @@ function ProjectForm({
   const validateForm = () => {
     const nextErrors = {};
     const trimmedTitle = formData.title.trim();
-    const trimmedDescription = formData.description.trim();
+    const trimmedDescription = formData.description.replace(/<[^>]+>/g, '').trim();
 
     if (trimmedTitle.length < 5 || trimmedTitle.length > 100) {
       nextErrors.title = 'El titulo debe tener entre 5 y 100 caracteres.';
@@ -452,7 +501,17 @@ function ProjectForm({
       nextErrors.technologies = 'Debes seleccionar entre 1 y 15 tecnologias.';
     }
 
-    // Backend allows nullable dates; keep only logical validation when both are present.
+    if (!formData.startDate) {
+      nextErrors.startDate = 'La fecha de inicio es obligatoria.';
+    } else if (formData.startDate > fechaActualIso) {
+      nextErrors.startDate = 'La fecha de inicio no puede ser posterior a la fecha actual.';
+    }
+
+    if (!formData.inProgress && !formData.endDate) {
+      nextErrors.endDate = 'La fecha de fin es obligatoria.';
+    } else if (!formData.inProgress && formData.endDate > fechaActualIso) {
+      nextErrors.endDate = 'La fecha de fin no puede ser posterior a la fecha actual.';
+    }
 
     if (formData.startDate && formData.endDate && formData.startDate > formData.endDate) {
       nextErrors.endDate = 'La fecha de inicio no puede ser mayor a la fecha fin.';
@@ -464,10 +523,6 @@ function ProjectForm({
 
     if (formData.repositoryUrl && !isValidHttpUrl(formData.repositoryUrl)) {
       nextErrors.repositoryUrl = 'Ingresa una URL de repositorio valida con HTTP o HTTPS.';
-    }
-
-    if (mode === 'create' && !imageFile) {
-      nextErrors.image = 'La imagen principal es obligatoria.';
     }
 
     setErrors(nextErrors);
@@ -532,6 +587,12 @@ function ProjectForm({
 
         if (backendErrors.image?.[0]) {
           nextErrors.image = backendErrors.image[0];
+        }
+        if (backendErrors.start_date?.[0]) {
+          nextErrors.startDate = backendErrors.start_date[0];
+        }
+        if (backendErrors.end_date?.[0]) {
+          nextErrors.endDate = backendErrors.end_date[0];
         }
 
         setErrors((current) => ({
@@ -618,7 +679,7 @@ function ProjectForm({
   };
 
   return (
-    <section className="softsave-projects-card">
+    <section className={`softsave-projects-card ${useModalLayout ? 'softsave-projects-card--modal' : ''}`}>
       {showHeader ? (
         <div className="softsave-projects-card__header">
           <div className="softsave-projects-card__title-wrap">
@@ -662,7 +723,9 @@ function ProjectForm({
 
       <form className="softsave-project-form" onSubmit={handleSubmit} noValidate>
         <label className="softsave-project-form__field">
-          <span className="softsave-project-form__label">Titulo del proyecto *</span>
+          <span className="softsave-project-form__label">
+            {useModalLayout ? 'Nombre del proyecto *' : 'Titulo del proyecto *'}
+          </span>
           <input
             type="text"
             className="softsave-input"
@@ -675,18 +738,48 @@ function ProjectForm({
           {errors.title ? <span className="error-text">{errors.title}</span> : null}
         </label>
 
-        <label className="softsave-project-form__field">
-          <span className="softsave-project-form__label">Descripcion *</span>
-          <textarea
-            className="softsave-input softsave-project-form__textarea"
+        <div className="softsave-project-form__field">
+          <span className="softsave-project-form__label">
+            {useModalLayout ? 'Descripcion detallada *' : 'Descripcion *'}
+          </span>
+          <div id={editorToolbarId} className="ql-toolbar ql-snow softsave-project-form__toolbar">
+            <span className="ql-formats">
+              <button type="button" className="ql-bold" aria-label="Negrita" />
+              <button type="button" className="ql-italic" aria-label="Cursiva" />
+              <button type="button" className="ql-underline" aria-label="Subrayado" />
+              <button type="button" className="ql-strike" aria-label="Tachado" />
+            </span>
+            <span className="ql-formats">
+              <button type="button" className="ql-list" value="ordered" aria-label="Lista ordenada" />
+              <button type="button" className="ql-list" value="bullet" aria-label="Lista con viñetas" />
+            </span>
+            <span className="ql-formats">
+              <button type="button" className="ql-script" value="sub" aria-label="Subindice" />
+              <button type="button" className="ql-script" value="super" aria-label="Superindice" />
+            </span>
+            <span className="ql-formats">
+              <button type="button" className="ql-sizeDecrease" aria-label="Reducir tamano de texto">
+                <Icon path={mdiFormatFontSizeDecrease} size={0.78} />
+              </button>
+              <button type="button" className="ql-sizeIncrease" aria-label="Aumentar tamano de texto">
+                <Icon path={mdiFormatFontSizeIncrease} size={0.78} />
+              </button>
+            </span>
+          </div>
+          <ReactQuill
+            theme="snow"
             value={formData.description}
-            maxLength={500}
+            onChange={(value) => updateField('description', value)}
+            modules={quillModules}
+            formats={quillFormats}
+            className="softsave-project-form__textarea softsave-project-form__textarea--compact"
             placeholder="Describe tu proyecto... (min. 20, max. 500 caracteres)"
-            onChange={(event) => updateField('description', event.target.value)}
           />
-          <span className="softsave-project-form__hint">{formData.description.trim().length}/500</span>
+          <span className="softsave-project-form__hint">
+            {formData.description.replace(/<[^>]+>/g, '').trim().length}/500
+          </span>
           {errors.description ? <span className="error-text">{errors.description}</span> : null}
-        </label>
+        </div>
 
         <div className="softsave-project-form__field">
           <span className="softsave-project-form__label">Tecnologias utilizadas *</span>
@@ -823,73 +916,89 @@ function ProjectForm({
 
         <div className="softsave-project-form__grid">
           <label className="softsave-project-form__field">
-            <span className="softsave-project-form__label">Fecha inicio</span>
+            <span className="softsave-project-form__label">Fecha inicio *</span>
             <input
               type="date"
               className="softsave-input"
               value={formData.startDate}
+              max={fechaInicioMax}
               onChange={(event) => updateField('startDate', event.target.value)}
             />
-            <span className="softsave-project-form__hint">DD/MM/AAAA</span>
+            {!useModalLayout ? <span className="softsave-project-form__hint">DD/MM/AAAA</span> : null}
             {errors.startDate ? <span className="error-text">{errors.startDate}</span> : null}
           </label>
 
           <div className="softsave-project-form__field">
-            <span className="softsave-project-form__label">Fecha fin</span>
-            <input
-              type="date"
-              className="softsave-input"
-              value={formData.endDate}
-              disabled={formData.inProgress}
-              onChange={(event) => updateField('endDate', event.target.value)}
-            />
-            <label className="softsave-project-form__checkbox">
+            <div className="softsave-project-form__end-header">
+              <span className="softsave-project-form__label">Fecha fin *</span>
+              <label className="softsave-project-form__checkbox softsave-project-form__checkbox--project-end">
+                <input
+                  type="checkbox"
+                  checked={formData.inProgress}
+                  onChange={(event) => {
+                    const checked = event.target.checked;
+                    setFormData((current) => ({
+                      ...current,
+                      inProgress: checked,
+                      endDate: checked ? '' : current.endDate,
+                    }));
+                    setErrors((current) => ({
+                      ...current,
+                      endDate: '',
+                    }));
+                  }}
+                />
+                En progreso
+              </label>
+            </div>
+            {formData.inProgress ? (
               <input
-                type="checkbox"
-                checked={formData.inProgress}
-                onChange={(event) => {
-                  const checked = event.target.checked;
-                  setFormData((current) => ({
-                    ...current,
-                    inProgress: checked,
-                    endDate: checked ? '' : current.endDate,
-                  }));
-                  setErrors((current) => ({
-                    ...current,
-                    endDate: '',
-                  }));
-                }}
+                type="text"
+                className="softsave-input"
+                value="Presente"
+                readOnly
+                aria-label="Estado de fecha fin"
               />
-              En progreso
-            </label>
-            <span className="softsave-project-form__hint">DD/MM/AAAA</span>
+            ) : (
+              <input
+                type="date"
+                className="softsave-input"
+                value={formData.endDate}
+                min={fechaFinMin}
+                max={fechaFinMax}
+                onChange={(event) => updateField('endDate', event.target.value)}
+              />
+            )}
+            {!useModalLayout ? <span className="softsave-project-form__hint">DD/MM/AAAA</span> : null}
             {errors.endDate ? <span className="error-text">{errors.endDate}</span> : null}
           </div>
         </div>
 
-        <label className="softsave-project-form__field">
-          <span className="softsave-project-form__label">URL demo</span>
-          <input
-            type="url"
-            className="softsave-input"
-            value={formData.demoUrl}
-            placeholder="https://mi-demo.com/proyecto"
-            onChange={(event) => updateField('demoUrl', event.target.value)}
-          />
-          {errors.demoUrl ? <span className="error-text">{errors.demoUrl}</span> : null}
-        </label>
+        <div className={`softsave-project-form__url-grid ${useModalLayout ? 'is-modal' : ''}`}>
+          <label className="softsave-project-form__field">
+            <span className="softsave-project-form__label">URL demo</span>
+            <input
+              type="url"
+              className="softsave-input"
+              value={formData.demoUrl}
+              placeholder="https://mi-demo.com/proyecto"
+              onChange={(event) => updateField('demoUrl', event.target.value)}
+            />
+            {errors.demoUrl ? <span className="error-text">{errors.demoUrl}</span> : null}
+          </label>
 
-        <label className="softsave-project-form__field">
-          <span className="softsave-project-form__label">URL repositorio</span>
-          <input
-            type="url"
-            className="softsave-input"
-            value={formData.repositoryUrl}
-            placeholder="https://github.com/usuario/repositorio"
-            onChange={(event) => updateField('repositoryUrl', event.target.value)}
-          />
-          {errors.repositoryUrl ? <span className="error-text">{errors.repositoryUrl}</span> : null}
-        </label>
+          <label className="softsave-project-form__field">
+            <span className="softsave-project-form__label">URL repositorio</span>
+            <input
+              type="url"
+              className="softsave-input"
+              value={formData.repositoryUrl}
+              placeholder="https://github.com/usuario/repositorio"
+              onChange={(event) => updateField('repositoryUrl', event.target.value)}
+            />
+            {errors.repositoryUrl ? <span className="error-text">{errors.repositoryUrl}</span> : null}
+          </label>
+        </div>
 
         <div className="softsave-project-form__field">
           <span className="softsave-project-form__label">Visibilidad</span>
@@ -1032,11 +1141,13 @@ ProjectForm.propTypes = {
     repo_url: PropTypes.string,
     is_public: PropTypes.bool,
     image_path: PropTypes.string,
+    image_original_name: PropTypes.string,
     image_url: PropTypes.string,
   }),
   showModeActions: PropTypes.bool,
   onCancel: PropTypes.func,
   showHeader: PropTypes.bool,
+  useModalLayout: PropTypes.bool,
 };
 
 export default ProjectForm;

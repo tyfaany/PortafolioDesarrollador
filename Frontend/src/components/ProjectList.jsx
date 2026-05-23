@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import Icon from '@mdi/react';
+import { mdiClose } from '@mdi/js';
 import PropTypes from 'prop-types';
 import ProjectCard from './ProjectCard';
 import ProjectForm from './ProjectForm';
@@ -172,16 +174,38 @@ function ProjectList({ refreshKey = 0 }) {
               onToggleEdit={toggleEdit}
             />
             {expandedEditId === project.id ? (
-              <div className="softsave-projects-card__editor">
-                <ProjectForm
-                  mode="edit"
-                  project={project}
-                  initialData={null}
-                  onProjectSaved={handleProjectUpdated}
-                  showModeActions={false}
-                  onCancel={() => setExpandedEditId(null)}
-                  showHeader={false}
-                />
+              <div
+                className="softsave-project-modal__overlay"
+                role="dialog"
+                aria-modal="true"
+                onClick={() => setExpandedEditId(null)}
+              >
+                <div className="softsave-project-modal" onClick={(event) => event.stopPropagation()}>
+                  <header className="softsave-project-modal__header">
+                    <h3 className="softsave-project-modal__title">Editar proyecto</h3>
+                    <p className="softsave-project-modal__subtitle">
+                      Actualiza la informacion detallada de tu trabajo para el portafolio.
+                    </p>
+                    <button
+                      type="button"
+                      className="softsave-project-modal__close"
+                      onClick={() => setExpandedEditId(null)}
+                      aria-label="Cerrar modal de editar proyecto"
+                    >
+                      <Icon path={mdiClose} size={0.8} />
+                    </button>
+                  </header>
+                  <ProjectForm
+                    mode="edit"
+                    project={project}
+                    initialData={null}
+                    onProjectSaved={handleProjectUpdated}
+                    showModeActions={false}
+                    onCancel={() => setExpandedEditId(null)}
+                    showHeader={false}
+                    useModalLayout
+                  />
+                </div>
               </div>
             ) : null}
           </div>

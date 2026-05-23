@@ -10,18 +10,18 @@ import {
   mdiTrashCanOutline,
 } from '@mdi/js';
 
-const MAX_DESCRIPTION_LENGTH = 140;
-
-function truncateDescription(description) {
+function sanitizeHtml(description) {
   if (!description) {
     return '';
   }
 
-  if (description.length <= MAX_DESCRIPTION_LENGTH) {
-    return description;
-  }
-
-  return `${description.slice(0, MAX_DESCRIPTION_LENGTH).trimEnd()}...`;
+  return String(description)
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+    .replace(/\son\w+="[^"]*"/gi, '')
+    .replace(/\son\w+='[^']*'/gi, '')
+    .replace(/\s(href|src)=("|\')\s*javascript:[^"\']*("|\')/gi, '')
+    .trim();
 }
 
 function normalizeTechnologies(technologies) {
@@ -147,7 +147,10 @@ function ProjectCard({ project, onDelete = () => {}, onToggleVisibility = () => 
             </div>
           </div>
 
-          <p>{truncateDescription(project?.description || '')}</p>
+          <div
+            className="softsave-projects-card__description softsave-projects-card__description--rich"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(project?.description || '') }}
+          />
           <div className="softsave-projects-card__links">
             {demoUrl ? (
               <a href={demoUrl} target="_blank" rel="noreferrer" aria-label="Abrir demo">

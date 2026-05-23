@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Icon from "@mdi/react";
 import {
@@ -22,6 +22,7 @@ import {
   mdiSchoolOutline,
   mdiSourceBranch,
   mdiWeb,
+  mdiLockOutline,
 } from "@mdi/js";
 import useAuth from "../hooks/useAuth";
 import useFeedback from "../hooks/useFeedback";
@@ -33,6 +34,7 @@ import {
   obtenerContacto,
   obtenerPerfilLinkedIn,
   obtenerRepositoriosGithub,
+  sincronizarDatosLinkedIn as sincronizarDatosLinkedInApi,
   sincronizarRepositoriosGithub,
   subirFoto,
   desvincularLinkedIn,
@@ -254,6 +256,10 @@ function ProfileSettings() {
   const [perfilLinkedinImportado, setPerfilLinkedinImportado] = useState(null);
   const [cargandoLinkedin, setCargandoLinkedin] = useState(false);
   const [linkedinSincronizado, setLinkedinSincronizado] = useState(false);
+  const [preferenciasLinkedin, setPreferenciasLinkedin] = useState({
+    importarNombre: false,
+    importarFoto: false,
+  });
   const [vistaPreviaLinkedin, setVistaPreviaLinkedin] = useState(null);
   const [fotoLinkedinBloqueada, setFotoLinkedinBloqueada] = useState(false);
   const [estaGithubConectado, setEstaGithubConectado] = useState(false);
@@ -302,6 +308,8 @@ function ProfileSettings() {
   );
   const vistaPreviaModal = imagenTemporal || imagenPerfil;
   const estaLinkedinVinculado = Boolean(perfilLinkedinImportado);
+  const linkedinVinculadoPersistente = Boolean(user?.linkedin_linked);
+  const linkedinVinculadoUI = linkedinVinculadoPersistente || estaLinkedinVinculado;
   const totalRepositoriosGithub = reposGithub.length;
   const correoContactoPredeterminado = user?.contact_email || user?.email || "";
   const repositoriosSeleccionados = useMemo(
@@ -841,22 +849,17 @@ function ProfileSettings() {
     const backendBaseUrl = apiBaseUrl.endsWith("/api")
       ? apiBaseUrl.slice(0, -4)
       : apiBaseUrl;
-    window.location.href = `${backendBaseUrl}/api/auth/linkedin/redirect`;
+    const tokenSesion = localStorage.getItem("token");
+    const query = tokenSesion ? `?link_token=${encodeURIComponent(tokenSesion)}` : "";
+    window.location.href = `${backendBaseUrl}/api/auth/linkedin/redirect${query}`;
   };
 
-  const cargarPerfilLinkedinVinculado = async (silencioso = false) => {
+  const cargarPerfilLinkedinVinculado = useCallback(async (silencioso = false) => {
     setCargandoLinkedin(true);
     try {
       const respuesta = await obtenerPerfilLinkedIn();
       const data = respuesta?.data?.data || {};
-      const perfil = {
-        nombreCompleto: data.nombreCompleto || "",
-        fotografia: data.fotografia || FOTO_LINKEDIN_MOCK,
-      };
-      setPerfilLinkedinImportado(perfil);
-      return perfil;
-    } catch (error) {
-      if (error?.response?.status === 404) {
+      if (data.linked === false) {
         setPerfilLinkedinImportado(null);
         if (!silencioso) {
           showFeedback("No tienes una cuenta de LinkedIn vinculada.", "warning");
@@ -864,6 +867,13 @@ function ProfileSettings() {
         return null;
       }
 
+      const perfil = {
+        nombreCompleto: data.nombreCompleto || "",
+        fotografia: data.fotografia || FOTO_LINKEDIN_MOCK,
+      };
+      setPerfilLinkedinImportado(perfil);
+      return perfil;
+    } catch (error) {
       if (!silencioso) {
         showFeedback(
           extractApiMessageByStatus(error, "No se pudieron obtener los datos de LinkedIn."),
@@ -874,47 +884,82 @@ function ProfileSettings() {
     } finally {
       setCargandoLinkedin(false);
     }
-  };
+  }, [showFeedback]);
 
-  const sincronizarDatosLinkedin = async () => {
-    const datosLinkedin = await cargarPerfilLinkedinVinculado();
-    if (!datosLinkedin) {
+  useEffect(() => {
+    if (!user) {
       return;
     }
 
-    setFormularioPerfil((estadoActual) => {
-      const nombreLinkedin = sanitizarTexto(datosLinkedin.nombreCompleto);
+    void cargarPerfilLinkedinVinculado(true);
+  }, [user, cargarPerfilLinkedinVinculado]);
 
-      return {
-        ...estadoActual,
-        // Merge inteligente: solo se toma LinkedIn cuando trae valor.
-        nombreCompleto: tieneTexto(nombreLinkedin)
-          ? nombreLinkedin
-          : estadoActual.nombreCompleto,
-      };
-    });
-    setVistaPreviaLinkedin(datosLinkedin);
-    setLinkedinSincronizado(true);
-    if (tieneTexto(datosLinkedin.fotografia)) {
-      setImagenPerfil(datosLinkedin.fotografia);
+  const sincronizarDatosLinkedin = async () => {
+    const datosLinkedin = await cargarPerfilLinkedinVinculado(true);
+    if (!datosLinkedin && !linkedinVinculadoUI) {
+      return;
     }
-    setErroresFormulario((estadoActual) => ({
+
+    const importName = Boolean(preferenciasLinkedin.importarNombre);
+    const importPhoto = Boolean(preferenciasLinkedin.importarFoto);
+
+    try {
+      await sincronizarDatosLinkedInApi({
+        import_name: importName,
+        import_photo: importPhoto,
+      });
+      await refreshUser();
+
+      if (importName && datosLinkedin?.nombreCompleto) {
+        const nombreLinkedin = sanitizarTexto(datosLinkedin.nombreCompleto);
+        setPerfilCabecera((estadoActual) => ({
+          ...estadoActual,
+          nombreCompleto: nombreLinkedin || estadoActual.nombreCompleto,
+        }));
+        setFormularioPerfil((estadoActual) => ({
+          ...estadoActual,
+          nombreCompleto: nombreLinkedin || estadoActual.nombreCompleto,
+        }));
+      }
+
+      if (importPhoto && tieneTexto(datosLinkedin?.fotografia)) {
+        setImagenPerfil(datosLinkedin.fotografia);
+        setVistaPreviaLinkedin(datosLinkedin);
+      }
+
+      setLinkedinSincronizado(true);
+      showFeedback(importName || importPhoto
+        ? "Sincronización completada con los datos seleccionados."
+        : "Cuenta vinculada en modo silencioso. No se aplicaron cambios visuales.", "success");
+    } catch (error) {
+      showFeedback(
+        extractApiMessageByStatus(error, "No se pudo completar la sincronización de LinkedIn."),
+        "error",
+      );
+    }
+  };
+
+  const manejarToggleLinkedin = (evento) => {
+    const { name, checked } = evento.target;
+    setPreferenciasLinkedin((estadoActual) => ({
       ...estadoActual,
-      nombreCompleto: "",
+      [name]: checked,
     }));
-    showFeedback(
-      "Datos de LinkedIn sincronizados: solo se aplicaron campos con información.",
-      "success",
-    );
+    setLinkedinSincronizado(false);
   };
 
   const desvincularCuentaLinkedin = async () => {
     setCargandoLinkedin(true);
     try {
       await desvincularLinkedIn();
+      await refreshUser();
       setPerfilLinkedinImportado(null);
       setLinkedinSincronizado(false);
       setVistaPreviaLinkedin(null);
+      setPreferenciasLinkedin({
+        importarNombre: false,
+        importarFoto: false,
+      });
       showFeedback("Cuenta de LinkedIn desvinculada correctamente.", "success");
     } catch (error) {
       showFeedback(
@@ -1073,7 +1118,7 @@ function ProfileSettings() {
             onClick={abrirPanelLinkedin}
           >
             <Icon path={mdiLinkedin} size={0.85} />
-            Vincular con LinkedIn
+            {linkedinVinculadoUI ? "LinkedIn vinculado" : "Vincular con LinkedIn"}
           </button>
 
           <button
@@ -1603,7 +1648,7 @@ function ProfileSettings() {
             <header className="softsave-profile__linkedin-header">
               <div>
                 <h3 className="softsave-profile__modal-title">
-                  {estaLinkedinVinculado
+                  {linkedinVinculadoUI
                     ? "Información de Cuenta Vinculada"
                     : "Vincular cuenta profesional"}
                 </h3>
@@ -1623,7 +1668,7 @@ function ProfileSettings() {
               <span>LinkedIn</span>
             </div>
 
-            {!estaLinkedinVinculado ? (
+            {!linkedinVinculadoUI ? (
               <div className="softsave-profile__linkedin-state">
                 <p className="softsave-profile__linkedin-status">
                   Estado: <strong>Sin vincular</strong>
@@ -1648,47 +1693,79 @@ function ProfileSettings() {
                 </p>
 
                 <div className="softsave-profile__linkedin-details">
-                  <div className="softsave-profile__linkedin-field">
-                    <span>Nombre importado:</span>
-                    <strong>{perfilLinkedinImportado?.nombreCompleto || "Sin datos"}</strong>
+                  <div className="softsave-profile__linkedin-details-head">
+                    <span>Datos de LinkedIn</span>
+                    <span>¿Sincronizar?</span>
                   </div>
-                  <div className="softsave-profile__linkedin-field">
-                    <span>Fotografía importada:</span>
-                    <img
-                      src={
-                        fotoLinkedinBloqueada
-                          ? FOTO_LINKEDIN_MOCK
-                          : (perfilLinkedinImportado?.fotografia || FOTO_LINKEDIN_MOCK)
-                      }
-                      alt="Foto importada de LinkedIn"
-                      className="softsave-profile__linkedin-photo"
-                      onError={() => setFotoLinkedinBloqueada(true)}
-                    />
+
+                  <div className="softsave-profile__linkedin-row">
+                    <div className="softsave-profile__linkedin-field">
+                      <span>Nombre importado:</span>
+                      <strong>{perfilLinkedinImportado?.nombreCompleto || "Sin datos"}</strong>
+                    </div>
+                    <label className="softsave-profile__linkedin-toggle">
+                      <input
+                        type="checkbox"
+                        name="importarNombre"
+                        checked={preferenciasLinkedin.importarNombre}
+                        onChange={manejarToggleLinkedin}
+                      />
+                      <span className="softsave-profile__linkedin-toggle-switch" aria-hidden="true" />
+                    </label>
+                  </div>
+
+                  <div className="softsave-profile__linkedin-row">
+                    <div className="softsave-profile__linkedin-field">
+                      <span>Fotografía importada:</span>
+                      <img
+                        src={
+                          fotoLinkedinBloqueada
+                            ? FOTO_LINKEDIN_MOCK
+                            : (perfilLinkedinImportado?.fotografia || FOTO_LINKEDIN_MOCK)
+                        }
+                        alt="Foto importada de LinkedIn"
+                        className="softsave-profile__linkedin-photo"
+                        onError={() => setFotoLinkedinBloqueada(true)}
+                      />
+                    </div>
+                    <label className="softsave-profile__linkedin-toggle">
+                      <input
+                        type="checkbox"
+                        name="importarFoto"
+                        checked={preferenciasLinkedin.importarFoto}
+                        onChange={manejarToggleLinkedin}
+                      />
+                      <span className="softsave-profile__linkedin-toggle-switch" aria-hidden="true" />
+                    </label>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  className="softsave-profile__linkedin-primary"
-                  onClick={sincronizarDatosLinkedin}
-                  disabled={cargandoLinkedin}
-                >
-                  <Icon path={mdiRefresh} size={0.85} />
-                  {cargandoLinkedin ? "Sincronizando..." : "Sincronizar Datos"}
-                </button>
-                <button
-                  type="button"
-                  className="softsave-profile__linkedin-secondary"
-                  onClick={desvincularCuentaLinkedin}
-                >
-                  Desvincular Cuenta
-                </button>
-                {linkedinSincronizado ? (
-                  <p className="softsave-profile__linkedin-helper">
-                    Se conservaron tus datos actuales donde LinkedIn no tenía información. Presiona
-                    “Guardar cambios” en “Editar perfil” para persistir.
-                  </p>
-                ) : null}
+                <div className="softsave-profile__linkedin-actions">
+                  <button
+                    type="button"
+                    className="softsave-profile__linkedin-secondary"
+                    onClick={desvincularCuentaLinkedin}
+                  >
+                    <Icon path={mdiLockOutline} size={0.8} />
+                    Desvincular Cuenta
+                  </button>
+                  <button
+                    type="button"
+                    className="softsave-profile__linkedin-primary"
+                    onClick={sincronizarDatosLinkedin}
+                    disabled={cargandoLinkedin || (!preferenciasLinkedin.importarNombre && !preferenciasLinkedin.importarFoto)}
+                    title={
+                      preferenciasLinkedin.importarNombre || preferenciasLinkedin.importarFoto
+                        ? "Aplicará únicamente los campos seleccionados."
+                        : "Activa al menos un campo para habilitar la sincronización."
+                    }
+                  >
+                    <Icon path={mdiRefresh} size={0.85} />
+                    {cargandoLinkedin
+                      ? "Sincronizando..."
+                      : "Sincronizar cambios seleccionados"}
+                  </button>
+                </div>
               </div>
             )}
           </div>
