@@ -122,7 +122,7 @@ function mapProjectToFormState(project) {
     demoUrl: project.demo_url || '',
     repositoryUrl: project.repo_url || '',
     visibility: project.is_public ? 'public' : 'private',
-    currentImageName: project.image_path ? String(project.image_path).split('/').pop() : '',
+    currentImageName: project.image_original_name || (project.image_path ? String(project.image_path).split('/').pop() : ''),
     currentImagePreview: resolveProjectImageUrl(project.image_url || project.image_path || ''),
   };
 }
@@ -501,10 +501,6 @@ function ProjectForm({
 
     if (formData.repositoryUrl && !isValidHttpUrl(formData.repositoryUrl)) {
       nextErrors.repositoryUrl = 'Ingresa una URL de repositorio valida con HTTP o HTTPS.';
-    }
-
-    if (mode === 'create' && !imageFile) {
-      nextErrors.image = 'La imagen principal es obligatoria.';
     }
 
     setErrors(nextErrors);
@@ -1114,6 +1110,7 @@ ProjectForm.propTypes = {
     repo_url: PropTypes.string,
     is_public: PropTypes.bool,
     image_path: PropTypes.string,
+    image_original_name: PropTypes.string,
     image_url: PropTypes.string,
   }),
   showModeActions: PropTypes.bool,

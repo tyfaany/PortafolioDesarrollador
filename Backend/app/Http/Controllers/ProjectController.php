@@ -79,9 +79,12 @@ class ProjectController extends Controller
 
             // 2. Procesamiento de la Imagen
             $imagePath = null;
+            $imageOriginalName = null;
             if ($request->hasFile('image')) {
                 // Guarda la imagen en storage/app/public/projects
-                $imagePath = $request->file('image')->store('projects', 'public');
+                $imageFile = $request->file('image');
+                $imagePath = $imageFile->store('projects', 'public');
+                $imageOriginalName = $imageFile->getClientOriginalName();
             }
 
             // 3. Crear el Registro del Proyecto
@@ -97,6 +100,10 @@ class ProjectController extends Controller
 
             if ($this->hasProjectColumn('image_path')) {
                 $projectData['image_path'] = $imagePath;
+            }
+
+            if ($this->hasProjectColumn('image_original_name')) {
+                $projectData['image_original_name'] = $imageOriginalName;
             }
 
             if ($this->hasProjectColumn('is_in_progress')) {
@@ -179,7 +186,12 @@ class ProjectController extends Controller
                     Storage::disk('public')->delete($project->image_path);
                 }
                 // Guardamos la nueva imagen
-                $project->image_path = $request->file('image')->store('projects', 'public');
+                $imageFile = $request->file('image');
+                $project->image_path = $imageFile->store('projects', 'public');
+
+                if ($this->hasProjectColumn('image_original_name')) {
+                    $project->image_original_name = $imageFile->getClientOriginalName();
+                }
             }
 
             // Actualizamos los campos de texto y fechas
