@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import Icon from '@mdi/react';
 import PropTypes from 'prop-types';
 import {
@@ -248,6 +250,23 @@ function ProjectForm({
   const [imageRemoved, setImageRemoved] = useState(false);
   const [technologySuggestions, setTechnologySuggestions] = useState(TECHNOLOGY_SUGGESTIONS);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const quillModules = useMemo(() => ({
+    toolbar: [
+      [{ size: ['small', false, 'large', 'huge'] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['clean'],
+    ],
+  }), []);
+  const quillFormats = [
+    'size',
+    'bold',
+    'italic',
+    'underline',
+    'strike',
+    'list',
+    'bullet',
+  ];
   const [isDirty, setIsDirty] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
   const { showFeedback } = useFeedback();
@@ -438,7 +457,7 @@ function ProjectForm({
   const validateForm = () => {
     const nextErrors = {};
     const trimmedTitle = formData.title.trim();
-    const trimmedDescription = formData.description.trim();
+    const trimmedDescription = formData.description.replace(/<[^>]+>/g, '').trim();
 
     if (trimmedTitle.length < 5 || trimmedTitle.length > 100) {
       nextErrors.title = 'El titulo debe tener entre 5 y 100 caracteres.';
@@ -677,14 +696,18 @@ function ProjectForm({
 
         <label className="softsave-project-form__field">
           <span className="softsave-project-form__label">Descripcion *</span>
-          <textarea
-            className="softsave-input softsave-project-form__textarea"
+          <ReactQuill
+            theme="snow"
             value={formData.description}
-            maxLength={500}
+            onChange={(value) => updateField('description', value)}
+            modules={quillModules}
+            formats={quillFormats}
+            className="softsave-project-form__textarea"
             placeholder="Describe tu proyecto... (min. 20, max. 500 caracteres)"
-            onChange={(event) => updateField('description', event.target.value)}
           />
-          <span className="softsave-project-form__hint">{formData.description.trim().length}/500</span>
+          <span className="softsave-project-form__hint">
+            {formData.description.replace(/<[^>]+>/g, '').trim().length}/500
+          </span>
           {errors.description ? <span className="error-text">{errors.description}</span> : null}
         </label>
 

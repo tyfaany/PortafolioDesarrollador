@@ -242,6 +242,44 @@
   resize: vertical;
 }
 
+.softsave-project-form__textarea .ql-toolbar {
+  border-radius: 12px 12px 0 0;
+  border: 1.5px solid var(--color-borde-input);
+  border-bottom: none;
+}
+
+.softsave-project-form__textarea .ql-container {
+  border: 1.5px solid var(--color-borde-input);
+  border-radius: 0 0 12px 12px;
+  min-height: 180px;
+}
+
+.softsave-project-form__textarea .ql-editor {
+  min-height: 140px;
+  padding: 14px;
+}
+
+.softsave-project-form__textarea .ql-editor p {
+  margin: 0;
+}
+
+.softsave-project-form__textarea .ql-container.ql-disabled .ql-editor {
+  background: var(--color-blanco);
+}
+
+.softsave-project-form__hint {
+  color: var(--color-texto-suave);
+  font-size: 0.8rem;
+}
+
+.softsave-project-form__textarea .ql-editor p {
+  margin: 0;
+}
+
+.softsave-project-form__textarea .ql-container.ql-disabled .ql-editor {
+  background: var(--color-blanco);
+}
+
 .softsave-project-form__hint {
   color: var(--color-texto-suave);
   font-size: 0.8rem;
