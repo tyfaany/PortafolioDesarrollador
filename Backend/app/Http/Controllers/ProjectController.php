@@ -17,13 +17,37 @@ class ProjectController extends Controller
         return Schema::hasColumn('projects', $column);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        // Los ordenamos para que los más recientes salgan primero.
-        $projects = Project::with('technologies')
-            ->where('user_id', auth()->id())
-            ->orderBy('created_at', 'desc')
-            ->get();
+        // 1. Consulta base usando auth()->id() (Evitamos N+1 cargando tecnologías)
+        $query = Project::with('technologies')->where('user_id', auth()->id());
+
+        // 2. Búsqueda Inteligente (Busca en el 'title' del proyecto o en sus tecnologías)
+        $query->when($request->search, function ($q, $search) {
+            $q->where(function ($subQ) use ($search) {
+                // Cambiamos 'name' por 'title' según tu base de datos
+                $subQ->where('title', 'LIKE', "%{$search}%") 
+                     ->orWhereHas('technologies', function ($techQ) use ($search) {
+                         // Especificamos la tabla 'project_technologies' para que MySQL no se confunda
+                         $techQ->where('project_technologies.name', 'LIKE', "%{$search}%");
+                     });
+            });
+        });
+
+        // 3. Filtros Rápidos: Por Visibilidad (is_public = true/false)
+        $query->when($request->has('is_public') && $this->hasProjectColumn('is_public'), function ($q) use ($request) {
+            $q->where('is_public', filter_var($request->is_public, FILTER_VALIDATE_BOOLEAN));
+        });
+
+        // 4. Filtros Rápidos: Por Tecnología exacta
+        $query->when($request->tech_filter, function ($q, $techFilter) {
+            $q->whereHas('technologies', function ($techQ) use ($techFilter) {
+                $techQ->where('name', $techFilter);
+            });
+        });
+
+        // 5. Paginación Tradicional (Opción A) - Mostrar 5 proyectos por página
+        $projects = $query->orderBy('created_at', 'desc')->paginate(5);
 
         return response()->json($projects, 200);
     }
