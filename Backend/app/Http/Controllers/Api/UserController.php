@@ -147,34 +147,43 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
     
 }
 
-Public function indexPublicProfilesFull(Request $request)
+public function indexPublicProfilesFull(Request $request)
     {
         // 1. Capturamos cuántos usuarios queremos por página desde la URL (ej: ?per_page=5).
-        // Si el frontend no lo envía, por defecto listará 10 usuarios.
         $perPage = $request->query('per_page', 10);
 
-        // 2. Hacemos la consulta paginada a la Base de Datos trayendo las relaciones con 'with'
-        $users = User::with([
+        // 2. Iniciamos la consulta base cargando las relaciones con 'with'
+        $query = User::with([
                 'projects.technologies',
                 'studies',
                 'jobs',
                 'skills',
                 'softSkills'
             ])
-            ->where('profile_completed', true) // Solo usuarios con perfil completado
-            ->latest() // Los registros más recientes primero
-            ->paginate($perPage);
+            ->where('profile_completed', true); // Aquí se cierra la configuración inicial
 
-        // 3. Recorremos la lista de usuarios de la página actual y les aplicamos tu filtro de privacidad
+        // 3. Pasamos la consulta por cada estación de filtrado independiente
+        $query = $this->applySearchFilter($query, $request);
+      
+        $query = $this->applySkillFilter($query, $request);
+
+        // 4. Ejecutamos la paginación final con el ordenamiento y lo guardamos en $users
+        $users = $query->latest()->paginate($perPage)->appends($request->all());;
+
+        // 5. Recorremos la lista de usuarios de la página actual y les aplicamos tu filtro de privacidad
         $users->getCollection()->transform(function ($user) {
             return $this->filterProfilePrivacy($user);
         });
-
-        // 4. Devolvemos la estructura de paginación completa en JSON
+       if ($users->total() === 0) {
+            // Convertimos el paginador a un array, le sumamos el mensaje y lo enviamos
+            $responseData = array_merge($users->toArray(), [
+                'message' => ' Búsqueda no encontrada.'
+            ]);
+            return response()->json($responseData, 200);
+        }
+        // 6. Devolvemos la estructura de paginación completa en JSON
         return response()->json($users, 200);
     }
-
-
    public function showPublicProfile(User $user)
 {
   // 1. Cargamos todas las relaciones de este usuario de forma eficiente
@@ -192,6 +201,27 @@ Public function indexPublicProfilesFull(Request $request)
         // 3. Devolvemos la respuesta
         return response()->json($profile, 200);
 }
+private function applySkillFilter($query, Request $request)
+    {
+        $skill = $request->query('skill');
+
+        return $query->when($skill, function ($q, $skill) {
+            $q->whereHas('skills', function ($sub) use ($skill) {
+                $sub->where('name', 'LIKE', '%' . $skill . '%');
+            });
+        });
+    }
+    private function applySearchFilter($query, Request $request)
+    {
+        $search = $request->query('search');
+
+        return $query->when($search, function ($q, $search) {
+            $q->where(function ($sub) use ($search) {
+                $sub->where('name', 'LIKE', '%' . $search . '%')
+                    ->orWhere('profession', 'LIKE', '%' . $search . '%');
+            });
+        });
+    }
 private function filterProfilePrivacy(User $user): array
     {
         // Datos básicos que siempre son visibles
