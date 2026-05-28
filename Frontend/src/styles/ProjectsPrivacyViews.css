@@ -225,11 +225,13 @@
 .softsave-project-form {
   display: grid;
   gap: 18px;
+  min-width: 0;
 }
 
 .softsave-project-form__field {
   display: grid;
   gap: 8px;
+  min-width: 0;
 }
 
 .softsave-project-form__label {
@@ -238,6 +240,7 @@
 }
 
 .softsave-project-form__textarea {
+  min-width: 0;
   min-height: 110px;
   resize: vertical;
 }
@@ -270,6 +273,7 @@
 }
 
 .softsave-project-form__textarea .ql-container {
+  min-width: 0;
   border: 1.5px solid var(--color-borde-input);
   border-radius: 0 0 12px 12px;
 }
@@ -283,8 +287,12 @@
 }
 
 .softsave-project-form__textarea .ql-editor {
+  min-width: 0;
   min-height: 140px;
   padding: 14px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .softsave-project-form__textarea.softsave-project-form__textarea--compact .ql-editor {
@@ -299,6 +307,8 @@
 
 .softsave-project-form__textarea .ql-editor p {
   margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .softsave-project-form__textarea .ql-container.ql-disabled .ql-editor {
@@ -530,6 +540,7 @@
   justify-content: flex-end;
   gap: 12px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .softsave-project-form__cancel {
@@ -911,10 +922,12 @@
   border-radius: 0;
   padding: 16px 18px 18px;
   background: transparent;
+  min-width: 0;
 }
 
 .softsave-projects-card--modal .softsave-project-form {
   gap: 14px;
+  min-width: 0;
 }
 
 .softsave-projects-card--modal .softsave-project-form__label {
@@ -967,6 +980,9 @@
   max-height: 130px;
   padding: 10px 12px;
   font-size: 0.88rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .softsave-projects-card--modal .softsave-project-form__chips {
