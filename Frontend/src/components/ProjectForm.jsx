@@ -827,7 +827,7 @@ function ProjectForm({
                   aria-label={`Eliminar ${getTechnologyName(technology)}`}
                   onClick={() => handleRemoveTechnology(technology)}
                 >
-                  <Icon path={mdiClose} size={0.72} />
+                  <Icon path={mdiClose} size={0.7} />
                 </button>
               </span>
             ))}

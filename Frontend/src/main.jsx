@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/App.css';
@@ -8,18 +7,16 @@ import FeedbackProvider from './context/FeedbackProvider';
 import App from './App.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <BrowserRouter
-      future={{
-        v7_startTransition: true,
-        v7_relativeSplatPath: true,
-      }}
-      >
-      <AuthProvider>
-        <FeedbackProvider>
-          <App />
-        </FeedbackProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>,
+  <BrowserRouter
+    future={{
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    }}
+  >
+    <AuthProvider>
+      <FeedbackProvider>
+        <App />
+      </FeedbackProvider>
+    </AuthProvider>
+  </BrowserRouter>,
 );

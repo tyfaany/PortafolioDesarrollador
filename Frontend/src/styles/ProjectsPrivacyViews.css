@@ -368,16 +368,33 @@
 }
 
 .softsave-project-form__chip-remove {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin-left: 2px;
   border: none;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
   color: #f2540d;
-  background-color: rgba(var(--color-primario-rgb), 0.12);
+  background-color: transparent;
   cursor: pointer;
+  box-shadow: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  border: 1px solid rgba(var(--color-primario-rgb), 0.24);
+}
+
+.softsave-project-form__chip-remove:hover {
+  color: #db4b0f;
+  background-color: rgba(var(--color-primario-rgb), 0.1);
+  border-color: rgba(var(--color-primario-rgb), 0.45);
+}
+
+.softsave-project-form__chip-remove:focus-visible {
+  outline: 2px solid rgba(var(--color-primario-rgb), 0.32);
+  outline-offset: 2px;
 }
 
 .softsave-project-form__tech-editor {
@@ -996,8 +1013,8 @@
 }
 
 .softsave-projects-card--modal .softsave-project-form__chip-remove {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 .softsave-projects-card--modal .softsave-project-form__image-current {
