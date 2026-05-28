@@ -7,6 +7,18 @@ import ProjectForm from './ProjectForm';
 import { eliminarProyecto, obtenerProyectos, toggleVisibilidadProyecto } from '../services/authService';
 import useFeedback from '../hooks/useFeedback';
 
+function normalizeProjectsResponse(responseData) {
+  if (Array.isArray(responseData)) {
+    return responseData;
+  }
+
+  if (Array.isArray(responseData?.data)) {
+    return responseData.data;
+  }
+
+  return [];
+}
+
 function ProjectList({ refreshKey = 0 }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +43,7 @@ function ProjectList({ refreshKey = 0 }) {
           return;
         }
 
-        setProjects(Array.isArray(response?.data) ? response.data : []);
+        setProjects(normalizeProjectsResponse(response?.data));
       } catch (requestError) {
         if (!isMounted) {
           return;
