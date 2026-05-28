@@ -9,12 +9,35 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 
 class ProjectController extends Controller
 {
     private function hasProjectColumn(string $column): bool
     {
         return Schema::hasColumn('projects', $column);
+    }
+
+    private function getPlainTextDescriptionLength(string $description): int
+    {
+        $normalized = html_entity_decode($description, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $normalized = preg_replace('/<\s*br\s*\/?\s*>/i', "\n", $normalized);
+        $normalized = preg_replace('/<\s*\/\s*(p|div|li|h[1-6])\s*>/i', "\n", $normalized);
+        $plainText = strip_tags($normalized);
+        $plainText = preg_replace('/\x{00A0}/u', ' ', $plainText ?? '');
+
+        return mb_strlen(trim($plainText ?? ''));
+    }
+
+    private function ensureDescriptionLengthIsValid(string $description): void
+    {
+        $descriptionLength = $this->getPlainTextDescriptionLength($description);
+
+        if ($descriptionLength < 20 || $descriptionLength > 500) {
+            throw ValidationException::withMessages([
+                'description' => ['La descripcion debe tener entre 20 y 500 caracteres.'],
+            ]);
+        }
     }
 
     public function index(Request $request)
@@ -72,7 +95,7 @@ class ProjectController extends Controller
         // 1. Validaciones estrictas según Criterios de Aceptación (HU-15)
         $validated = $request->validate([
             'title' => 'required|string|min:5|max:100', // Mínimo 5, máximo 100 caracteres[cite: 2]
-            'description' => 'required|string|min:20|max:500', // Mínimo 20, máximo 500 caracteres[cite: 2]
+            'description' => 'required|string', // Validamos el texto visible por separado
             'technologies' => 'required|array|min:1|max:15', // Selector múltiple, mín 1, máx 15[cite: 2]
             'technologies.*' => 'exists:project_technologies,id', // Verifica que las tecnologías existan en el catálogo
             'image' => 'nullable|image|mimes:jpeg,png|max:10240', // Formato JPEG/PNG, máx 10MB[cite: 2]
@@ -83,6 +106,8 @@ class ProjectController extends Controller
             'repo_url' => 'nullable|url|max:2048', // URLs válidas[cite: 2]
             'is_public' => 'boolean'
         ]);
+
+        $this->ensureDescriptionLengthIsValid($validated['description']);
 
         $isInProgress = (bool) ($validated['is_in_progress'] ?? false);
         if ($isInProgress) {
@@ -175,7 +200,7 @@ class ProjectController extends Controller
         // Las mismas validaciones de creación se aplican a la edición[cite: 1]
         $validated = $request->validate([
             'title' => 'required|string|min:5|max:100',
-            'description' => 'required|string|min:20|max:500',
+            'description' => 'required|string',
             'technologies' => 'required|array|min:1|max:15',
             'technologies.*' => 'exists:project_technologies,id',
             'image' => 'nullable|image|mimes:jpeg,png|max:10240',
@@ -186,6 +211,8 @@ class ProjectController extends Controller
             'repo_url' => 'nullable|url|max:2048',
             'is_public' => 'boolean'
         ]);
+
+        $this->ensureDescriptionLengthIsValid($validated['description']);
 
         $isInProgress = (bool) ($validated['is_in_progress'] ?? false);
         if ($isInProgress) {

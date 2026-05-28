@@ -30,6 +30,9 @@ const TECHNOLOGY_SUGGESTIONS = [
   'Laravel',
 ];
 
+const DESCRIPTION_MIN_LENGTH = 20;
+const DESCRIPTION_MAX_LENGTH = 500;
+
 function toTechnologyOption(technology) {
   if (technology && typeof technology === 'object') {
     const id = technology.id ?? null;
@@ -89,6 +92,23 @@ function normalizeSelectedTechnologies(technologies) {
       return null;
     })
     .filter(Boolean);
+}
+
+function getDescriptionText(description) {
+  if (!description) {
+    return '';
+  }
+
+  const container = document.createElement('div');
+  container.innerHTML = String(description);
+
+  return (container.innerText || container.textContent || '')
+    .replace(/\u00a0/g, ' ')
+    .trim();
+}
+
+function getDescriptionLength(description) {
+  return getDescriptionText(description).length;
 }
 
 function createInitialFormState(initialData) {
@@ -388,6 +408,20 @@ function ProjectForm({
     setIsDirty(true);
   };
 
+  const handleDescriptionChange = (value, editor) => {
+    const plainText = editor?.getText ? editor.getText().trim() : getDescriptionText(value);
+
+    if (plainText.length > DESCRIPTION_MAX_LENGTH) {
+      setErrors((current) => ({
+        ...current,
+        description: `La descripcion debe tener entre ${DESCRIPTION_MIN_LENGTH} y ${DESCRIPTION_MAX_LENGTH} caracteres.`,
+      }));
+      return;
+    }
+
+    updateField('description', value);
+  };
+
   const handleAddTechnology = (technology) => {
     const normalizedTechnology = resolveTechnologyOption(technology, technologySuggestions);
 
@@ -487,14 +521,14 @@ function ProjectForm({
   const validateForm = () => {
     const nextErrors = {};
     const trimmedTitle = formData.title.trim();
-    const trimmedDescription = formData.description.replace(/<[^>]+>/g, '').trim();
+    const trimmedDescription = getDescriptionText(formData.description);
 
     if (trimmedTitle.length < 5 || trimmedTitle.length > 100) {
       nextErrors.title = 'El titulo debe tener entre 5 y 100 caracteres.';
     }
 
-    if (trimmedDescription.length < 20 || trimmedDescription.length > 500) {
-      nextErrors.description = 'La descripcion debe tener entre 20 y 500 caracteres.';
+    if (trimmedDescription.length < DESCRIPTION_MIN_LENGTH || trimmedDescription.length > DESCRIPTION_MAX_LENGTH) {
+      nextErrors.description = `La descripcion debe tener entre ${DESCRIPTION_MIN_LENGTH} y ${DESCRIPTION_MAX_LENGTH} caracteres.`;
     }
 
     if (selectedTechs.length < 1 || selectedTechs.length > 15) {
@@ -769,14 +803,14 @@ function ProjectForm({
           <ReactQuill
             theme="snow"
             value={formData.description}
-            onChange={(value) => updateField('description', value)}
+            onChange={handleDescriptionChange}
             modules={quillModules}
             formats={quillFormats}
             className="softsave-project-form__textarea softsave-project-form__textarea--compact"
-            placeholder="Describe tu proyecto... (min. 20, max. 500 caracteres)"
+            placeholder="Describe tu proyecto... (min. 20, max. 500 caracteres visibles)"
           />
           <span className="softsave-project-form__hint">
-            {formData.description.replace(/<[^>]+>/g, '').trim().length}/500
+            {getDescriptionLength(formData.description)}/500
           </span>
           {errors.description ? <span className="error-text">{errors.description}</span> : null}
         </div>
