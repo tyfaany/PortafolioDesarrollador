@@ -26,6 +26,11 @@ function App() {
         <Route path="/users/:user/profile" element={<PerfilPublico />} />
       </Route>
 
+      {/* Sprint 5 publico sin backend */}
+      <Route element={<MainLayout />}>
+        <Route path="/inicio" element={<Inicio />} />
+      </Route>
+
       {/* Rutas protegidas */}
       <Route
         element={(
@@ -34,7 +39,6 @@ function App() {
           </ProtectedRoute>
         )}
       >
-        <Route path="/inicio" element={<Inicio />} />
         <Route path="/portafolio" element={<Portafolio />} />
         <Route path="/perfil" element={<Navigate to="/perfil/contacto" replace />} />
         <Route path="/perfil/contacto" element={<ProfileSettings />} />
@@ -45,7 +49,7 @@ function App() {
       </Route>
 
       {/* Redirecciones */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<Navigate to="/inicio" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
