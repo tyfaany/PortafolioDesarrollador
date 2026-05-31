@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Icon from '@mdi/react';
 import { mdiMagnify, mdiStarFourPoints } from '@mdi/js';
-import { obtenerPerfilesPublicos } from '../../services/authService';
+import { obtenerPerfilesPublicos, obtenerTecnologias } from '../../services/authService';
 import TalentProfileCard from './TalentProfileCard';
 import TalentProfileDetail from './TalentProfileDetail';
 import ProfilePagination from './ProfilePagination';
@@ -129,6 +129,46 @@ function TalentBoardHome() {
   const [totalPages, setTotalPages] = useState(1);
   const [apiCurrentPage, setApiCurrentPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
+  const [availableSkills, setAvailableSkills] = useState([]);
+  const [loadingSkills, setLoadingSkills] = useState(true);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadTechnologies = async () => {
+      setLoadingSkills(true);
+
+      try {
+        const response = await obtenerTecnologias();
+        const technologies = Array.isArray(response?.data) ? response.data : [];
+        const names = technologies
+          .map((technology) => (typeof technology === 'string' ? technology : technology?.name))
+          .filter(Boolean);
+
+        if (!isActive) {
+          return;
+        }
+
+        setAvailableSkills(Array.from(new Set(names)));
+      } catch {
+        if (!isActive) {
+          return;
+        }
+
+        setAvailableSkills([]);
+      } finally {
+        if (isActive) {
+          setLoadingSkills(false);
+        }
+      }
+    };
+
+    loadTechnologies();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -301,6 +341,8 @@ function TalentBoardHome() {
 
       <section className="talent-board-layout">
         <TalentSidebarFilters
+          availableSkills={availableSkills}
+          loadingSkills={loadingSkills}
           selectedSkills={selectedSkills}
           onToggleSkill={toggleSkill}
           onClearFilters={() => setSelectedSkills([])}

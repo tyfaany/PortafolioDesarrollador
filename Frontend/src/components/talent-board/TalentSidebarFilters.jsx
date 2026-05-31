@@ -1,9 +1,14 @@
 import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
 import { mdiCheck, mdiTuneVariant } from '@mdi/js';
-import { technicalFilters } from '../../mocks/talentProfiles';
 
-function TalentSidebarFilters({ selectedSkills, onToggleSkill, onClearFilters }) {
+function TalentSidebarFilters({
+  availableSkills,
+  loadingSkills,
+  selectedSkills,
+  onToggleSkill,
+  onClearFilters,
+}) {
   return (
     <aside className="talent-board-filters softsave-privacy__card" aria-label="Filtros tecnicos">
       <div className="talent-board-filters__title">
@@ -15,11 +20,13 @@ function TalentSidebarFilters({ selectedSkills, onToggleSkill, onClearFilters })
       </div>
 
       <div className="talent-board-filters__groups">
-        {technicalFilters.map((group) => (
-          <fieldset key={group.id} className="talent-board-filters__group">
-            <legend>{group.title}</legend>
-            <div className="talent-board-filters__options">
-              {group.options.map((option) => {
+        <fieldset className="talent-board-filters__group">
+          <legend>Habilidades disponibles</legend>
+          <div className="talent-board-filters__options">
+            {loadingSkills ? (
+              <p className="talent-board-filters__empty">Cargando filtros...</p>
+            ) : availableSkills.length > 0 ? (
+              availableSkills.map((option) => {
                 const checked = selectedSkills.includes(option);
 
                 return (
@@ -35,10 +42,12 @@ function TalentSidebarFilters({ selectedSkills, onToggleSkill, onClearFilters })
                     <span>{option}</span>
                   </label>
                 );
-              })}
-            </div>
-          </fieldset>
-        ))}
+              })
+            ) : (
+              <p className="talent-board-filters__empty">No hay filtros disponibles.</p>
+            )}
+          </div>
+        </fieldset>
       </div>
 
       <button
@@ -53,6 +62,8 @@ function TalentSidebarFilters({ selectedSkills, onToggleSkill, onClearFilters })
 }
 
 TalentSidebarFilters.propTypes = {
+  availableSkills: PropTypes.arrayOf(PropTypes.string).isRequired,
+  loadingSkills: PropTypes.bool.isRequired,
   selectedSkills: PropTypes.arrayOf(PropTypes.string).isRequired,
   onToggleSkill: PropTypes.func.isRequired,
   onClearFilters: PropTypes.func.isRequired,
