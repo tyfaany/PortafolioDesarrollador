@@ -53,7 +53,7 @@ class QueryBuilderProfilesTest extends TestCase
         ]);
 
         $skill = TechnicalSkill::create([
-            'name' => 'Laravel',
+            'name' => 'laravel',
         ]);
 
         $user->skills()->attach($skill->id, [
