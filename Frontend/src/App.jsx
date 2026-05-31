@@ -23,8 +23,9 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/password-reset/:token" element={<ResetPassword />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/users/:user/profile" element={<PerfilPublico />} />
       </Route>
+
+      <Route path="/users/:user/profile" element={<PerfilPublico />} />
 
       {/* Rutas protegidas */}
       <Route
