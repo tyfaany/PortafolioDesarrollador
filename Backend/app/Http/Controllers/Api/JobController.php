@@ -122,8 +122,8 @@ class JobController extends Controller
             'start_month' => 'required|string|max:20',
             'start_year' => 'required|integer',
             'is_current_job' => 'boolean',
-            'end_month' => 'required_if:is_current_job,false|string|max:20',
-            'end_year' => 'required_if:is_current_job,false',
+            'end_month' => 'nullable|string|max:20',
+            'end_year' => 'nullable|integer',
             'achievements' => 'nullable|string',
             'evidence_url' => 'nullable|url|max:255'
         ]);
