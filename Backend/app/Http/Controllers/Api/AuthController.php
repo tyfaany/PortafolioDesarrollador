@@ -85,6 +85,7 @@ class AuthController extends Controller
         }
 
         $user = User::where('email', $request->email)->first();
+        $user->tokens()->delete();
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -497,6 +498,7 @@ class AuthController extends Controller
         }
 
         // 5️⃣ Generar token
+        $user->tokens()->delete();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return redirect()->away(
