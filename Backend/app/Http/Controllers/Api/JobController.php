@@ -9,11 +9,19 @@ use Illuminate\Support\Facades\Schema;
 
 class JobController extends Controller
 {
-    // Mapeo auxiliar para comparar fechas numéricamente
-    private $months = [
-        'Enero' => 1, 'Febrero' => 2, 'Marzo' => 3, 'Abril' => 4,
-        'Mayo' => 5, 'Junio' => 6, 'Julio' => 7, 'Agosto' => 8,
-        'Septiembre' => 9, 'Octubre' => 10, 'Noviembre' => 11, 'Diciembre' => 12
+    private const MONTHS = [
+        'enero' => 1,
+        'febrero' => 2,
+        'marzo' => 3,
+        'abril' => 4,
+        'mayo' => 5,
+        'junio' => 6,
+        'julio' => 7,
+        'agosto' => 8,
+        'septiembre' => 9,
+        'octubre' => 10,
+        'noviembre' => 11,
+        'diciembre' => 12,
     ];
 
     /**
@@ -111,14 +119,31 @@ class JobController extends Controller
         $request->validate([
             'company_name' => 'required|string|max:100',
             'position' => 'required|string|max:100',
-            'start_month' => 'required|string',
+            'start_month' => 'required|string|max:20',
             'start_year' => 'required|integer',
             'is_current_job' => 'boolean',
-            'end_month' => 'required_if:is_current_job,false',
+            'end_month' => 'required_if:is_current_job,false|string|max:20',
             'end_year' => 'required_if:is_current_job,false',
             'achievements' => 'nullable|string',
             'evidence_url' => 'nullable|url|max:255'
         ]);
+    }
+
+    private function normalizeMonthValue($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            $month = (int) $value;
+
+            return $month >= 1 && $month <= 12 ? $month : null;
+        }
+
+        $normalized = mb_strtolower(trim((string) $value), 'UTF-8');
+
+        return self::MONTHS[$normalized] ?? null;
     }
 
     private function prepareData(Request $request)
@@ -126,17 +151,20 @@ class JobController extends Controller
         $job = new Job();
         $table = $job->getTable();
         $columnas = Schema::getColumnListing($table);
+        $startMonth = $this->normalizeMonthValue($request->input('start_month'));
+        $endMonth = $this->normalizeMonthValue($request->input('end_month'));
         $data = $request->only([
             'company_name',
             'position',
             'achievements',
-            'start_month',
             'start_year',
-            'end_month',
             'end_year',
             'is_current_job',
             'evidence_url',
         ]);
+
+        $data['start_month'] = $startMonth;
+        $data['end_month'] = $request->is_current_job ? null : $endMonth;
 
         // Si es trabajo actual, forzamos que las fechas de fin sean nulas para no guardar basura en la BD
         if ($request->is_current_job) {
@@ -176,12 +204,12 @@ class JobController extends Controller
 
         $sYear = $request->start_year;
         $eYear = $request->end_year;
+        $sMonthNum = $this->normalizeMonthValue($request->start_month) ?? 0;
+        $eMonthNum = $this->normalizeMonthValue($request->end_month) ?? 0;
         
         if ($sYear > $eYear) return false;
         
         if ($sYear == $eYear) {
-            $sMonthNum = $this->months[$request->start_month] ?? 0;
-            $eMonthNum = $this->months[$request->end_month] ?? 0;
             if ($sMonthNum > $eMonthNum) return false;
         }
 

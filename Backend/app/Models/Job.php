@@ -44,6 +44,10 @@ class Job extends Model
      */
     protected $casts = [
         'is_current_job' => 'boolean',
+        'start_month' => 'integer',
+        'start_year' => 'integer',
+        'end_month' => 'integer',
+        'end_year' => 'integer',
     ];
 
     /**
