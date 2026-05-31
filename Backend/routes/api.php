@@ -27,7 +27,7 @@ Route::get('/project-technologies', [ProjectTechnologyController::class, 'index'
 Route::get('/users/{user}/projects', [ProjectController::class, 'indexPublic']);
 Route::get('profiles', [UserController::class, 'indexPublicProfilesFull']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'role:owner,admin'])->group(function () {
     Route::post('/user', [AuthController::class, 'updatePassword']);
     Route::put('/user/update', [UserController::class, 'update']);
     Route::post('/logout', [AuthController::class, 'logout']);

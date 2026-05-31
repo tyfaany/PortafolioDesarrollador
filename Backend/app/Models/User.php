@@ -16,6 +16,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
         'linkedin_id',
         'profession',
         'biography',
@@ -56,6 +57,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed', // Esto asegura que la contraseña siempre se guarde cifrada
+        'role' => 'string',
         'show_phone' => 'boolean',
         'show_mobile' => 'boolean',
         'show_contact_email' => 'boolean',

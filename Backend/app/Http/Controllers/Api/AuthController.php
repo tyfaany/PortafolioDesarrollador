@@ -44,6 +44,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'contact_email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => 'owner',
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -476,6 +477,7 @@ class AuthController extends Controller
                     'email' => $linkedinUser->getEmail(),
                     'contact_email' => $linkedinUser->getEmail(),
                     'password' => null,
+                    'role' => 'owner',
                 ]);
             }
 
