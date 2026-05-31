@@ -11,7 +11,7 @@ return new class extends Migration
         if (Schema::hasTable('project_technology')
             && Schema::hasColumn('project_technology', 'project_technology_id')
             && ! Schema::hasColumn('project_technology', 'technology_id')) {
-            DB::statement('ALTER TABLE project_technology RENAME COLUMN project_technology_id TO technology_id');
+            DB::statement('ALTER TABLE project_technology CHANGE COLUMN project_technology_id technology_id BIGINT UNSIGNED NOT NULL');
         }
     }
 
@@ -20,7 +20,7 @@ return new class extends Migration
         if (Schema::hasTable('project_technology')
             && Schema::hasColumn('project_technology', 'technology_id')
             && ! Schema::hasColumn('project_technology', 'project_technology_id')) {
-            DB::statement('ALTER TABLE project_technology RENAME COLUMN technology_id TO project_technology_id');
+            DB::statement('ALTER TABLE project_technology CHANGE COLUMN technology_id project_technology_id BIGINT UNSIGNED NOT NULL');
         }
     }
 };
