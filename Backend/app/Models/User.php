@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -17,7 +18,6 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'linkedin_id',
         'profession',
         'biography',
         'github_url',
@@ -29,26 +29,27 @@ class User extends Authenticatable
         'mobile',
         'contact_email',
         'address',
-        'show_phone',
-        'show_mobile',
-        'show_contact_email',
-        'show_address',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+        'visibility',
+    ];
+
+    // --- NUEVO
+    protected $appends = [
+        'profile_photo_url',
         'show_bio',
         'show_studies',
         'show_jobs',
         'show_skills',
         'show_social_links',
         'show_profile_photo',
-    ];
-
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
-
-    // --- NUEVO
-    protected $appends = [
-        'profile_photo_url',
+        'show_phone',
+        'show_mobile',
+        'show_contact_email',
+        'show_address',
     ];
 
     /**
@@ -58,16 +59,6 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed', // Esto asegura que la contraseña siempre se guarde cifrada
         'role' => 'string',
-        'show_phone' => 'boolean',
-        'show_mobile' => 'boolean',
-        'show_contact_email' => 'boolean',
-        'show_address' => 'boolean',
-        'show_bio' => 'boolean',
-        'show_studies' => 'boolean',
-        'show_jobs' => 'boolean',
-        'show_skills' => 'boolean',
-        'show_social_links' => 'boolean',
-        'show_profile_photo' => 'boolean',
         'linkedin_linked' => 'boolean',
     ];
 
@@ -126,6 +117,67 @@ class User extends Authenticatable
 {
     return $this->hasMany(SocialAccount::class);
 }
+
+    public function visibility(): HasOne
+    {
+        return $this->hasOne(UserVisibility::class);
+    }
+
+    protected function visibilityValue(string $key): bool
+    {
+        return (bool) ($this->visibility?->{$key} ?? UserVisibility::defaults()[$key]);
+    }
+
+    public function getShowBioAttribute(): bool
+    {
+        return $this->visibilityValue('show_bio');
+    }
+
+    public function getShowStudiesAttribute(): bool
+    {
+        return $this->visibilityValue('show_studies');
+    }
+
+    public function getShowJobsAttribute(): bool
+    {
+        return $this->visibilityValue('show_jobs');
+    }
+
+    public function getShowSkillsAttribute(): bool
+    {
+        return $this->visibilityValue('show_skills');
+    }
+
+    public function getShowSocialLinksAttribute(): bool
+    {
+        return $this->visibilityValue('show_social_links');
+    }
+
+    public function getShowProfilePhotoAttribute(): bool
+    {
+        return $this->visibilityValue('show_profile_photo');
+    }
+
+    public function getShowPhoneAttribute(): bool
+    {
+        return $this->visibilityValue('show_phone');
+    }
+
+    public function getShowMobileAttribute(): bool
+    {
+        return $this->visibilityValue('show_mobile');
+    }
+
+    public function getShowContactEmailAttribute(): bool
+    {
+        return $this->visibilityValue('show_contact_email');
+    }
+
+    public function getShowAddressAttribute(): bool
+    {
+        return $this->visibilityValue('show_address');
+    }
+
     // --- NUEVO: Agregamos la función del Accessor al final ---
     /**
      * Accessor para obtener la URL completa de la foto de perfil automáticamente

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserVisibility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -46,6 +47,8 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'role' => 'owner',
         ]);
+
+        $user->visibility()->create(UserVisibility::defaults());
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -479,6 +482,8 @@ class AuthController extends Controller
                     'password' => null,
                     'role' => 'owner',
                 ]);
+
+                $user->visibility()->create(UserVisibility::defaults());
             }
 
             // 5️⃣ Crear registro en social_accounts

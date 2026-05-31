@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\UserVisibility;
+use Illuminate\Support\Arr;
 use App\Http\Requests\UpdateContactRequest;
 
 class UserController extends Controller
@@ -17,6 +19,7 @@ class UserController extends Controller
         'jobs', 
         'skills',
         'softSkills',
+        'visibility',
     ]);
 
     return response()->json($user, 200);
@@ -46,14 +49,11 @@ class UserController extends Controller
         return is_string($value) ? strip_tags($value) : $value;
     }, $validated);
 
-   
     $isComplete = $this->checkIfProfileIsComplete($user, $sanitized);
-    
-    
     $sanitized['profile_completed'] = $isComplete;
 
-    
-    $user->fill($sanitized);
+    $contactData = Arr::only($sanitized, ['name', 'profession', 'biography', 'github_url', 'linkedin_url', 'profile_completed']);
+    $user->fill($contactData);
     $user->save();
 
     return response()->json([
@@ -105,7 +105,36 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
         return is_string($value) ? strip_tags($value) : $value;
     }, $data);
 
-    $user->update($sanitized);
+    $visibilityData = Arr::only($sanitized, [
+        'show_phone',
+        'show_mobile',
+        'show_contact_email',
+        'show_address',
+    ]);
+    $contactData = Arr::only($sanitized, [
+        'phone',
+        'mobile',
+        'contact_email',
+        'address',
+    ]);
+
+    $user->fill($contactData);
+    $user->save();
+
+    if (! empty($visibilityData)) {
+        $visibility = $user->visibility()->firstOrCreate(
+            ['user_id' => $user->id],
+            UserVisibility::defaults()
+        );
+
+        $visibility->fill($visibilityData);
+        $visibility->save();
+    }
+
+    $visibility = $user->visibility()->firstOrCreate(
+        ['user_id' => $user->id],
+        UserVisibility::defaults()
+    );
 
     return response()->json([
         'message' => 'Información de contacto actualizada correctamente',
@@ -114,10 +143,10 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
             'mobile' => $user->mobile,
             'contact_email' => $user->contact_email,
             'address' => $user->address,
-            'show_phone' => $user->show_phone,
-            'show_mobile' => $user->show_mobile,
-            'show_contact_email' => $user->show_contact_email,
-            'show_address' => $user->show_address,
+            'show_phone' => $visibility->show_phone,
+            'show_mobile' => $visibility->show_mobile,
+            'show_contact_email' => $visibility->show_contact_email,
+            'show_address' => $visibility->show_address,
         ]
     ]);
 }
@@ -153,12 +182,13 @@ public function indexPublicProfilesFull(Request $request)
         $perPage = $request->query('per_page', 10);
 
         // 2. Iniciamos la consulta base cargando las relaciones con 'with'
-        $query = User::with([
+    $query = User::with([
                 'projects.technologies',
                 'studies',
                 'jobs',
                 'skills',
-                'softSkills'
+                'softSkills',
+                'visibility'
             ])
             ->where('profile_completed', true); // Aquí se cierra la configuración inicial
 
@@ -187,12 +217,13 @@ public function indexPublicProfilesFull(Request $request)
    public function showPublicProfile(User $user)
 {
   // 1. Cargamos todas las relaciones de este usuario de forma eficiente
-        $user->load([
+    $user->load([
             'projects.technologies',
             'studies',
             'jobs',
             'skills',
             'softSkills',
+            'visibility',
         ]);
 
         // 2. Pasamos el usuario por el filtro de privacidad común
