@@ -6,14 +6,13 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up(): void
-{
-    Schema::create('project_technology', function (Blueprint $table) {
-        $table->id();
-        // ¡Esta línea es la clave! Debe ser foreignUuid
-        $table->foreignUuid('project_id')->constrained('projects')->onDelete('cascade');
-        $table->foreignId('project_technology_id')->constrained('project_technologies')->onDelete('cascade');
-    });
-}
+    {
+        Schema::create('project_technology', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('project_id')->constrained('projects')->onDelete('cascade');
+            $table->foreignId('project_technology_id')->constrained('project_technologies')->onDelete('cascade');
+        });
+    }
 
     public function down(): void
     {

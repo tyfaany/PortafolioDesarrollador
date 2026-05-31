@@ -12,29 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('projects', function (Blueprint $table) {
-            // Requerimiento HU-15: ID único (UUID)[cite: 2]
-            $table->uuid('id')->primary(); 
+            // Clave primaria compatible con el estado real del esquema.
+            $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            
-            // Requerimiento HU-15: Título y Descripción con límites[cite: 2]
-            $table->string('title', 100);
-            $table->string('description', 500);
-            
-            // Imagen principal
+
+            $table->string('name', 100);
+            $table->text('description');
             $table->string('image_path')->nullable();
-            
-            // Fechas y estado
+            $table->string('image_original_name')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->boolean('is_in_progress')->default(false);
-            
-            // URLs
-            $table->string('demo_url')->nullable();
-            $table->string('repo_url')->nullable();
-            
-            // Requerimiento HU-17: Visibilidad (Público por defecto)[cite: 2]
+            $table->string('demo_url', 2048)->nullable();
+            $table->string('repository_url', 2048)->nullable();
             $table->boolean('is_public')->default(true);
-            
+
             $table->timestamps();
         });
     }
