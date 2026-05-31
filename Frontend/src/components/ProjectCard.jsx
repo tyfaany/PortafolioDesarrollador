@@ -1,5 +1,5 @@
-import PropTypes from 'prop-types';
-import Icon from '@mdi/react';
+import PropTypes from "prop-types";
+import Icon from "@mdi/react";
 import {
   mdiEyeOffOutline,
   mdiEyeOutline,
@@ -8,62 +8,72 @@ import {
   mdiLinkVariant,
   mdiPencilOutline,
   mdiTrashCanOutline,
-} from '@mdi/js';
+} from "@mdi/js";
 
 function sanitizeHtml(description) {
   if (!description) {
-    return '';
+    return "";
   }
 
   const allowedTags = new Set([
-    'a',
-    'b',
-    'blockquote',
-    'br',
-    'code',
-    'div',
-    'em',
-    'h1',
-    'h2',
-    'h3',
-    'h4',
-    'h5',
-    'h6',
-    'i',
-    'li',
-    'ol',
-    'p',
-    'pre',
-    's',
-    'span',
-    'strong',
-    'u',
-    'ul',
+    "a",
+    "b",
+    "blockquote",
+    "br",
+    "code",
+    "div",
+    "em",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "i",
+    "li",
+    "ol",
+    "p",
+    "pre",
+    "s",
+    "span",
+    "strong",
+    "u",
+    "ul",
   ]);
 
   const parser = new DOMParser();
-  const htmlDocument = parser.parseFromString(`<template>${String(description)}</template>`, 'text/html');
-  const root = htmlDocument.body.firstElementChild;
+  const document = parser.parseFromString(
+    `<div>${String(description)}</div>`,
+    "text/html",
+  );
+  const root = document.body.firstElementChild;
 
   if (!root) {
-    return '';
+    return "";
   }
 
-  const walk = (node) => {
-    Array.from(node.children).forEach((child) => {
+  const sanitizeNode = (node) => {
+    const nodes = Array.from(node.childNodes);
+
+    nodes.forEach((child) => {
+      if (child.nodeType === Node.TEXT_NODE) {
+        return;
+      }
+
+      if (child.nodeType !== Node.ELEMENT_NODE) {
+        child.remove();
+        return;
+      }
+
       const tagName = child.tagName.toLowerCase();
 
       if (!allowedTags.has(tagName)) {
         const fragment = document.createDocumentFragment();
-        Array.from(child.childNodes).forEach((nestedChild) => {
-          if (nestedChild.nodeType === Node.ELEMENT_NODE) {
-            walk(nestedChild);
-          }
-
-          fragment.appendChild(nestedChild);
-        });
-
+        while (child.firstChild) {
+          fragment.appendChild(child.firstChild);
+        }
         child.replaceWith(fragment);
+        sanitizeNode(fragment);
         return;
       }
 
@@ -71,33 +81,39 @@ function sanitizeHtml(description) {
         const name = attribute.name.toLowerCase();
         const value = attribute.value.trim();
 
-        if (name.startsWith('on') || name === 'style' || name === 'class' || name === 'id') {
+        if (
+          name.startsWith("on") ||
+          name === "style" ||
+          name === "class" ||
+          name === "id"
+        ) {
           child.removeAttribute(attribute.name);
           return;
         }
 
-        if (tagName !== 'a' || name !== 'href') {
-          if (name !== 'href') {
+        if (tagName !== "a") {
+          child.removeAttribute(attribute.name);
+          return;
+        }
+
+        if (name === "href") {
+          if (!/^(https?:|mailto:|tel:|\/|#)/i.test(value)) {
             child.removeAttribute(attribute.name);
+          } else {
+            child.setAttribute("rel", "noreferrer noopener");
+            child.setAttribute("target", "_blank");
           }
           return;
         }
 
-        if (!/^(https?:|mailto:|tel:|\/|#)/i.test(value)) {
-          child.removeAttribute(attribute.name);
-          return;
-        }
-
-        child.setAttribute('rel', 'noreferrer noopener');
-        child.setAttribute('target', '_blank');
+        child.removeAttribute(attribute.name);
       });
 
-      walk(child);
+      sanitizeNode(child);
     });
   };
 
-  walk(root.content);
-
+  sanitizeNode(root);
   return root.innerHTML.trim();
 }
 
@@ -108,11 +124,11 @@ function normalizeTechnologies(technologies) {
 
   return technologies
     .map((technology) => {
-      if (technology && typeof technology === 'object') {
-        return technology.name || technology.label || '';
+      if (technology && typeof technology === "object") {
+        return technology.name || technology.label || "";
       }
 
-      return String(technology || '');
+      return String(technology || "");
     })
     .map((technology) => technology.trim())
     .filter(Boolean);
@@ -124,22 +140,30 @@ function formatDateRange(project) {
   const inProgress = Boolean(project?.is_in_progress ?? project?.inProgress);
 
   if (!startDate && !endDate) {
-    return 'Sin fechas definidas';
+    return "Sin fechas definidas";
   }
 
-  const startLabel = startDate || 'Sin inicio';
-  const endLabel = (inProgress || !endDate) ? 'En progreso' : endDate;
+  const startLabel = startDate || "Sin inicio";
+  const endLabel = inProgress || !endDate ? "En progreso" : endDate;
 
   return `${startLabel} - ${endLabel}`;
 }
 
 function resolveImageUrl(project) {
-  const rawUrl = project?.image_url || project?.image_path || project?.currentImagePreview || '';
+  const rawUrl =
+    project?.image_url ||
+    project?.image_path ||
+    project?.currentImagePreview ||
+    "";
   if (!rawUrl) {
-    return '';
+    return "";
   }
 
-  if (/^https?:\/\//i.test(rawUrl) || rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) {
+  if (
+    /^https?:\/\//i.test(rawUrl) ||
+    rawUrl.startsWith("data:") ||
+    rawUrl.startsWith("blob:")
+  ) {
     return rawUrl;
   }
 
@@ -148,41 +172,55 @@ function resolveImageUrl(project) {
     return rawUrl;
   }
 
-  let backendOrigin = '';
+  let backendOrigin = "";
   try {
     backendOrigin = new URL(apiBase).origin;
   } catch {
     return rawUrl;
   }
 
-  if (rawUrl.startsWith('/storage/')) {
+  if (rawUrl.startsWith("/storage/")) {
     return `${backendOrigin}${rawUrl}`;
   }
 
-  if (rawUrl.startsWith('storage/')) {
+  if (rawUrl.startsWith("storage/")) {
     return `${backendOrigin}/${rawUrl}`;
   }
 
-  if (rawUrl.startsWith('projects/')) {
+  if (rawUrl.startsWith("projects/")) {
     return `${backendOrigin}/storage/${rawUrl}`;
   }
 
-  return `${backendOrigin}/${rawUrl.replace(/^\/+/, '')}`;
+  return `${backendOrigin}/${rawUrl.replace(/^\/+/, "")}`;
 }
 
-function ProjectCard({ project, onDelete = () => {}, onToggleVisibility = () => {}, onToggleEdit = () => {} }) {
+function ProjectCard({
+  project,
+  onDelete = () => {},
+  onToggleVisibility = () => {},
+  onToggleEdit = () => {},
+}) {
   const technologies = normalizeTechnologies(project?.technologies);
-  const isPublic = Boolean(project?.is_public ?? project?.visibility === 'public');
+  const isPublic = Boolean(
+    project?.is_public ?? project?.visibility === "public",
+  );
   const imageUrl = resolveImageUrl(project);
-  const demoUrl = project?.demo_url || '';
-  const repoUrl = project?.repo_url || project?.repository_url || '';
+  const demoUrl = project?.demo_url || "";
+  const repoUrl = project?.repo_url || project?.repository_url || "";
+  const richDescription = sanitizeHtml(project?.description || "");
 
   return (
-    <article className="softsave-projects-card" aria-label={`Proyecto ${project?.title || ''}`}>
+    <article
+      className="softsave-projects-card"
+      aria-label={`Proyecto ${project?.title || ""}`}
+    >
       <div className="softsave-projects-card__body">
         <div className="softsave-projects-card__media" aria-hidden="true">
           {imageUrl ? (
-            <img src={imageUrl} alt={`Vista previa de ${project?.title || 'proyecto'}`} />
+            <img
+              src={imageUrl}
+              alt={`Vista previa de ${project?.title || "proyecto"}`}
+            />
           ) : (
             <Icon path={mdiImageOutline} size={1.1} />
           )}
@@ -191,19 +229,26 @@ function ProjectCard({ project, onDelete = () => {}, onToggleVisibility = () => 
         <div className="softsave-projects-card__summary">
           <div className="softsave-projects-card__header">
             <div className="softsave-projects-card__title-wrap">
-              <h3 className="softsave-projects-card__title">{project?.title || 'Proyecto sin titulo'}</h3>
-              <p className="softsave-project-form__hint">{formatDateRange(project)}</p>
+              <h3 className="softsave-projects-card__title">
+                {project?.title || "Proyecto sin titulo"}
+              </h3>
+              <p className="softsave-project-form__hint">
+                {formatDateRange(project)}
+              </p>
             </div>
 
             <div className="softsave-projects-card__header-actions">
               <button
                 type="button"
-                className={`softsave-projects-card__badge ${isPublic ? 'is-public' : 'is-private'}`}
-                aria-label={`Cambiar visibilidad. Actualmente ${isPublic ? 'publica' : 'privada'}`}
+                className={`softsave-projects-card__badge ${isPublic ? "is-public" : "is-private"}`}
+                aria-label={`Cambiar visibilidad. Actualmente ${isPublic ? "publica" : "privada"}`}
                 onClick={() => onToggleVisibility(project)}
               >
-                <Icon path={isPublic ? mdiEyeOutline : mdiEyeOffOutline} size={0.7} />
-                {isPublic ? 'Publico' : 'Privado'}
+                <Icon
+                  path={isPublic ? mdiEyeOutline : mdiEyeOffOutline}
+                  size={0.7}
+                />
+                {isPublic ? "Publico" : "Privado"}
               </button>
               <button
                 type="button"
@@ -226,26 +271,46 @@ function ProjectCard({ project, onDelete = () => {}, onToggleVisibility = () => 
 
           <div
             className="softsave-projects-card__description softsave-projects-card__description--rich"
-            dangerouslySetInnerHTML={{ __html: sanitizeHtml(project?.description || '') }}
+            dangerouslySetInnerHTML={{ __html: richDescription || "" }}
           />
           <div className="softsave-projects-card__links">
             {demoUrl ? (
-              <a href={demoUrl} target="_blank" rel="noreferrer" aria-label="Abrir demo">
+              <a
+                href={demoUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Abrir demo"
+              >
                 <Icon path={mdiLinkVariant} size={0.72} />
                 Demo
               </a>
-            ) : <span>Demo: no disponible</span>}
+            ) : (
+              <span>Demo: no disponible</span>
+            )}
             {repoUrl ? (
-              <a href={repoUrl} target="_blank" rel="noreferrer" aria-label="Abrir repositorio">
+              <a
+                href={repoUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Abrir repositorio"
+              >
                 <Icon path={mdiGithub} size={0.72} />
                 Repositorio
               </a>
-            ) : <span>Repo: no disponible</span>}
+            ) : (
+              <span>Repo: no disponible</span>
+            )}
           </div>
 
-          <div className="softsave-project-form__chips" aria-label="Tecnologias del proyecto">
+          <div
+            className="softsave-project-form__chips"
+            aria-label="Tecnologias del proyecto"
+          >
             {technologies.map((technology) => (
-              <span key={technology} className="softsave-project-form__chip softsave-project-form__chip--selected">
+              <span
+                key={technology}
+                className="softsave-project-form__chip softsave-project-form__chip--selected"
+              >
                 {technology}
               </span>
             ))}
