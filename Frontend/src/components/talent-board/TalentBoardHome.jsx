@@ -129,14 +129,13 @@ function TalentBoardHome() {
   const [totalPages, setTotalPages] = useState(1);
   const [apiCurrentPage, setApiCurrentPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
-  const [availableSkills, setAvailableSkills] = useState([]);
-  const [loadingSkills, setLoadingSkills] = useState(true);
+  const [availableSkills, setAvailableSkills] = useState(null);
 
   useEffect(() => {
     let isActive = true;
 
     const loadTechnologies = async () => {
-      setLoadingSkills(true);
+      setAvailableSkills(null);
 
       try {
         const response = await obtenerTecnologias();
@@ -156,10 +155,6 @@ function TalentBoardHome() {
         }
 
         setAvailableSkills([]);
-      } finally {
-        if (isActive) {
-          setLoadingSkills(false);
-        }
       }
     };
 
@@ -342,7 +337,6 @@ function TalentBoardHome() {
       <section className="talent-board-layout">
         <TalentSidebarFilters
           availableSkills={availableSkills}
-          loadingSkills={loadingSkills}
           selectedSkills={selectedSkills}
           onToggleSkill={toggleSkill}
           onClearFilters={() => setSelectedSkills([])}

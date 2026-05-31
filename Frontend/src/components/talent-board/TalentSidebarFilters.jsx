@@ -4,7 +4,6 @@ import { mdiCheck, mdiTuneVariant } from '@mdi/js';
 
 function TalentSidebarFilters({
   availableSkills,
-  loadingSkills,
   selectedSkills,
   onToggleSkill,
   onClearFilters,
@@ -23,7 +22,7 @@ function TalentSidebarFilters({
         <fieldset className="talent-board-filters__group">
           <legend>Habilidades disponibles</legend>
           <div className="talent-board-filters__options">
-            {loadingSkills ? (
+            {availableSkills === null ? (
               <p className="talent-board-filters__empty">Cargando filtros...</p>
             ) : availableSkills.length > 0 ? (
               availableSkills.map((option) => {
@@ -62,11 +61,14 @@ function TalentSidebarFilters({
 }
 
 TalentSidebarFilters.propTypes = {
-  availableSkills: PropTypes.arrayOf(PropTypes.string).isRequired,
-  loadingSkills: PropTypes.bool.isRequired,
+  availableSkills: PropTypes.arrayOf(PropTypes.string),
   selectedSkills: PropTypes.arrayOf(PropTypes.string).isRequired,
   onToggleSkill: PropTypes.func.isRequired,
   onClearFilters: PropTypes.func.isRequired,
+};
+
+TalentSidebarFilters.defaultProps = {
+  availableSkills: null,
 };
 
 export default TalentSidebarFilters;
