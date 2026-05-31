@@ -31,6 +31,8 @@ class Project extends Model
     ];
 
     protected $casts = [
+        // Quill guarda HTML rico en este campo; el frontend debe sanitizar antes de renderizarlo.
+        'description' => 'string',
         'is_public' => 'boolean',
         'is_in_progress' => 'boolean',
     ];

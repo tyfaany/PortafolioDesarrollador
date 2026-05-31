@@ -15,13 +15,90 @@ function sanitizeHtml(description) {
     return '';
   }
 
-  return String(description)
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
-    .replace(/\son\w+="[^"]*"/gi, '')
-    .replace(/\son\w+='[^']*'/gi, '')
-    .replace(/\s(href|src)=("|\')\s*javascript:[^"\']*("|\')/gi, '')
-    .trim();
+  const allowedTags = new Set([
+    'a',
+    'b',
+    'blockquote',
+    'br',
+    'code',
+    'div',
+    'em',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'i',
+    'li',
+    'ol',
+    'p',
+    'pre',
+    's',
+    'span',
+    'strong',
+    'u',
+    'ul',
+  ]);
+
+  const parser = new DOMParser();
+  const htmlDocument = parser.parseFromString(`<template>${String(description)}</template>`, 'text/html');
+  const root = htmlDocument.body.firstElementChild;
+
+  if (!root) {
+    return '';
+  }
+
+  const walk = (node) => {
+    Array.from(node.children).forEach((child) => {
+      const tagName = child.tagName.toLowerCase();
+
+      if (!allowedTags.has(tagName)) {
+        const fragment = document.createDocumentFragment();
+        Array.from(child.childNodes).forEach((nestedChild) => {
+          if (nestedChild.nodeType === Node.ELEMENT_NODE) {
+            walk(nestedChild);
+          }
+
+          fragment.appendChild(nestedChild);
+        });
+
+        child.replaceWith(fragment);
+        return;
+      }
+
+      Array.from(child.attributes).forEach((attribute) => {
+        const name = attribute.name.toLowerCase();
+        const value = attribute.value.trim();
+
+        if (name.startsWith('on') || name === 'style' || name === 'class' || name === 'id') {
+          child.removeAttribute(attribute.name);
+          return;
+        }
+
+        if (tagName !== 'a' || name !== 'href') {
+          if (name !== 'href') {
+            child.removeAttribute(attribute.name);
+          }
+          return;
+        }
+
+        if (!/^(https?:|mailto:|tel:|\/|#)/i.test(value)) {
+          child.removeAttribute(attribute.name);
+          return;
+        }
+
+        child.setAttribute('rel', 'noreferrer noopener');
+        child.setAttribute('target', '_blank');
+      });
+
+      walk(child);
+    });
+  };
+
+  walk(root.content);
+
+  return root.innerHTML.trim();
 }
 
 function normalizeTechnologies(technologies) {
