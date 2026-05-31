@@ -4,20 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\User;
+use App\QueryFilters\TechFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class ProjectController extends Controller
 {
-    private function hasProjectColumn(string $column): bool
-    {
-        return Schema::hasColumn('projects', $column);
-    }
-
     private function getPlainTextDescriptionLength(string $description): int
     {
         $normalized = html_entity_decode($description, ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -42,35 +40,33 @@ class ProjectController extends Controller
 
     public function index(Request $request)
     {
-        // 1. Consulta base usando auth()->id() (Evitamos N+1 cargando tecnologías)
-        $query = Project::with('technologies')->where('user_id', auth()->id());
+        $perPage = min($request->integer('per_page', 5), 50);
 
-        // 2. Búsqueda Inteligente (Busca en el 'title' del proyecto o en sus tecnologías)
-        $query->when($request->search, function ($q, $search) {
-            $q->where(function ($subQ) use ($search) {
-                // Cambiamos 'name' por 'title' según tu base de datos
-                $subQ->where('title', 'LIKE', "%{$search}%") 
-                     ->orWhereHas('technologies', function ($techQ) use ($search) {
-                         // Especificamos la tabla 'project_technologies' para que MySQL no se confunda
-                         $techQ->where('project_technologies.name', 'LIKE', "%{$search}%");
-                     });
-            });
-        });
+        $projects = QueryBuilder::for(
+            Project::query()->with('technologies')->where('user_id', auth()->id())
+        )
+            ->allowedFilters([
+                AllowedFilter::callback('search', function (Builder $query, $value): void {
+                    $value = trim((string) $value);
 
-        // 3. Filtros Rápidos: Por Visibilidad (is_public = true/false)
-        $query->when($request->has('is_public') && $this->hasProjectColumn('is_public'), function ($q) use ($request) {
-            $q->where('is_public', filter_var($request->is_public, FILTER_VALIDATE_BOOLEAN));
-        });
+                    if ($value === '') {
+                        return;
+                    }
 
-        // 4. Filtros Rápidos: Por Tecnología exacta
-        $query->when($request->tech_filter, function ($q, $techFilter) {
-            $q->whereHas('technologies', function ($techQ) use ($techFilter) {
-                $techQ->where('name', $techFilter);
-            });
-        });
-
-        // 5. Paginación Tradicional (Opción A) - Mostrar 5 proyectos por página
-        $projects = $query->orderBy('created_at', 'desc')->paginate(5);
+                    $query->where(function (Builder $subQuery) use ($value): void {
+                        $subQuery->where('name', 'LIKE', "%{$value}%")
+                            ->orWhereHas('technologies', function (Builder $techQuery) use ($value): void {
+                                $techQuery->where('project_technologies.name', 'LIKE', "%{$value}%");
+                            });
+                    });
+                }),
+                AllowedFilter::exact('is_public'),
+                AllowedFilter::custom('tech_filter', new TechFilter()),
+            ])
+            ->allowedSorts(['created_at', 'name'])
+            ->defaultSort('-created_at')
+            ->paginate($perPage)
+            ->appends($request->query());
 
         return response()->json($projects, 200);
     }
@@ -81,9 +77,7 @@ class ProjectController extends Controller
             ->where('user_id', $user->id)
             ->orderBy('created_at', 'desc');
 
-        if ($this->hasProjectColumn('is_public')) {
-            $query->where('is_public', true);
-        }
+        $query->where('is_public', true);
 
         $projects = $query->get();
 
@@ -147,21 +141,10 @@ class ProjectController extends Controller
                 'repository_url' => $validated['repo_url'] ?? null,
             ];
 
-            if ($this->hasProjectColumn('image_path')) {
-                $projectData['image_path'] = $imagePath;
-            }
-
-            if ($this->hasProjectColumn('image_original_name')) {
-                $projectData['image_original_name'] = $imageOriginalName;
-            }
-
-            if ($this->hasProjectColumn('is_in_progress')) {
-                $projectData['is_in_progress'] = $validated['is_in_progress'] ?? false;
-            }
-
-            if ($this->hasProjectColumn('is_public')) {
-                $projectData['is_public'] = $validated['is_public'] ?? true;
-            }
+            $projectData['image_path'] = $imagePath;
+            $projectData['image_original_name'] = $imageOriginalName;
+            $projectData['is_in_progress'] = $validated['is_in_progress'] ?? false;
+            $projectData['is_public'] = $validated['is_public'] ?? true;
 
             $project = Project::create($projectData);
 
@@ -240,9 +223,7 @@ class ProjectController extends Controller
                 $imageFile = $request->file('image');
                 $project->image_path = $imageFile->store('projects', 'public');
 
-                if ($this->hasProjectColumn('image_original_name')) {
-                    $project->image_original_name = $imageFile->getClientOriginalName();
-                }
+                $project->image_original_name = $imageFile->getClientOriginalName();
             }
 
             // Actualizamos los campos de texto y fechas
@@ -255,13 +236,8 @@ class ProjectController extends Controller
                 'repository_url' => $validated['repo_url'] ?? $project->repository_url,
             ];
 
-            if ($this->hasProjectColumn('is_in_progress')) {
-                $projectData['is_in_progress'] = $validated['is_in_progress'] ?? $project->is_in_progress;
-            }
-
-            if ($this->hasProjectColumn('is_public')) {
-                $projectData['is_public'] = $validated['is_public'] ?? $project->is_public;
-            }
+            $projectData['is_in_progress'] = $validated['is_in_progress'] ?? $project->is_in_progress;
+            $projectData['is_public'] = $validated['is_public'] ?? $project->is_public;
 
             $project->update($projectData);
 

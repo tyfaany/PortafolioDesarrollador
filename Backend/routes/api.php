@@ -12,7 +12,6 @@ use App\Http\Controllers\Api\ProjectTechnologyController;
 use App\Http\Controllers\Api\PrivacyController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\GithubController;
-use App\Http\Controllers\ProfileSearchController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -67,6 +66,4 @@ Route::middleware(['auth:sanctum', 'role:owner,admin'])->group(function () {
     Route::get('/user/linkedin/profile', [AuthController::class, 'getLinkedInProfile']);
     Route::post('/user/linkedin/sync', [AuthController::class, 'syncLinkedInData']);
     Route::delete('/user/linkedin/unlink', [AuthController::class, 'unlinkLinkedIn']);
-    // Ruta pública para buscar y listar perfiles (HU-23)
-    Route::get('/profiles/search', [ProfileSearchController::class, 'index']);
 });
