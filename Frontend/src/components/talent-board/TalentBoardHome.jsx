@@ -67,20 +67,28 @@ function mapPublicProfile(profile) {
 
   return {
     id: profile?.id,
+    name,
     nombre: name,
+    profession: profile?.profession || '',
     rol: profile?.profession || 'Profesional',
+    profile_photo_url: profile?.profile_photo_url || '',
     bio: profile?.biography || 'Sin biografía disponible.',
+    biography: profile?.biography || '',
     calificacion: Number(profile?.rating || 5),
     proyectos: Array.isArray(profile?.projects) ? profile.projects.length : 0,
+    projects: Array.isArray(profile?.projects) ? profile.projects : [],
     email: profile?.contact_email || profile?.email || '',
     github: profile?.github_url || '',
+    github_url: profile?.github_url || '',
     linkedin: profile?.linkedin_url || '',
+    linkedin_url: profile?.linkedin_url || '',
     avatar: {
       initials: getInitials(name),
       from,
       to,
     },
     habilidades: skills,
+    skills: skills.map((skill) => ({ name: skill })),
     focus: skills[0] || profile?.profession || 'Talento destacado',
     experienciaLaboral: jobs.map((job) => ({
       puesto: pickFirstText(job?.position, job?.job_title, job?.role, job?.title, job?.cargo, 'Experiencia laboral'),
