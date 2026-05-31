@@ -45,8 +45,8 @@ function App() {
       </Route>
 
       {/* Redirecciones */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<Navigate to="/inicio" replace />} />
+      <Route path="*" element={<Navigate to="/inicio" replace />} />
     </Routes>
   );
 }

@@ -8,7 +8,6 @@ import {
   mdiCheckCircle,
   mdiClose,
   mdiCodeTags,
-  mdiCogOutline,
   mdiConsoleLine,
   mdiContentSaveOutline,
   mdiFolderOutline,
@@ -255,12 +254,12 @@ function ProfileSettings() {
   const [guardandoEnlaces, setGuardandoEnlaces] = useState(false);
   const [perfilLinkedinImportado, setPerfilLinkedinImportado] = useState(null);
   const [cargandoLinkedin, setCargandoLinkedin] = useState(false);
-  const [linkedinSincronizado, setLinkedinSincronizado] = useState(false);
+  const [, setLinkedinSincronizado] = useState(false);
   const [preferenciasLinkedin, setPreferenciasLinkedin] = useState({
     importarNombre: false,
     importarFoto: false,
   });
-  const [vistaPreviaLinkedin, setVistaPreviaLinkedin] = useState(null);
+  const [, setVistaPreviaLinkedin] = useState(null);
   const [fotoLinkedinBloqueada, setFotoLinkedinBloqueada] = useState(false);
   const [estaGithubConectado, setEstaGithubConectado] = useState(false);
   const [ultimaSyncGithub, setUltimaSyncGithub] = useState("hace 2 horas");
