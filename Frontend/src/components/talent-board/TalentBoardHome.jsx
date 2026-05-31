@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Icon from '@mdi/react';
 import { mdiMagnify, mdiStarFourPoints } from '@mdi/js';
-import { talentProfiles } from '../../mocks/talentProfiles';
+import { obtenerPerfilesPublicos } from '../../services/authService';
 import TalentProfileCard from './TalentProfileCard';
 import TalentProfileDetail from './TalentProfileDetail';
 import ProfilePagination from './ProfilePagination';
@@ -10,11 +10,103 @@ import '../../styles/TalentBoard.css';
 
 const PROFILES_PER_PAGE = 4;
 
-function normalizeText(value) {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
+function getInitials(name) {
+  return String(name || '')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+}
+
+function buildGradient(seed) {
+  const palette = [
+    ['#2C3E50', '#4C6580'],
+    ['#0F766E', '#14B8A6'],
+    ['#7C3AED', '#A855F7'],
+    ['#B45309', '#EA580C'],
+    ['#2563EB', '#38BDF8'],
+  ];
+
+  const text = String(seed || '');
+  const hash = [...text].reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return palette[hash % palette.length];
+}
+
+function formatYearRange(startMonth, startYear, endMonth, endYear, isCurrentJob) {
+  const start = [startMonth, startYear].filter(Boolean).join('/');
+  const end = isCurrentJob ? 'Actualidad' : [endMonth, endYear].filter(Boolean).join('/');
+
+  if (!start && !end) {
+    return 'Sin fechas';
+  }
+
+  if (!start) {
+    return end || 'Sin fechas';
+  }
+
+  if (!end) {
+    return start;
+  }
+
+  return `${start} - ${end}`;
+}
+
+function pickFirstText(...values) {
+  return values.find((value) => String(value || '').trim() !== '') || '';
+}
+
+function mapPublicProfile(profile) {
+  const name = profile?.name || 'Perfil sin nombre';
+  const skills = Array.isArray(profile?.skills)
+    ? profile.skills.map((skill) => (typeof skill === 'string' ? skill : skill?.name)).filter(Boolean)
+    : [];
+  const jobs = Array.isArray(profile?.jobs) ? profile.jobs : [];
+  const studies = Array.isArray(profile?.studies) ? profile.studies : [];
+  const [from, to] = buildGradient(name);
+
+  return {
+    id: profile?.id,
+    nombre: name,
+    rol: profile?.profession || 'Profesional',
+    bio: profile?.biography || 'Sin biografía disponible.',
+    calificacion: Number(profile?.rating || 5),
+    proyectos: Array.isArray(profile?.projects) ? profile.projects.length : 0,
+    email: profile?.contact_email || profile?.email || '',
+    github: profile?.github_url || '',
+    linkedin: profile?.linkedin_url || '',
+    avatar: {
+      initials: getInitials(name),
+      from,
+      to,
+    },
+    habilidades: skills,
+    focus: skills[0] || profile?.profession || 'Talento destacado',
+    experienciaLaboral: jobs.map((job) => ({
+      puesto: pickFirstText(job?.position, job?.job_title, job?.role, job?.title, job?.cargo, 'Experiencia laboral'),
+      empresa: job?.company_name || 'Empresa no especificada',
+      anios: formatYearRange(job?.start_month, job?.start_year, job?.end_month, job?.end_year, job?.is_current_job),
+      descripcion: pickFirstText(
+        job?.description,
+        job?.achievements,
+        job?.achievement,
+        job?.achivements,
+        job?.logros,
+        'Sin descripción disponible.',
+      ),
+    })),
+    formacionAcademica: studies.map((study) => ({
+      titulo: study?.degree || 'Estudio',
+      institucion: study?.academic_institution || 'Institución no especificada',
+      anio: formatYearRange(
+        study?.start_date ? new Date(study.start_date).getFullYear() : '',
+        '',
+        study?.end_date ? new Date(study.end_date).getFullYear() : '',
+        '',
+        false,
+      ),
+    })),
+  };
 }
 
 function TalentBoardHome() {
@@ -22,46 +114,89 @@ function TalentBoardHome() {
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [selectedProfileIndex, setSelectedProfileIndex] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-
-  const filteredProfiles = useMemo(() => {
-    const query = normalizeText(searchTerm.trim());
-
-    return talentProfiles.filter((profile) => {
-      const searchableContent = normalizeText([
-        profile.nombre,
-        profile.rol,
-        profile.bio,
-        profile.focus,
-        profile.habilidades.join(' '),
-      ].join(' '));
-
-      const matchesSearch = !query || searchableContent.includes(query);
-      const matchesSkills = selectedSkills.every((skill) => profile.habilidades.includes(skill));
-
-      return matchesSearch && matchesSkills;
-    });
-  }, [searchTerm, selectedSkills]);
+  const [refreshTick, setRefreshTick] = useState(0);
+  const [profiles, setProfiles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [totalPages, setTotalPages] = useState(1);
+  const [apiCurrentPage, setApiCurrentPage] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedSkills]);
 
   useEffect(() => {
+    let isActive = true;
+    const timeoutId = window.setTimeout(async () => {
+      setLoading(true);
+      setError('');
+
+      try {
+        const params = {
+          page: currentPage,
+          per_page: PROFILES_PER_PAGE,
+        };
+
+        const query = searchTerm.trim();
+        if (query) {
+          params['filter[search]'] = query;
+        }
+
+        if (selectedSkills.length > 0) {
+          params['filter[habilidades]'] = selectedSkills
+            .map((skill) => skill.toLowerCase())
+            .join(',');
+        }
+
+        const response = await obtenerPerfilesPublicos(params);
+        const payload = response?.data || {};
+        const rawProfiles = Array.isArray(payload.data) ? payload.data : [];
+
+        if (!isActive) {
+          return;
+        }
+
+        setProfiles(rawProfiles.map(mapPublicProfile));
+        setTotalPages(Math.max(1, Number(payload.last_page || 1)));
+        setApiCurrentPage(Number(payload.current_page || currentPage));
+        setTotalResults(Number(payload.total || rawProfiles.length));
+      } catch {
+        if (!isActive) {
+          return;
+        }
+
+        setProfiles([]);
+        setTotalPages(1);
+        setApiCurrentPage(1);
+        setTotalResults(0);
+        setError('No se pudieron cargar los perfiles.');
+      } finally {
+        if (isActive) {
+          setLoading(false);
+        }
+      }
+    }, 300);
+
+    return () => {
+      isActive = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [currentPage, refreshTick, searchTerm, selectedSkills]);
+
+  useEffect(() => {
     if (selectedProfileIndex === null) {
       return;
     }
 
-    if (selectedProfileIndex < 0 || selectedProfileIndex >= filteredProfiles.length) {
+    if (selectedProfileIndex < 0 || selectedProfileIndex >= profiles.length) {
       setSelectedProfileIndex(null);
     }
-  }, [filteredProfiles, selectedProfileIndex]);
+  }, [profiles, selectedProfileIndex]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredProfiles.length / PROFILES_PER_PAGE));
-  const safePage = Math.min(currentPage, totalPages);
-  const pageStart = (safePage - 1) * PROFILES_PER_PAGE;
-  const visibleProfiles = filteredProfiles.slice(pageStart, pageStart + PROFILES_PER_PAGE);
+  const safePage = Math.min(apiCurrentPage, totalPages);
   const selectedProfile = selectedProfileIndex !== null
-    ? filteredProfiles[selectedProfileIndex]
+    ? profiles[selectedProfileIndex]
     : null;
 
   const toggleSkill = (skill) => {
@@ -73,7 +208,7 @@ function TalentBoardHome() {
   };
 
   const openProfile = (profileId) => {
-    const index = filteredProfiles.findIndex((profile) => profile.id === profileId);
+    const index = profiles.findIndex((profile) => profile.id === profileId);
     if (index >= 0) {
       setSelectedProfileIndex(index);
     }
@@ -81,21 +216,21 @@ function TalentBoardHome() {
 
   const showPreviousProfile = () => {
     setSelectedProfileIndex((currentIndex) => {
-      if (currentIndex === null || filteredProfiles.length === 0) {
+      if (currentIndex === null || profiles.length === 0) {
         return currentIndex;
       }
 
-      return currentIndex === 0 ? filteredProfiles.length - 1 : currentIndex - 1;
+      return currentIndex === 0 ? profiles.length - 1 : currentIndex - 1;
     });
   };
 
   const showNextProfile = () => {
     setSelectedProfileIndex((currentIndex) => {
-      if (currentIndex === null || filteredProfiles.length === 0) {
+      if (currentIndex === null || profiles.length === 0) {
         return currentIndex;
       }
 
-      return currentIndex === filteredProfiles.length - 1 ? 0 : currentIndex + 1;
+      return currentIndex === profiles.length - 1 ? 0 : currentIndex + 1;
     });
   };
 
@@ -107,7 +242,7 @@ function TalentBoardHome() {
         <TalentProfileDetail
           profile={selectedProfile}
           currentIndex={selectedProfileIndex}
-          totalProfiles={filteredProfiles.length}
+          totalProfiles={profiles.length}
           onBack={() => setSelectedProfileIndex(null)}
           onPreviousProfile={showPreviousProfile}
           onNextProfile={showNextProfile}
@@ -166,17 +301,34 @@ function TalentBoardHome() {
         <div className="talent-board-results">
           <div className="talent-board-results__bar">
             <p>
-              Mostrando <span>{filteredProfiles.length}</span> perfiles destacados
+              Mostrando <span>{totalResults}</span> perfiles destacados
             </p>
             <p>
               Pagina <span>{safePage}</span> de <span>{totalPages}</span>
             </p>
           </div>
 
-          {filteredProfiles.length > 0 ? (
+          {loading ? (
+            <div className="talent-board-empty softsave-projects-card">
+              <h2>Cargando perfiles</h2>
+              <p>Estamos consultando la informacion mas reciente del directorio.</p>
+            </div>
+          ) : error ? (
+            <div className="talent-board-empty softsave-projects-card">
+              <h2>No fue posible cargar los perfiles</h2>
+              <p>{error}</p>
+              <button
+                type="button"
+                className="talent-board-primary-button talent-board-empty__action"
+                onClick={() => setRefreshTick((value) => value + 1)}
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : profiles.length > 0 ? (
             <>
               <div className="talent-board-results__grid">
-                {visibleProfiles.map((profile) => (
+                {profiles.map((profile) => (
                   <TalentProfileCard
                     key={profile.id}
                     profile={profile}
