@@ -2,6 +2,10 @@ import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
 import { mdiCheck, mdiTuneVariant } from '@mdi/js';
 
+function normalizeSkillValue(skill) {
+  return String(skill || '').trim().toLowerCase();
+}
+
 function TalentSidebarFilters({
   availableSkills,
   selectedSkills,
@@ -26,7 +30,7 @@ function TalentSidebarFilters({
               <p className="talent-board-filters__empty">Cargando filtros...</p>
             ) : availableSkills.length > 0 ? (
               availableSkills.map((option) => {
-                const checked = selectedSkills.includes(option);
+                const checked = selectedSkills.includes(normalizeSkillValue(option));
 
                 return (
                   <label key={option} className="talent-board-checkbox">

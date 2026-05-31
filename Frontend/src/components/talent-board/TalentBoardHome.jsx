@@ -56,6 +56,10 @@ function pickFirstText(...values) {
   return values.find((value) => String(value || '').trim() !== '') || '';
 }
 
+function normalizeSkillValue(skill) {
+  return String(skill || '').trim().toLowerCase();
+}
+
 function mapPublicProfile(profile) {
   const name = profile?.name || 'Perfil sin nombre';
   const skills = Array.isArray(profile?.skills)
@@ -243,10 +247,12 @@ function TalentBoardHome() {
     : null;
 
   const toggleSkill = (skill) => {
+    const normalizedSkill = normalizeSkillValue(skill);
+
     setSelectedSkills((currentSkills) => (
-      currentSkills.includes(skill)
-        ? currentSkills.filter((currentSkill) => currentSkill !== skill)
-        : [...currentSkills, skill]
+      currentSkills.includes(normalizedSkill)
+        ? currentSkills.filter((currentSkill) => currentSkill !== normalizedSkill)
+        : [...currentSkills, normalizedSkill]
     ));
   };
 
