@@ -3,7 +3,6 @@ import Icon from '@mdi/react';
 import { mdiMagnify, mdiStarFourPoints } from '@mdi/js';
 import { obtenerPerfilesPublicos, obtenerTecnologias } from '../../services/authService';
 import TalentProfileCard from './TalentProfileCard';
-import TalentProfileDetail from './TalentProfileDetail';
 import ProfilePagination from './ProfilePagination';
 import TalentSidebarFilters from './TalentSidebarFilters';
 import '../../styles/TalentBoard.css';
@@ -124,7 +123,6 @@ function mapPublicProfile(profile) {
 function TalentBoardHome() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSkills, setSelectedSkills] = useState([]);
-  const [selectedProfileIndex, setSelectedProfileIndex] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshTick, setRefreshTick] = useState(0);
   const [profiles, setProfiles] = useState([]);
@@ -231,20 +229,7 @@ function TalentBoardHome() {
     };
   }, [currentPage, refreshTick, searchTerm, selectedSkills]);
 
-  useEffect(() => {
-    if (selectedProfileIndex === null) {
-      return;
-    }
-
-    if (selectedProfileIndex < 0 || selectedProfileIndex >= profiles.length) {
-      setSelectedProfileIndex(null);
-    }
-  }, [profiles, selectedProfileIndex]);
-
   const safePage = Math.min(apiCurrentPage, totalPages);
-  const selectedProfile = selectedProfileIndex !== null
-    ? profiles[selectedProfileIndex]
-    : null;
 
   const toggleSkill = (skill) => {
     const normalizedSkill = normalizeSkillValue(skill);
@@ -255,50 +240,6 @@ function TalentBoardHome() {
         : [...currentSkills, normalizedSkill]
     ));
   };
-
-  const openProfile = (profileId) => {
-    const index = profiles.findIndex((profile) => profile.id === profileId);
-    if (index >= 0) {
-      setSelectedProfileIndex(index);
-    }
-  };
-
-  const showPreviousProfile = () => {
-    setSelectedProfileIndex((currentIndex) => {
-      if (currentIndex === null || profiles.length === 0) {
-        return currentIndex;
-      }
-
-      return currentIndex === 0 ? profiles.length - 1 : currentIndex - 1;
-    });
-  };
-
-  const showNextProfile = () => {
-    setSelectedProfileIndex((currentIndex) => {
-      if (currentIndex === null || profiles.length === 0) {
-        return currentIndex;
-      }
-
-      return currentIndex === profiles.length - 1 ? 0 : currentIndex + 1;
-    });
-  };
-
-  if (selectedProfile) {
-    return (
-      <main className="talent-board-page">
-        <div className="talent-board-page__orb talent-board-page__orb--one" aria-hidden="true" />
-        <div className="talent-board-page__orb talent-board-page__orb--two" aria-hidden="true" />
-        <TalentProfileDetail
-          profile={selectedProfile}
-          currentIndex={selectedProfileIndex}
-          totalProfiles={profiles.length}
-          onBack={() => setSelectedProfileIndex(null)}
-          onPreviousProfile={showPreviousProfile}
-          onNextProfile={showNextProfile}
-        />
-      </main>
-    );
-  }
 
   return (
     <main className="talent-board-page">
@@ -382,7 +323,6 @@ function TalentBoardHome() {
                   <TalentProfileCard
                     key={profile.id}
                     profile={profile}
-                    onViewDetail={() => openProfile(profile.id)}
                   />
                 ))}
               </div>

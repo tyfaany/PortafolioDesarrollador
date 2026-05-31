@@ -14,6 +14,22 @@
   margin-bottom: 18px;
 }
 
+.softsave-workspace__back {
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #f2540d;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.softsave-workspace__back:hover,
+.softsave-workspace__back:focus-visible {
+  text-decoration: underline;
+}
+
 .softsave-workspace__eyebrow {
   margin: 0 0 6px;
   color: var(--color-primario);

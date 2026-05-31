@@ -1,8 +1,19 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import Icon from '@mdi/react';
+import {
+  mdiArrowLeft,
+  mdiBriefcaseOutline,
+  mdiCodeBraces,
+  mdiEmailOutline,
+  mdiGithub,
+  mdiLinkedin,
+  mdiSchoolOutline,
+  mdiStar,
+} from '@mdi/js';
 import api from '../services/api';
 import { getMe } from '../services/authService';
-import '../styles/ProjectsPrivacyViews.css';
+import '../styles/TalentBoard.css';
 
 function getInitials(name) {
   return String(name || '')
@@ -71,6 +82,7 @@ function getTextValue(...values) {
 
 function PerfilPublico() {
   const { user } = useParams();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -126,144 +138,205 @@ function PerfilPublico() {
     return <p className="error-text">{error}</p>;
   }
 
-  const initials = getInitials(profile?.name || 'Usuario');
-  const profilePhotoUrl = profile?.profile_photo_url || '';
+  const name = profile?.name || 'Usuario';
+  const role = profile?.profession || '';
+  const photoUrl = profile?.profile_photo_url || '';
+  const initials = getInitials(name);
+  const avatarStyle = photoUrl ? undefined : {
+    background: 'linear-gradient(135deg, #2C3E50, #4C6580)',
+  };
+  const rating = Number(profile?.rating || 5);
+  const projectsCount = Array.isArray(profile?.projects) ? profile.projects.length : 0;
+  const skills = Array.isArray(profile?.skills)
+    ? profile.skills
+        .map((skill) => (typeof skill === 'string' ? skill : skill?.name))
+        .filter(Boolean)
+    : [];
+  const jobs = Array.isArray(profile?.jobs) ? profile.jobs : [];
+  const studies = Array.isArray(profile?.studies) ? profile.studies : [];
+  const projects = Array.isArray(profile?.projects) ? profile.projects : [];
+  const softSkills = Array.isArray(profile?.soft_skills)
+    ? profile.soft_skills
+        .map((skill) => (typeof skill === 'string' ? skill : skill?.name))
+        .filter(Boolean)
+    : [];
+  const githubUrl = getTextValue(profile?.github_url, profile?.github);
+  const linkedinUrl = getTextValue(profile?.linkedin_url, profile?.linkedin);
+  const email = getTextValue(profile?.contact_email, profile?.email);
+  const focus = skills[0] || role || 'Talento destacado';
 
   return (
-    <section className="softsave-workspace">
-      <div className="softsave-workspace__container">
-        <header className="softsave-workspace__hero">
-          <p className="softsave-workspace__eyebrow">Perfil publico</p>
+    <section className="talent-board-detail">
+      <button type="button" className="talent-board-detail__back" onClick={() => navigate('/inicio')}>
+        <Icon path={mdiArrowLeft} size={0.78} />
+        Volver a la busqueda
+      </button>
 
-          <div className="softsave-workspace__profile-header">
-            <div className="softsave-workspace__profile-photo" aria-hidden="true">
-              {profilePhotoUrl ? (
-                <img src={profilePhotoUrl} alt="" />
-              ) : (
-                <span>{initials}</span>
-              )}
-            </div>
-
-            <div className="softsave-workspace__profile-copy">
-              <h1 className="softsave-workspace__title">{profile?.name || 'Usuario'}</h1>
-              <p className="softsave-workspace__subtitle">{profile?.profession || ''}</p>
-              {isOwnProfile ? (
-                <p className="softsave-project-form__hint">
-                  Estas viendo tu perfil publico. Algunas secciones privadas no se muestran aqui.
-                </p>
-              ) : null}
-            </div>
+      <div className="talent-board-detail__hero">
+        <div className="talent-board-detail__photo-wrap">
+          <div className="talent-board-detail__photo" style={avatarStyle}>
+            {photoUrl ? <img src={photoUrl} alt="" /> : <span>{initials}</span>}
           </div>
-        </header>
+          {email ? (
+            <a
+              className="talent-board-detail__mail"
+              href={`mailto:${email}`}
+              aria-label={`Contactar a ${name}`}
+            >
+              <Icon path={mdiEmailOutline} size={0.9} />
+            </a>
+          ) : null}
+        </div>
 
-        {profile?.biography ? (
-          <article className="softsave-projects-card">
-            <h3 className="softsave-projects-card__edit-title">Biografia</h3>
-            <p>{profile.biography}</p>
-          </article>
-        ) : null}
+        <div className="talent-board-detail__summary">
+          <span className="talent-board-detail__availability">Perfil publico</span>
+          <h1>{name}</h1>
+          <p className="talent-board-detail__role">{role}</p>
 
-        {Array.isArray(profile?.studies) && profile.studies.length > 0 ? (
-          <article className="softsave-projects-card">
-            <h3 className="softsave-projects-card__edit-title">Estudios</h3>
-            <div className="softsave-public-list">
-              {profile.studies.map((study) => (
-                <article key={study.id} className="softsave-public-list__item">
-                  <h4>{getTextValue(study?.degree, study?.title, 'Estudio')}</h4>
-                  <p>{getTextValue(study?.academic_institution, study?.institution, 'Institución no especificada')}</p>
-                  {formatStudyRange(study) ? <span>{formatStudyRange(study)}</span> : null}
-                  {getTextValue(study?.achievements) ? <p>{study.achievements}</p> : null}
-                </article>
-              ))}
-            </div>
-          </article>
-        ) : null}
+          <div className="talent-board-detail__stats" aria-label="Estadisticas del perfil">
+            <span>
+              <Icon path={mdiStar} size={0.7} />
+              {rating.toFixed(1)}
+            </span>
+            <span>{projectsCount} proyectos</span>
+            <span>{focus}</span>
+          </div>
 
-        {Array.isArray(profile?.jobs) && profile.jobs.length > 0 ? (
-          <article className="softsave-projects-card">
-            <h3 className="softsave-projects-card__edit-title">Experiencia laboral</h3>
-            <div className="softsave-public-list">
-              {profile.jobs.map((job) => (
-                <article key={job.id} className="softsave-public-list__item">
-                  <h4>
-                    {getTextValue(job?.position, job?.job_title, job?.role, job?.title, job?.cargo, 'Experiencia')}
-                  </h4>
-                  <p>{getTextValue(job?.company_name, 'Empresa no especificada')}</p>
-                  {formatJobRange(job) ? <span>{formatJobRange(job)}</span> : null}
-                  {getTextValue(job?.description, job?.achievements, job?.achievement, job?.achivements, job?.logros) ? (
+          <div className="talent-board-detail__links">
+            {githubUrl ? (
+              <a href={githubUrl} target="_blank" rel="noreferrer">
+                <Icon path={mdiGithub} size={0.72} />
+                GitHub
+              </a>
+            ) : null}
+            {linkedinUrl ? (
+              <a href={linkedinUrl} target="_blank" rel="noreferrer">
+                <Icon path={mdiLinkedin} size={0.72} />
+                LinkedIn
+              </a>
+            ) : null}
+          </div>
+
+          <div className="talent-board-detail__bio softsave-projects-card">
+            <h2>Biografia</h2>
+            <p>{profile?.biography || 'Sin biografía disponible.'}</p>
+            {isOwnProfile ? (
+              <p className="softsave-project-form__hint">
+                Estas viendo tu perfil publico. Algunas secciones privadas no se muestran aqui.
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="talent-board-detail__content">
+        <div className="talent-board-detail__skills softsave-privacy__card">
+          <h2>
+            <Icon path={mdiCodeBraces} size={0.9} />
+            Habilidades tecnicas
+          </h2>
+          <div className="talent-board-tags" aria-label={`Habilidades de ${name}`}>
+            {skills.length > 0 ? (
+              skills.map((skill) => <span key={skill}>{skill}</span>)
+            ) : (
+              <span>Sin habilidades publicas</span>
+            )}
+          </div>
+        </div>
+
+        <div className="talent-board-detail__skills softsave-privacy__card">
+          <h2>
+            <Icon path={mdiCodeBraces} size={0.9} />
+            Habilidades blandas
+          </h2>
+          <div className="talent-board-tags" aria-label={`Habilidades blandas de ${name}`}>
+            {softSkills.length > 0 ? (
+              softSkills.map((skill) => <span key={skill}>{skill}</span>)
+            ) : (
+              <span>Sin habilidades blandas publicas</span>
+            )}
+          </div>
+        </div>
+
+        <section className="talent-board-detail__timeline">
+          <h2>
+            <Icon path={mdiBriefcaseOutline} size={0.9} />
+            Experiencia laboral
+          </h2>
+          <div className="talent-board-timeline">
+            {jobs.length > 0 ? (
+              jobs.map((job) => (
+                <article
+                  key={job.id}
+                  className="talent-board-timeline__item"
+                >
+                  <span className="talent-board-timeline__dot" aria-hidden="true" />
+                  <div>
+                    <p className="talent-board-timeline__years">{formatJobRange(job)}</p>
+                    <h3>{getTextValue(job?.position, job?.job_title, job?.role, job?.title, job?.cargo, 'Experiencia')}</h3>
+                    <p className="talent-board-timeline__company">{getTextValue(job?.company_name, 'Empresa no especificada')}</p>
                     <p>{getTextValue(job?.description, job?.achievements, job?.achievement, job?.achivements, job?.logros)}</p>
-                  ) : null}
+                  </div>
                 </article>
-              ))}
-            </div>
-          </article>
-        ) : null}
+              ))
+            ) : (
+              <p className="softsave-project-form__hint">Sin experiencia laboral publica disponible.</p>
+            )}
+          </div>
+        </section>
 
-        {Array.isArray(profile?.skills) && profile.skills.length > 0 ? (
-          <article className="softsave-projects-card">
-            <h3 className="softsave-projects-card__edit-title">Habilidades</h3>
-            <div className="softsave-tags-list">
-              {profile.skills.map((skill) => {
-                const skillName = typeof skill === 'string' ? skill : skill?.name;
-                const skillLevel = typeof skill === 'object' ? skill?.pivot?.level : null;
+        <section className="talent-board-detail__education">
+          <h2>
+            <Icon path={mdiSchoolOutline} size={0.9} />
+            Formacion academica
+          </h2>
+          <div className="talent-board-education">
+            {studies.length > 0 ? (
+              studies.map((study) => (
+                <article
+                  key={study.id}
+                  className="talent-board-education__card"
+                >
+                  <h3>{getTextValue(study?.degree, study?.title, 'Estudio')}</h3>
+                  <p>{getTextValue(study?.academic_institution, study?.institution, 'Institución no especificada')}</p>
+                  <span>{formatStudyRange(study)}</span>
+                </article>
+              ))
+            ) : (
+              <p className="softsave-project-form__hint">Sin formacion academica publica disponible.</p>
+            )}
+          </div>
 
-                if (!skillName) {
-                  return null;
-                }
+          {projects.length > 0 ? (
+            <>
+              <h2 style={{ marginTop: '1.5rem' }}>
+                Proyectos publicos
+              </h2>
+              <div className="talent-board-education">
+                {projects.map((project) => {
+                  const technologies = Array.isArray(project?.technologies) ? project.technologies : [];
 
-                return (
-                  <span key={skillName} className="softsave-tag">
-                    {skillName}
-                    {skillLevel ? <small>{skillLevel}</small> : null}
-                  </span>
-                );
-              })}
-            </div>
-          </article>
-        ) : null}
-
-        {Array.isArray(profile?.soft_skills) && profile.soft_skills.length > 0 ? (
-          <article className="softsave-projects-card">
-            <h3 className="softsave-projects-card__edit-title">Habilidades blandas</h3>
-            <div className="softsave-tags-list">
-              {profile.soft_skills.map((skill) => (
-                <span key={skill?.id || skill?.name} className="softsave-tag">
-                  {skill?.name || skill}
-                </span>
-              ))}
-            </div>
-          </article>
-        ) : null}
-
-        {Array.isArray(profile?.projects) && profile.projects.length > 0 ? (
-          <article className="softsave-projects-card">
-            <h3 className="softsave-projects-card__edit-title">Proyectos publicos</h3>
-            <div className="softsave-public-list">
-              {profile.projects.map((project) => {
-                const projectTitle = getTextValue(project?.title, project?.name, 'Proyecto');
-                const technologies = Array.isArray(project?.technologies)
-                  ? project.technologies
-                  : [];
-
-                return (
-                  <article key={project.id} className="softsave-public-list__item">
-                    <h4>{projectTitle}</h4>
-                    {getTextValue(project?.description) ? <p>{project.description}</p> : null}
-                    {technologies.length > 0 ? (
-                      <div className="softsave-tags-list">
-                        {technologies.map((technology) => (
-                          <span key={technology?.id || technology?.name} className="softsave-tag">
-                            {technology?.name || technology}
-                          </span>
-                        ))}
-                      </div>
-                    ) : null}
-                  </article>
-                );
-              })}
-            </div>
-          </article>
-        ) : null}
+                  return (
+                    <article
+                      key={project.id}
+                      className="talent-board-education__card"
+                    >
+                      <h3>{getTextValue(project?.title, project?.name, 'Proyecto')}</h3>
+                      {getTextValue(project?.description) ? <p>{project.description}</p> : null}
+                      {technologies.length > 0 ? (
+                        <div className="talent-board-tags">
+                          {technologies.map((technology) => (
+                            <span key={technology?.id || technology?.name}>{technology?.name || technology}</span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </article>
+                  );
+                })}
+              </div>
+            </>
+          ) : null}
+        </section>
       </div>
     </section>
   );

@@ -25,7 +25,13 @@ function App() {
         <Route path="/auth/callback" element={<AuthCallback />} />
       </Route>
 
-      <Route path="/users/:user/profile" element={<PerfilPublico />} />
+      <Route
+        element={(
+          <MainLayout />
+        )}
+      >
+        <Route path="/users/:user/profile" element={<PerfilPublico />} />
+      </Route>
 
       {/* Rutas protegidas */}
       <Route

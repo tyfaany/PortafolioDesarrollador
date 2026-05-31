@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
 import { mdiArrowRight, mdiStar } from '@mdi/js';
+import { useNavigate } from 'react-router-dom';
 
 function getInitials(name) {
   return String(name || '')
@@ -24,6 +25,7 @@ function getSkills(profile) {
 }
 
 function TalentProfileCard({ profile, onViewDetail }) {
+  const navigate = useNavigate();
   const name = profile?.name || profile?.nombre || 'Perfil sin nombre';
   const profession = profile?.profession || profile?.rol || 'Profesional';
   const rating = Number(profile?.rating || profile?.calificacion || 5);
@@ -76,7 +78,14 @@ function TalentProfileCard({ profile, onViewDetail }) {
       <button
         type="button"
         className="talent-board-primary-button talent-board-card__action"
-        onClick={onViewDetail}
+        onClick={() => {
+          if (profile?.id) {
+            navigate(`/users/${profile.id}/profile`);
+            return;
+          }
+
+          onViewDetail?.();
+        }}
       >
         Ver perfil
         <Icon path={mdiArrowRight} size={0.78} />
@@ -87,6 +96,7 @@ function TalentProfileCard({ profile, onViewDetail }) {
 
 TalentProfileCard.propTypes = {
   profile: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     name: PropTypes.string,
     nombre: PropTypes.string,
     profession: PropTypes.string,
