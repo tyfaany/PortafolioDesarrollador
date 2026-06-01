@@ -92,7 +92,6 @@ function mapPublicProfile(profile) {
     },
     habilidades: skills,
     skills: skills.map((skill) => ({ name: skill })),
-    focus: skills[0] || profile?.profession || 'Talento destacado',
     experienciaLaboral: jobs.map((job) => ({
       puesto: pickFirstText(job?.position, job?.job_title, job?.role, job?.title, job?.cargo, 'Experiencia laboral'),
       empresa: job?.company_name || 'Empresa no especificada',

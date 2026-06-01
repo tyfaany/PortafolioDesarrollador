@@ -325,7 +325,6 @@ function PortfolioSkillsSection() {
         setIndiceBlandaEditando(null);
         setNombresTecnicosEditando({});
         setEvidenciasTecnicasEditando({});
-        setTimeout(() => skillInputRef.current?.focus(), 0);
       }
       return siguiente;
     });

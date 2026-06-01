@@ -55,7 +55,6 @@ function TalentProfileCard({ profile, onViewDetail }) {
         </div>
 
         <div className="talent-board-card__heading">
-          <p className="talent-board-card__eyebrow">{profile?.focus || profession}</p>
           <h3>{name}</h3>
           <p>{profession}</p>
           <div className="talent-board-card__rating">
@@ -67,7 +66,7 @@ function TalentProfileCard({ profile, onViewDetail }) {
         </div>
       </div>
 
-      <p className="talent-board-card__bio">&ldquo;{biography}&rdquo;</p>
+      <p className="talent-board-card__bio">{biography}</p>
 
       <div className="talent-board-tags" aria-label={`Habilidades de ${name}`}>
         {skills.map((skill) => (
@@ -109,7 +108,6 @@ TalentProfileCard.propTypes = {
     proyectos: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     skills: PropTypes.array,
     habilidades: PropTypes.array,
-    focus: PropTypes.string,
     profile_photo_url: PropTypes.string,
     avatar: PropTypes.shape({
       initials: PropTypes.string,

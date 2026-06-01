@@ -163,7 +163,6 @@ function PerfilPublico() {
   const githubUrl = getTextValue(profile?.github_url, profile?.github);
   const linkedinUrl = getTextValue(profile?.linkedin_url, profile?.linkedin);
   const email = getTextValue(profile?.contact_email, profile?.email);
-  const focus = skills[0] || role || 'Talento destacado';
 
   return (
     <section className="talent-board-detail">
@@ -199,7 +198,6 @@ function PerfilPublico() {
               {rating.toFixed(1)}
             </span>
             <span>{projectsCount} proyectos</span>
-            <span>{focus}</span>
           </div>
 
           <div className="talent-board-detail__links">
