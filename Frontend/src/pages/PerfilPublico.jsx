@@ -527,8 +527,10 @@ function PerfilPublico() {
         background: 'linear-gradient(135deg, #2C3E50, #E67E22)',
       };
 
+  const visibleProjectsTotal = normalizedProfile.projects.length + normalizedProfile.githubRepositories.length;
+
   const publicHighlights = [
-    { label: 'Proyectos públicos', value: normalizedProfile.projects.length },
+    { label: 'Proyectos públicos', value: visibleProjectsTotal },
     { label: 'Experiencias', value: normalizedProfile.jobs.length },
     { label: 'Formaciones', value: normalizedProfile.studies.length },
     { label: 'Habilidades', value: normalizedProfile.skills.length + normalizedProfile.softSkills.length },
@@ -616,7 +618,7 @@ function PerfilPublico() {
             <div className="perfil-publico-hero__badge">
               <span className="perfil-publico-hero__badge-value">
                 <Icon path={mdiFolderOutline} size={0.72} />
-                {normalizedProfile.projects.length > 0 ? normalizedProfile.projects.length : '0'}
+                {visibleProjectsTotal > 0 ? visibleProjectsTotal : '0'}
               </span>
               <span className="perfil-publico-hero__badge-label">proyectos visibles</span>
             </div>
