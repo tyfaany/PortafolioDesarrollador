@@ -242,6 +242,7 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
             'skills',
             'softSkills',
             'visibility',
+            'githubRepositories',
         ]);
 
         // 2. Pasamos el usuario por el filtro de privacidad común
@@ -305,6 +306,10 @@ private function filterProfilePrivacy(User $user): array
         // Filtrado individual de proyectos públicos
         $profile['projects'] = $user->projects
             ->where('is_public', true)
+            ->values();
+
+        $profile['github_repositories'] = $user->githubRepositories
+            ->where('is_visible', true)
             ->values();
 
         return $profile;

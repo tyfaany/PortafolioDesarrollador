@@ -114,6 +114,11 @@ class User extends Authenticatable
                 ->withTimestamps();
     }
 
+    public function githubRepositories()
+    {
+        return $this->hasMany(GithubRepository::class);
+    }
+
     public function socialAccounts()
 {
     return $this->hasMany(SocialAccount::class);

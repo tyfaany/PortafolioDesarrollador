@@ -322,6 +322,34 @@ function getProjectTechnologies(project) {
     .filter(Boolean);
 }
 
+function normalizeGithubRepositories(repositories) {
+  if (!Array.isArray(repositories)) {
+    return [];
+  }
+
+  return repositories
+    .map((repository, index) => {
+      if (!repository) {
+        return null;
+      }
+
+      const fallbackId = repository?.id || repository?.github_id || repository?.html_url || repository?.name || index;
+      const language = getTextValue(repository?.language);
+
+      return {
+        id: `github-${fallbackId}`,
+        title: getTextValue(repository?.name, 'Repositorio'),
+        description: getTextValue(repository?.description, 'Sin descripción disponible.'),
+        language,
+        starsCount: Number(repository?.stars_count || 0),
+        forksCount: Number(repository?.forks_count || 0),
+        repoUrl: getTextValue(repository?.html_url),
+        isFork: Boolean(repository?.is_fork),
+      };
+    })
+    .filter(Boolean);
+}
+
 function resolveProjectImageUrl(project) {
   const rawUrl =
     project?.image_url ||
@@ -393,6 +421,20 @@ function sortProjects(projects) {
   });
 }
 
+function sortGithubRepositories(repositories) {
+  return [...repositories].sort((repoA, repoB) => {
+    const pushedA = Date.parse(repoA?.pushed_at || '');
+    const pushedB = Date.parse(repoB?.pushed_at || '');
+
+    if (!Number.isNaN(pushedA) || !Number.isNaN(pushedB)) {
+      return (Number.isNaN(pushedB) ? Number.NEGATIVE_INFINITY : pushedB)
+        - (Number.isNaN(pushedA) ? Number.NEGATIVE_INFINITY : pushedA);
+    }
+
+    return String(repoB?.id || '').localeCompare(String(repoA?.id || ''));
+  });
+}
+
 function PerfilPublico() {
   const { user } = useParams();
   const navigate = useNavigate();
@@ -446,6 +488,9 @@ function PerfilPublico() {
 
   const normalizedProfile = useMemo(() => {
     const projects = sortProjects(Array.isArray(profile?.projects) ? profile.projects : []);
+    const githubRepositories = sortGithubRepositories(
+      normalizeGithubRepositories(Array.isArray(profile?.github_repositories) ? profile.github_repositories : []),
+    );
     const skills = getSkills(profile);
     const softSkills = getSoftSkills(profile);
     const jobs = Array.isArray(profile?.jobs) ? profile.jobs : [];
@@ -465,6 +510,7 @@ function PerfilPublico() {
       githubUrl: getTextValue(profile?.github_url, profile?.github),
       linkedinUrl: getTextValue(profile?.linkedin_url, profile?.linkedin),
       projects,
+      githubRepositories,
       featuredProject: projects[0] || null,
       remainingProjects: projects.slice(1),
       skills,
@@ -542,6 +588,8 @@ function PerfilPublico() {
 
   const featuredProjectDescription = sanitizeHtml(normalizedProfile.featuredProject?.description || '');
   const projectsTabHasContent = normalizedProfile.projects.length > 0;
+  const githubRepositoriesTabHasContent = normalizedProfile.githubRepositories.length > 0;
+  const hasProjectsSection = projectsTabHasContent || githubRepositoriesTabHasContent;
 
   return (
     <section className="perfil-publico-page">
@@ -829,8 +877,20 @@ function PerfilPublico() {
             aria-labelledby="perfil-publico-tab-projects"
             className="perfil-publico-projects"
           >
-            {projectsTabHasContent ? (
+            {hasProjectsSection ? (
               <>
+                {projectsTabHasContent ? (
+                  <div className="perfil-publico-section-head perfil-publico-section-head--spaced perfil-publico-projects-personal-head">
+                    <div className="perfil-publico-section-head__title-wrap">
+                      <span className="perfil-publico-section-head__icon perfil-publico-section-head__icon--dark" aria-hidden="true">
+                        <Icon path={mdiFolderOutline} size={0.9} />
+                      </span>
+                      <h2>Proyectos personales</h2>
+                    </div>
+                    <span className="perfil-publico-section-head__count">{normalizedProfile.projects.length}</span>
+                  </div>
+                ) : null}
+
                 {normalizedProfile.featuredProject ? (
                   <section className="softsave-projects-card softsave-projects-card--public perfil-publico-project-featured">
                     <div className="softsave-projects-card__body perfil-publico-project-featured__body">
@@ -1008,6 +1068,61 @@ function PerfilPublico() {
                 <p>No hay proyectos visibles para este perfil en este momento.</p>
               </section>
             )}
+
+            {githubRepositoriesTabHasContent ? (
+              <section className="perfil-publico-card perfil-publico-github-grid-card">
+                <div className="perfil-publico-section-head perfil-publico-section-head--spaced">
+                  <div className="perfil-publico-section-head__title-wrap">
+                    <span className="perfil-publico-section-head__icon perfil-publico-section-head__icon--dark" aria-hidden="true">
+                      <Icon path={mdiGithub} size={0.9} />
+                    </span>
+                    <h2>Repositorios de GitHub</h2>
+                  </div>
+                  <span className="perfil-publico-section-head__count">{normalizedProfile.githubRepositories.length}</span>
+                </div>
+
+                <div className="perfil-publico-github-grid">
+                  {normalizedProfile.githubRepositories.map((repository) => (
+                    <article key={repository.id} className="perfil-publico-github-card">
+                      <div className="perfil-publico-github-card__top">
+                        <span className="perfil-publico-github-card__icon" aria-hidden="true">
+                          <Icon path={mdiFolderOutline} size={0.82} />
+                        </span>
+                        {repository.language ? (
+                          <span className="softsave-project-form__chip softsave-project-form__chip--selected perfil-publico-github-card__tech">
+                            {repository.language}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <div className="perfil-publico-github-card__content">
+                        <h3>{repository.title}</h3>
+                        <p className="perfil-publico-github-card__text">
+                          {repository.description}
+                        </p>
+
+                        <div className="perfil-publico-github-card__stats" aria-label="Estadísticas del repositorio">
+                          <span className="perfil-publico-github-card__stat">☆ {repository.starsCount}</span>
+                          <span className="perfil-publico-github-card__stat">⑂ {repository.forksCount}</span>
+                          {repository.isFork ? (
+                            <span className="perfil-publico-github-card__stat perfil-publico-github-card__stat--fork">Fork</span>
+                          ) : null}
+                        </div>
+
+                        {repository.repoUrl ? (
+                          <div className="perfil-publico-github-card__links">
+                            <a href={repository.repoUrl} target="_blank" rel="noreferrer">
+                              Ver en GitHub
+                              <Icon path={mdiOpenInNew} size={0.68} />
+                            </a>
+                          </div>
+                        ) : null}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </div>
         ) : null}
       </div>
