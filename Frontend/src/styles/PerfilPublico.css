@@ -91,13 +91,21 @@
 }
 
 .perfil-publico-hero__photo-frame::before {
+  content: none;
+}
+
+.perfil-publico-hero__photo-frame::after {
   content: "";
   position: absolute;
-  inset: -0.5rem;
-  border-radius: 2rem;
-  background: linear-gradient(135deg, rgba(var(--color-primario-rgb), 0.28), rgba(var(--color-texto-rgb), 0.08));
-  filter: blur(0.3rem);
-  opacity: 0.75;
+  right: -0.05rem;
+  bottom: -0.05rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  background: rgba(var(--color-blanco-rgb), 0.98);
+  box-shadow: 0 0 0 1px rgba(var(--color-blanco-rgb), 0.98);
+  z-index: 2;
+  pointer-events: none;
 }
 
 .perfil-publico-hero__photo {
@@ -112,7 +120,7 @@
   font-family: var(--font-titulos);
   font-size: 4rem;
   font-weight: 800;
-  box-shadow: 0 20px 36px rgba(var(--color-texto-rgb), 0.15);
+  box-shadow: none;
 }
 
 .perfil-publico-hero__photo img {
