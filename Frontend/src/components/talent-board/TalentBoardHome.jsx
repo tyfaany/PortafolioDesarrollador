@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Icon from '@mdi/react';
-import { mdiMagnify, mdiStarFourPoints } from '@mdi/js';
+import { mdiMagnify } from '@mdi/js';
 import { obtenerPerfilesPublicos, obtenerTecnologias } from '../../services/authService';
 import TalentProfileCard from './TalentProfileCard';
 import ProfilePagination from './ProfilePagination';
@@ -247,10 +247,6 @@ function TalentBoardHome() {
       <div className="talent-board-page__orb talent-board-page__orb--two" aria-hidden="true" />
 
       <section className="talent-board-hero">
-        <p className="talent-board-hero__eyebrow">
-          <Icon path={mdiStarFourPoints} size={0.7} />
-          Talent Board
-        </p>
         <h1>Explora talento, proyectos y trayectoria en una sola vista</h1>
         <p>
           Una experiencia de discovery pensada para encontrar perfiles que encajan con tu stack,

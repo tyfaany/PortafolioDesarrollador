@@ -2,7 +2,7 @@
   position: relative;
   width: 100%;
   min-height: calc(100vh - 86px);
-  padding: 0.25rem 1.25rem 4rem;
+  padding: 2.25rem 1.25rem 4rem;
   color: var(--color-texto);
 }
 
@@ -33,7 +33,7 @@
 }
 
 .talent-board-page > * {
-  position: relative;
+  /*position: relative;*/
   z-index: 1;
 }
 
@@ -41,18 +41,6 @@
   max-width: 72rem;
   margin: 0 auto 0.75rem;
   text-align: center;
-}
-
-.talent-board-hero__eyebrow {
-  margin: 0 0 0.75rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--color-primario);
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .talent-board-hero h1 {
