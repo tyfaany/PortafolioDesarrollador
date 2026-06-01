@@ -193,6 +193,12 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
                 'softSkills',
                 'visibility',
             ])->where('profile_completed', true)
+                ->where(function (Builder $query): void {
+                    $query->whereDoesntHave('visibility')
+                        ->orWhereHas('visibility', function (Builder $visibilityQuery): void {
+                            $visibilityQuery->where('show_in_search', true);
+                        });
+                })
         )
             ->allowedFilters([
                 AllowedFilter::callback('search', function (Builder $query, $value): void {

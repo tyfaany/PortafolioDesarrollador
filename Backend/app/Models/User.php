@@ -40,6 +40,7 @@ class User extends Authenticatable
     // --- NUEVO
     protected $appends = [
         'profile_photo_url',
+        'show_in_search',
         'show_bio',
         'show_studies',
         'show_jobs',
@@ -131,6 +132,11 @@ class User extends Authenticatable
     public function getShowBioAttribute(): bool
     {
         return $this->visibilityValue('show_bio');
+    }
+
+    public function getShowInSearchAttribute(): bool
+    {
+        return $this->visibilityValue('show_in_search');
     }
 
     public function getShowStudiesAttribute(): bool

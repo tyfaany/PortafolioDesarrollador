@@ -19,6 +19,7 @@ class PrivacyController extends Controller
         $user = $request->user();
 
         return response()->json([
+            'show_in_search' => $user->show_in_search,
             'show_bio' => $user->show_bio,
             'show_studies' => $user->show_studies,
             'show_jobs' => $user->show_jobs,
@@ -49,6 +50,7 @@ class PrivacyController extends Controller
         $visibility->save();
 
         return response()->json(Arr::only($visibility->toArray(), [
+            'show_in_search',
             'show_bio',
             'show_studies',
             'show_jobs',

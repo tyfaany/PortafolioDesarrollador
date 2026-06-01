@@ -22,6 +22,7 @@ class UpdatePrivacyRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'show_in_search' => 'nullable|boolean',
             'show_bio' => 'nullable|boolean',
             'show_studies' => 'nullable|boolean',
             'show_jobs' => 'nullable|boolean',

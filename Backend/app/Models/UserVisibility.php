@@ -19,6 +19,7 @@ class UserVisibility extends Model
 
     protected $fillable = [
         'user_id',
+        'show_in_search',
         'show_bio',
         'show_studies',
         'show_jobs',
@@ -32,6 +33,7 @@ class UserVisibility extends Model
     ];
 
     protected $casts = [
+        'show_in_search' => 'boolean',
         'show_bio' => 'boolean',
         'show_studies' => 'boolean',
         'show_jobs' => 'boolean',
@@ -47,6 +49,7 @@ class UserVisibility extends Model
     public static function defaults(): array
     {
         return [
+            'show_in_search' => true,
             'show_bio' => true,
             'show_studies' => true,
             'show_jobs' => true,

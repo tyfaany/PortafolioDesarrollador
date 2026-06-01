@@ -6,6 +6,12 @@ import useFeedback from '../hooks/useFeedback';
 
 const SECTIONS = [
   {
+    id: 'searchVisibility',
+    title: 'Perfil en búsquedas',
+    description: 'Permite que tu perfil aparezca en búsquedas y listados públicos',
+    fields: ['show_in_search'],
+  },
+  {
     id: 'profilePhoto',
     title: 'Foto de perfil',
     description: 'Muestra tu foto de perfil en el portafolio',
@@ -50,6 +56,7 @@ const SECTIONS = [
 ];
 
 const DEFAULT_PRIVACY = {
+  show_in_search: true,
   show_bio: true,
   show_studies: true,
   show_jobs: true,
@@ -172,6 +179,7 @@ function PrivacySettingsPanel() {
     }
 
     const hiddenConfig = {
+      show_in_search: false,
       show_bio: false,
       show_studies: false,
       show_jobs: false,

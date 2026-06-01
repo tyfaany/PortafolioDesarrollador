@@ -73,4 +73,37 @@ class QueryBuilderProfilesTest extends TestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'John React');
     }
+
+    public function test_it_hides_profiles_marked_as_not_visible_in_search(): void
+    {
+        $visibleUser = User::factory()->create([
+            'name' => 'Visible Dev',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $visibleUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $hiddenUser = User::factory()->create([
+            'name' => 'Hidden Dev',
+            'profession' => 'Frontend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $hiddenUser->id,
+            ...UserVisibility::defaults(),
+            'show_in_search' => false,
+        ]);
+
+        $response = $this->getJson('/api/profiles');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Visible Dev')
+            ->assertJsonMissing(['name' => 'Hidden Dev']);
+    }
 }
