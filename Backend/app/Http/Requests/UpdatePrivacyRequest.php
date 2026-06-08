@@ -33,6 +33,8 @@ class UpdatePrivacyRequest extends FormRequest
             'show_mobile' => 'nullable|boolean',
             'show_contact_email' => 'nullable|boolean',
             'show_address' => 'nullable|boolean',
+            'show_instagram' => 'nullable|boolean',
+            'show_facebook' => 'nullable|boolean',
         ];
     }
 }

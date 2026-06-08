@@ -29,6 +29,8 @@ class User extends Authenticatable
         'mobile',
         'contact_email',
         'address',
+        'instagram_url',
+        'facebook_url',
     ];
 
     protected $hidden = [
@@ -51,6 +53,8 @@ class User extends Authenticatable
         'show_mobile',
         'show_contact_email',
         'show_address',
+        'show_instagram',
+        'show_facebook',
     ];
 
     /**
@@ -187,6 +191,16 @@ class User extends Authenticatable
     public function getShowAddressAttribute(): bool
     {
         return $this->visibilityValue('show_address');
+    }
+
+    public function getShowInstagramAttribute(): bool
+    {
+        return $this->visibilityValue('show_instagram');
+    }
+
+    public function getShowFacebookAttribute(): bool
+    {
+        return $this->visibilityValue('show_facebook');
     }
 
     // --- NUEVO: Agregamos la función del Accessor al final ---

@@ -30,6 +30,8 @@ class UserVisibility extends Model
         'show_mobile',
         'show_contact_email',
         'show_address',
+        'show_instagram',
+        'show_facebook',
     ];
 
     protected $casts = [
@@ -44,6 +46,8 @@ class UserVisibility extends Model
         'show_mobile' => 'boolean',
         'show_contact_email' => 'boolean',
         'show_address' => 'boolean',
+        'show_instagram' => 'boolean',
+        'show_facebook' => 'boolean',
     ];
 
     public static function defaults(): array
@@ -60,6 +64,8 @@ class UserVisibility extends Model
             'show_mobile' => false,
             'show_contact_email' => false,
             'show_address' => false,
+            'show_instagram' => false,
+            'show_facebook' => false,
         ];
     }
 

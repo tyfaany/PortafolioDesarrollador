@@ -26,6 +26,8 @@ class UpdateContactRequest extends FormRequest
             'mobile' => 'nullable|string|max:20',
             'contact_email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:255',
+            'instagram_url' => 'nullable|url|max:255',
+            'facebook_url' => 'nullable|url|max:255',
             'show_phone' => 'boolean',
             'show_mobile' => 'boolean',
             'show_contact_email' => 'boolean',
