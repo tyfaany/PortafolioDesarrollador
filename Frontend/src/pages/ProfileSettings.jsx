@@ -13,6 +13,8 @@ import {
   mdiFolderOutline,
   mdiGithub,
   mdiImageOutline,
+  mdiInstagram,
+  mdiFacebook,
   mdiLinkedin,
   mdiMagnify,
   mdiOpenInNew,
@@ -129,6 +131,24 @@ function normalizarEnlacesProfesionales(user) {
       label: "GitHub",
       url: user.github_url,
       icono: mdiGithub,
+    });
+  }
+
+  if (user?.instagram_url) {
+    enlaces.push({
+      id: "instagram",
+      label: "Instagram",
+      url: user.instagram_url,
+      icono: mdiInstagram,
+    });
+  }
+
+  if (user?.facebook_url) {
+    enlaces.push({
+      id: "facebook",
+      label: "Facebook",
+      url: user.facebook_url,
+      icono: mdiFacebook,
     });
   }
 
@@ -1207,34 +1227,22 @@ function ProfileSettings() {
           <span className="softsave-profile__view-label">Dirección</span>
           <p className="softsave-profile__contact-value">{formularioPerfil.direccion || "Sin registrar"}</p>
         </article>
-        <article className="softsave-profile__contact-item">
-          <span className="softsave-profile__view-label">Instagram</span>
-          <p className="softsave-profile__contact-value">
-            {formularioPerfil.instagramUrl || "Sin registrar"}
-          </p>
-        </article>
-        <article className="softsave-profile__contact-item">
-          <span className="softsave-profile__view-label">Facebook</span>
-          <p className="softsave-profile__contact-value">
-            {formularioPerfil.facebookUrl || "Sin registrar"}
-          </p>
-        </article>
         <article className="softsave-profile__contact-item softsave-profile__contact-item--links">
-          <span className="softsave-profile__view-label">Redes profesionales</span>
+          <span className="softsave-profile__view-label">Redes</span>
           {enlacesProfesionales.length > 0 ? (
             <div className="softsave-profile__links-list">
-              {enlacesProfesionales.map((enlace) => (
-                <a
-                  key={enlace.id}
-                  href={enlace.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="softsave-profile__inline-link"
-                >
-                  <Icon path={enlace.icono} size={0.8} />
-                  <span>{enlace.label}</span>
-                  <Icon path={mdiOpenInNew} size={0.7} />
-                </a>
+                {enlacesProfesionales.map((enlace) => (
+                  <a
+                    key={enlace.id}
+                    href={enlace.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="softsave-profile__inline-link"
+                  >
+                    <Icon path={enlace.icono} size={0.8} />
+                    <span>{enlace.label}</span>
+                    <Icon path={mdiOpenInNew} size={0.7} />
+                  </a>
               ))}
             </div>
           ) : (
@@ -2000,9 +2008,9 @@ function ProfileSettings() {
           <div className="softsave-profile__modal">
             <header className="softsave-profile__modal-header">
               <div className="softsave-profile__modal-content">
-                <h3 className="softsave-profile__modal-title">Redes profesionales</h3>
+                <h3 className="softsave-profile__modal-title">Redes</h3>
                 <p className="softsave-profile__modal-text">
-                  Agrega tus enlaces de LinkedIn y GitHub manteniendo la misma estética del perfil.
+                  Agrega tus enlaces de LinkedIn, GitHub e Instagram/Facebook manteniendo la misma estética del perfil.
                 </p>
               </div>
 

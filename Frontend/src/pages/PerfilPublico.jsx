@@ -9,12 +9,15 @@ import {
   mdiEmailOutline,
   mdiFolderOutline,
   mdiGithub,
+  mdiInstagram,
   mdiLinkedin,
+  mdiGmail,
   mdiMapMarkerOutline,
   mdiOpenInNew,
   mdiPhoneOutline,
   mdiSchoolOutline,
   mdiStar,
+  mdiFacebook,
   mdiWhatsapp,
 } from '@mdi/js';
 import api from '../services/api';
@@ -493,6 +496,8 @@ function PerfilPublico() {
       photoUrl: profile?.profile_photo_url || '',
       githubUrl: getTextValue(profile?.github_url, profile?.github),
       linkedinUrl: getTextValue(profile?.linkedin_url, profile?.linkedin),
+      instagramUrl: getTextValue(profile?.instagram_url),
+      facebookUrl: getTextValue(profile?.facebook_url),
       projects,
       githubRepositories,
       featuredProject: projects[0] || null,
@@ -549,6 +554,58 @@ function PerfilPublico() {
           label: 'Dirección',
           value: normalizedProfile.contact.address,
           icon: mdiMapMarkerOutline,
+        }
+      : null,
+  ].filter(Boolean);
+
+  const redesProfesionales = [
+    normalizedProfile.contact.email
+      ? {
+          label: 'Gmail',
+          icon: mdiGmail,
+          href: `mailto:${normalizedProfile.contact.email}`,
+          className: 'perfil-publico-link-button perfil-publico-link-button--gmail',
+          variant: 'gmail',
+        }
+      : null,
+    normalizedProfile.githubUrl
+      ? {
+          label: 'GitHub',
+          icon: mdiGithub,
+          href: normalizedProfile.githubUrl,
+          className: 'perfil-publico-link-button perfil-publico-link-button--github',
+          variant: 'github',
+        }
+      : null,
+    normalizedProfile.linkedinUrl
+      ? {
+          label: 'LinkedIn',
+          icon: mdiLinkedin,
+          href: normalizedProfile.linkedinUrl,
+          className: 'perfil-publico-link-button perfil-publico-link-button--linkedin',
+          variant: 'linkedin',
+        }
+      : null,
+    normalizedProfile.instagramUrl
+      ? {
+          label: 'Instagram',
+          icon: mdiInstagram,
+          href: normalizedProfile.instagramUrl,
+          className: 'perfil-publico-link-button perfil-publico-link-button--instagram',
+          variant: 'instagram',
+          target: '_blank',
+          rel: 'noreferrer',
+        }
+      : null,
+    normalizedProfile.facebookUrl
+      ? {
+          label: 'Facebook',
+          icon: mdiFacebook,
+          href: normalizedProfile.facebookUrl,
+          className: 'perfil-publico-link-button perfil-publico-link-button--facebook',
+          variant: 'facebook',
+          target: '_blank',
+          rel: 'noreferrer',
         }
       : null,
   ].filter(Boolean);
@@ -656,7 +713,12 @@ function PerfilPublico() {
                         ) : null}
                       </div>
                       {entry.href ? (
-                        <a className="perfil-publico-contact__value" href={entry.href}>
+                        <a
+                          className="perfil-publico-contact__value"
+                          href={entry.href}
+                          target={entry.target}
+                          rel={entry.rel}
+                        >
                           {entry.value}
                         </a>
                       ) : (
@@ -670,25 +732,21 @@ function PerfilPublico() {
               )}
             </div>
 
-            <div className="perfil-publico-hero__links">
-              {normalizedProfile.githubUrl ? (
-                <a href={normalizedProfile.githubUrl} target="_blank" rel="noreferrer" className="perfil-publico-link-button">
-                  <Icon path={mdiGithub} size={0.78} />
-                  GitHub
-                </a>
-              ) : null}
-              {normalizedProfile.linkedinUrl ? (
-                <a href={normalizedProfile.linkedinUrl} target="_blank" rel="noreferrer" className="perfil-publico-link-button perfil-publico-link-button--soft">
-                  <Icon path={mdiLinkedin} size={0.78} />
-                  LinkedIn
-                </a>
-              ) : null}
-              {normalizedProfile.contact.email ? (
-                <a href={`mailto:${normalizedProfile.contact.email}`} className="perfil-publico-link-button perfil-publico-link-button--ghost">
-                  <Icon path={mdiEmailOutline} size={0.78} />
-                  Escribir correo
-                </a>
-              ) : null}
+            <div className="perfil-publico-hero__links-section">
+              <div className="perfil-publico-hero__links">
+                {redesProfesionales.map((entry) => (
+                  <a
+                    key={entry.label}
+                    href={entry.href}
+                    target={entry.target}
+                    rel={entry.rel}
+                    className={entry.className}
+                  >
+                    <Icon path={entry.icon} size={0.92} />
+                    {entry.label}
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </header>

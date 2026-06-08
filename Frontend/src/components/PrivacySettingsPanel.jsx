@@ -53,6 +53,12 @@ const SECTIONS = [
     description: 'Incluye email, telefono, ubicacion y el acceso a WhatsApp derivado del movil',
     fields: ['show_phone', 'show_mobile', 'show_contact_email', 'show_address'],
   },
+  {
+    id: 'socialNetworks',
+    title: 'Redes sociales',
+    description: 'Muestra tus perfiles de Instagram y Facebook',
+    fields: ['show_instagram', 'show_facebook'],
+  },
 ];
 
 const DEFAULT_PRIVACY = {
@@ -67,6 +73,8 @@ const DEFAULT_PRIVACY = {
   show_mobile: true,
   show_contact_email: true,
   show_address: true,
+  show_instagram: false,
+  show_facebook: false,
 };
 
 function isSectionVisible(section, privacyConfig) {
@@ -190,6 +198,8 @@ function PrivacySettingsPanel() {
       show_mobile: false,
       show_contact_email: false,
       show_address: false,
+      show_instagram: false,
+      show_facebook: false,
     };
 
     setIsHidingAll(true);

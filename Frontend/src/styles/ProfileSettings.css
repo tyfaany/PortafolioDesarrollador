@@ -428,6 +428,11 @@
   font-weight: 600;
 }
 
+.softsave-profile__inline-link:hover,
+.softsave-profile__inline-link:focus-visible {
+  text-decoration: none;
+}
+
 .softsave-profile__textarea {
   min-height: 110px;
   resize: vertical;

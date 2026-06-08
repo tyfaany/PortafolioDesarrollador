@@ -30,6 +30,8 @@ class PrivacyController extends Controller
             'show_mobile' => $user->show_mobile,
             'show_contact_email' => $user->show_contact_email,
             'show_address' => $user->show_address,
+            'show_instagram' => $user->show_instagram,
+            'show_facebook' => $user->show_facebook,
         ], 200);
     }
 
@@ -61,6 +63,8 @@ class PrivacyController extends Controller
             'show_mobile',
             'show_contact_email',
             'show_address',
+            'show_instagram',
+            'show_facebook',
         ]), 200);
     }
 }

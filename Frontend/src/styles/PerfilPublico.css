@@ -307,11 +307,24 @@ a.perfil-publico-contact__value {
   box-shadow: 0 12px 22px rgba(37, 211, 102, 0.24);
 }
 
+.perfil-publico-hero__links-section {
+  margin-top: 1rem;
+}
+
+.perfil-publico-hero__links-label {
+  display: block;
+  margin-bottom: 0.65rem;
+  color: var(--color-texto-suave);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .perfil-publico-hero__links {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 1rem;
 }
 
 .perfil-publico-link-button {
@@ -321,51 +334,88 @@ a.perfil-publico-contact__value {
   min-height: 2.85rem;
   padding: 0 1rem;
   border-radius: 1rem;
-  background: var(--color-texto);
-  color: var(--color-blanco);
+  background: var(--color-blanco);
+  color: var(--color-texto);
   font-weight: 800;
-  border: 1px solid transparent;
-  box-shadow: 0 14px 24px rgba(var(--color-texto-rgb), 0.18);
+  border: 1px solid rgba(var(--color-texto-rgb), 0.1);
+  box-shadow: 0 10px 20px rgba(var(--color-texto-rgb), 0.08);
   transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
 }
 
 .perfil-publico-link-button:hover,
 .perfil-publico-link-button:focus-visible {
-  color: var(--color-blanco);
   text-decoration: none;
   transform: translateY(-1px);
-  background: var(--color-primario);
-  box-shadow: 0 18px 28px rgba(var(--color-primario-rgb), 0.26);
+  box-shadow: 0 16px 28px rgba(var(--color-texto-rgb), 0.12);
 }
 
-.perfil-publico-link-button--soft {
-  background: var(--color-blanco);
-  color: var(--color-texto);
-  border: 1px solid rgba(var(--color-texto-rgb), 0.1);
-  box-shadow: none;
+.perfil-publico-link-button--gmail {
+  background: #ffffff;
+  color: #d93025;
+  border-color: rgba(217, 48, 37, 0.26);
 }
 
-.perfil-publico-link-button--soft:hover,
-.perfil-publico-link-button--soft:focus-visible {
-  color: var(--color-primario);
-  background: rgba(var(--color-blanco-rgb), 0.98);
-  border-color: rgba(var(--color-primario-rgb), 0.45);
-  box-shadow: 0 14px 24px rgba(var(--color-texto-rgb), 0.08);
+.perfil-publico-link-button--gmail:hover,
+.perfil-publico-link-button--gmail:focus-visible {
+  background: #fff7f7;
+  color: #c5221f;
+  border-color: rgba(217, 48, 37, 0.38);
+  box-shadow: 0 16px 28px rgba(217, 48, 37, 0.14);
 }
 
-.perfil-publico-link-button--ghost {
-  background: rgba(var(--color-blanco-rgb), 0.92);
-  color: var(--color-secundario);
-  border: 1px solid rgba(var(--color-primario-rgb), 0.18);
-  box-shadow: none;
+.perfil-publico-link-button--github {
+  background: #24292f;
+  color: #ffffff;
+  border-color: rgba(36, 41, 47, 0.14);
 }
 
-.perfil-publico-link-button--ghost:hover,
-.perfil-publico-link-button--ghost:focus-visible {
-  background: rgba(var(--color-primario-rgb), 0.1);
-  border-color: rgba(var(--color-primario-rgb), 0.34);
-  color: var(--color-primario);
-  box-shadow: 0 14px 24px rgba(var(--color-primario-rgb), 0.16);
+.perfil-publico-link-button--github:hover,
+.perfil-publico-link-button--github:focus-visible {
+  background: #1b1f24;
+  color: #ffffff;
+  box-shadow: 0 18px 28px rgba(36, 41, 47, 0.22);
+}
+
+.perfil-publico-link-button--linkedin {
+  background: #ffffff;
+  color: #0a66c2;
+  border-color: rgba(10, 102, 194, 0.24);
+}
+
+.perfil-publico-link-button--linkedin:hover,
+.perfil-publico-link-button--linkedin:focus-visible {
+  background: #f5f9ff;
+  color: #084e96;
+  border-color: rgba(10, 102, 194, 0.36);
+  box-shadow: 0 16px 28px rgba(10, 102, 194, 0.14);
+}
+
+.perfil-publico-link-button--instagram {
+  background: linear-gradient(135deg, #ffffff 0%, #fff8fb 60%, #fff3e8 100%);
+  color: #c13584;
+  border-color: rgba(193, 53, 132, 0.22);
+}
+
+.perfil-publico-link-button--instagram:hover,
+.perfil-publico-link-button--instagram:focus-visible {
+  background: linear-gradient(135deg, #fff5f9 0%, #fff0f5 58%, #fff1e7 100%);
+  color: #a62d70;
+  border-color: rgba(193, 53, 132, 0.34);
+  box-shadow: 0 16px 28px rgba(193, 53, 132, 0.14);
+}
+
+.perfil-publico-link-button--facebook {
+  background: #ffffff;
+  color: #1877f2;
+  border-color: rgba(24, 119, 242, 0.24);
+}
+
+.perfil-publico-link-button--facebook:hover,
+.perfil-publico-link-button--facebook:focus-visible {
+  background: #f5f9ff;
+  color: #145cb9;
+  border-color: rgba(24, 119, 242, 0.36);
+  box-shadow: 0 16px 28px rgba(24, 119, 242, 0.14);
 }
 
 .perfil-publico-link-button[href*="github"] svg {
@@ -376,11 +426,20 @@ a.perfil-publico-contact__value {
   color: #0a66c2;
 }
 
-.perfil-publico-link-button--soft:hover svg,
-.perfil-publico-link-button--soft:focus-visible svg,
-.perfil-publico-link-button--ghost:hover svg,
-.perfil-publico-link-button--ghost:focus-visible svg {
+.perfil-publico-link-button--gmail svg,
+.perfil-publico-link-button--github svg,
+.perfil-publico-link-button--linkedin svg,
+.perfil-publico-link-button--instagram svg,
+.perfil-publico-link-button--facebook svg {
   color: currentColor;
+}
+
+.perfil-publico-link-button--instagram svg {
+  color: #e1306c;
+}
+
+.perfil-publico-link-button--facebook svg {
+  color: #1877f2;
 }
 
 .perfil-publico-bio,
