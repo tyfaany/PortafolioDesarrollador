@@ -153,6 +153,25 @@ function validarUrlProfesional(valor, plataforma) {
   return "";
 }
 
+function validarUrlGeneral(valor, etiqueta) {
+  const limpio = sanitizarTexto(valor);
+
+  if (!limpio) {
+    return "";
+  }
+
+  try {
+    const url = new URL(limpio);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return `Por favor, ingresa una URL válida de ${etiqueta}`;
+    }
+  } catch {
+    return `Por favor, ingresa una URL válida de ${etiqueta}`;
+  }
+
+  return "";
+}
+
 function formatearTiempoRelativo(dias) {
   if (dias <= 1) {
     return "hace 1 día";
@@ -289,6 +308,8 @@ function ProfileSettings() {
     movil: user?.mobile || "",
     correoContacto: user?.contact_email || "",
     direccion: user?.address || "",
+    instagramUrl: user?.instagram_url || "",
+    facebookUrl: user?.facebook_url || "",
   });
   const [formularioEnlaces, setFormularioEnlaces] = useState({
     githubUrl: user?.github_url || "",
@@ -433,6 +454,8 @@ function ProfileSettings() {
       biografia: user.biography || "",
       githubUrl: user.github_url || "",
       linkedinUrl: user.linkedin_url || "",
+      instagramUrl: user.instagram_url || "",
+      facebookUrl: user.facebook_url || "",
     };
 
     setPerfilCabecera(datosPerfil);
@@ -461,6 +484,8 @@ function ProfileSettings() {
           movil: contacto.mobile || "",
           correoContacto: contacto.contact_email || correoContactoPredeterminado,
           direccion: contacto.address || "",
+          instagramUrl: contacto.instagram_url || user?.instagram_url || "",
+          facebookUrl: contacto.facebook_url || user?.facebook_url || "",
         }));
       } catch {
         setFormularioPerfil((estadoActual) => ({
@@ -469,6 +494,8 @@ function ProfileSettings() {
           movil: user?.mobile || "",
           correoContacto: correoContactoPredeterminado,
           direccion: user?.address || "",
+          instagramUrl: user?.instagram_url || "",
+          facebookUrl: user?.facebook_url || "",
         }));
       }
     };
@@ -510,6 +537,8 @@ function ProfileSettings() {
     const direccionLimpia = sanitizarTexto(formularioPerfil.direccion);
     const githubError = validarUrlProfesional(formularioPerfil.githubUrl, "GitHub");
     const linkedinError = validarUrlProfesional(formularioPerfil.linkedinUrl, "LinkedIn");
+    const instagramError = validarUrlGeneral(formularioPerfil.instagramUrl, "Instagram");
+    const facebookError = validarUrlGeneral(formularioPerfil.facebookUrl, "Facebook");
 
     if (!nombreLimpio) {
       nuevosErrores.nombreCompleto = "El nombre es obligatorio.";
@@ -549,6 +578,12 @@ function ProfileSettings() {
     if (linkedinError) {
       nuevosErrores.linkedinUrl = linkedinError;
     }
+    if (instagramError) {
+      nuevosErrores.instagramUrl = instagramError;
+    }
+    if (facebookError) {
+      nuevosErrores.facebookUrl = facebookError;
+    }
 
     setErroresFormulario(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
@@ -573,6 +608,8 @@ function ProfileSettings() {
       mobile: sanitizarTexto(formularioPerfil.movil) || null,
       contact_email: sanitizarTexto(formularioPerfil.correoContacto) || null,
       address: sanitizarTexto(formularioPerfil.direccion) || null,
+      instagram_url: sanitizarTexto(formularioPerfil.instagramUrl) || null,
+      facebook_url: sanitizarTexto(formularioPerfil.facebookUrl) || null,
     };
 
     setGuardandoPerfil(true);
@@ -616,6 +653,8 @@ function ProfileSettings() {
       movil: user?.mobile || "",
       correoContacto: correoContactoPredeterminado,
       direccion: user?.address || "",
+      instagramUrl: user?.instagram_url || "",
+      facebookUrl: user?.facebook_url || "",
     });
     setErroresFormulario({});
     setMensajeGuardadoError("");
@@ -1168,6 +1207,18 @@ function ProfileSettings() {
           <span className="softsave-profile__view-label">Dirección</span>
           <p className="softsave-profile__contact-value">{formularioPerfil.direccion || "Sin registrar"}</p>
         </article>
+        <article className="softsave-profile__contact-item">
+          <span className="softsave-profile__view-label">Instagram</span>
+          <p className="softsave-profile__contact-value">
+            {formularioPerfil.instagramUrl || "Sin registrar"}
+          </p>
+        </article>
+        <article className="softsave-profile__contact-item">
+          <span className="softsave-profile__view-label">Facebook</span>
+          <p className="softsave-profile__contact-value">
+            {formularioPerfil.facebookUrl || "Sin registrar"}
+          </p>
+        </article>
         <article className="softsave-profile__contact-item softsave-profile__contact-item--links">
           <span className="softsave-profile__view-label">Redes profesionales</span>
           {enlacesProfesionales.length > 0 ? (
@@ -1610,6 +1661,16 @@ function ProfileSettings() {
                 <span className="softsave-profile__label">Dirección</span>
                 <input type="text" name="direccion" value={formularioPerfil.direccion} onChange={manejarCambioFormulario} maxLength={255} className="softsave-input softsave-profile__input" placeholder="Ciudad, país" />
                 {erroresFormulario.direccion ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.direccion}</span> : null}
+              </label>
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">Instagram</span>
+                <input type="url" name="instagramUrl" value={formularioPerfil.instagramUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://instagram.com/tu-usuario" />
+                {erroresFormulario.instagramUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.instagramUrl}</span> : null}
+              </label>
+              <label className="softsave-profile__field">
+                <span className="softsave-profile__label">Facebook</span>
+                <input type="url" name="facebookUrl" value={formularioPerfil.facebookUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://facebook.com/tu-perfil" />
+                {erroresFormulario.facebookUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.facebookUrl}</span> : null}
               </label>
               <label className="softsave-profile__field">
                 <span className="softsave-profile__label">URL de GitHub</span>
