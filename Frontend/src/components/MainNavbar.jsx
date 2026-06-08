@@ -1,6 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon from '@mdi/react';
-import { mdiAccountCircle, mdiFolder, mdiHome } from '@mdi/js';
+import { mdiAccountCircle, mdiFolder, mdiHome, mdiLogoutVariant } from '@mdi/js';
+import useAuth from '../hooks/useAuth';
 import "../styles/MainNavbar.css";
 
 const NAV_ITEMS = [
@@ -27,7 +29,25 @@ function obtenerNavActivo(pathname) {
 
 function MainNavbar() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
   const navActivo = obtenerNavActivo(pathname);
+  const [cerrandoSesion, setCerrandoSesion] = useState(false);
+
+  const manejarCerrarSesion = async () => {
+    if (cerrandoSesion) {
+      return;
+    }
+
+    setCerrandoSesion(true);
+
+    try {
+      await logout();
+    } finally {
+      setCerrandoSesion(false);
+      navigate('/login', { replace: true });
+    }
+  };
 
   return (
     <header className="softsave-navbar">
@@ -55,6 +75,22 @@ function MainNavbar() {
               <span>{item.label}</span>
             </Link>
           ))}
+
+          {isAuthenticated ? (
+            <button
+              type="button"
+              className="softsave-navbar__nav-item softsave-navbar__nav-item--button softsave-navbar__nav-item--logout"
+              onClick={manejarCerrarSesion}
+              disabled={cerrandoSesion}
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+            >
+              <span className="softsave-navbar__nav-icon" aria-hidden="true">
+                <Icon path={mdiLogoutVariant} size={1.5} />
+              </span>
+              <span>{cerrandoSesion ? 'Saliendo...' : 'Salir'}</span>
+            </button>
+          ) : null}
         </nav>
       </div>
     </header>

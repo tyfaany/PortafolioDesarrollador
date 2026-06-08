@@ -78,6 +78,14 @@
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
+.softsave-navbar__nav-item--button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 .softsave-navbar__nav-item span:last-child {
   white-space: nowrap;
 }
@@ -91,6 +99,21 @@
 .softsave-navbar__nav-item.is-active {
   color: var(--color-texto);
   border-bottom-color: var(--color-texto);
+}
+
+.softsave-navbar__nav-item--logout {
+  color: var(--color-texto-suave);
+}
+
+.softsave-navbar__nav-item--logout:hover:not(:disabled),
+.softsave-navbar__nav-item--logout:focus-visible {
+  color: var(--color-texto);
+}
+
+.softsave-navbar__nav-item--logout:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  transform: none;
 }
 
 .softsave-navbar__nav-icon {
