@@ -267,8 +267,8 @@ function TalentBoardHome() {
             type="search"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Busca por nombre, rol o palabra clave"
-            aria-label="Buscar perfiles por nombre, rol o palabra clave"
+            placeholder="Busca por nombre, rol, biografía o experiencia"
+            aria-label="Buscar perfiles por nombre, rol, biografía o experiencia"
           />
           <button type="submit" className="talent-board-primary-button">
             Buscar
