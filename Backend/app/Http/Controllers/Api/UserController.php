@@ -91,11 +91,15 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
         'mobile' => $user->mobile,
         'contact_email' => $user->contact_email,
         'address' => $user->address,
+        'instagram_url' => $user->instagram_url,
+        'facebook_url' => $user->facebook_url,
 
         'show_phone' => $user->show_phone,
         'show_mobile' => $user->show_mobile,
         'show_contact_email' => $user->show_contact_email,
         'show_address' => $user->show_address,
+        'show_instagram' => $user->show_instagram,
+        'show_facebook' => $user->show_facebook,
     ]);
 }
      public function updateContact(UpdateContactRequest $request)
@@ -114,12 +118,16 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
         'show_mobile',
         'show_contact_email',
         'show_address',
+        'show_instagram',
+        'show_facebook',
     ]);
     $contactData = Arr::only($sanitized, [
         'phone',
         'mobile',
         'contact_email',
         'address',
+        'instagram_url',
+        'facebook_url',
     ]);
 
     $user->fill($contactData);
@@ -147,10 +155,14 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
             'mobile' => $user->mobile,
             'contact_email' => $user->contact_email,
             'address' => $user->address,
+            'instagram_url' => $user->instagram_url,
+            'facebook_url' => $user->facebook_url,
             'show_phone' => $visibility->show_phone,
             'show_mobile' => $visibility->show_mobile,
             'show_contact_email' => $visibility->show_contact_email,
             'show_address' => $visibility->show_address,
+            'show_instagram' => $visibility->show_instagram,
+            'show_facebook' => $visibility->show_facebook,
         ]
     ]);
 }
@@ -166,6 +178,9 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
 
     if ($user->show_mobile) {
         $data['mobile'] = $user->mobile;
+        $data['whatsapp_url'] = preg_replace('/\D+/', '', (string) $user->mobile)
+            ? 'https://wa.me/' . preg_replace('/\D+/', '', (string) $user->mobile)
+            : null;
     }
 
     if ($user->show_contact_email) {
@@ -174,6 +189,14 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
 
     if ($user->show_address) {
         $data['address'] = $user->address;
+    }
+
+    if ($user->show_instagram) {
+        $data['instagram_url'] = $user->instagram_url;
+    }
+
+    if ($user->show_facebook) {
+        $data['facebook_url'] = $user->facebook_url;
     }
 
     return response()->json($data);
@@ -284,6 +307,14 @@ private function filterProfilePrivacy(User $user): array
 
         if ($user->show_mobile) {
             $profile['mobile'] = $user->mobile;
+        }
+
+        if ($user->show_instagram) {
+            $profile['instagram_url'] = $user->instagram_url;
+        }
+
+        if ($user->show_facebook) {
+            $profile['facebook_url'] = $user->facebook_url;
         }
 
         if ($user->show_contact_email) {
