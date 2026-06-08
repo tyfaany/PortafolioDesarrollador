@@ -49,6 +49,23 @@
   box-shadow: 0 16px 34px rgba(var(--color-texto-rgb), 0.08);
 }
 
+.perfil-publico-pdf-region {
+  display: grid;
+  gap: 1rem;
+  background: #ffffff;
+  color: var(--color-texto);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.perfil-publico-pdf-region .perfil-publico-card,
+.perfil-publico-pdf-region .perfil-publico-empty-state {
+  background: #ffffff;
+  box-shadow: none;
+}
+
 .perfil-publico-back {
   display: inline-flex;
   align-items: center;
@@ -440,6 +457,35 @@ a.perfil-publico-contact__value {
 
 .perfil-publico-link-button--facebook svg {
   color: #1877f2;
+}
+
+@media print {
+  .perfil-publico-page {
+    padding: 0;
+    overflow: visible;
+    background: #ffffff;
+  }
+
+  .perfil-publico-page__orb,
+  .perfil-publico-back {
+    display: none !important;
+  }
+
+  .perfil-publico-page__container {
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .perfil-publico-pdf-region {
+    gap: 0.75rem;
+  }
+
+  .perfil-publico-pdf-region,
+  .perfil-publico-pdf-region * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    backdrop-filter: none !important;
+  }
 }
 
 .perfil-publico-bio,

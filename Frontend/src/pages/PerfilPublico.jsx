@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '@mdi/react';
 import {
@@ -430,6 +430,7 @@ function PerfilPublico() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('general');
+  const perfilImprimibleRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -646,6 +647,7 @@ function PerfilPublico() {
           Volver a la búsqueda
         </button>
 
+        <div ref={perfilImprimibleRef} className="perfil-publico-pdf-region">
         <header className="perfil-publico-hero perfil-publico-card">
           <div className="perfil-publico-hero__media">
             <div className="perfil-publico-hero__photo-frame">
@@ -1202,6 +1204,7 @@ function PerfilPublico() {
             ) : null}
           </div>
         ) : null}
+        </div>
       </div>
     </section>
   );
