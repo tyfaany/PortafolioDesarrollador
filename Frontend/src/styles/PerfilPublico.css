@@ -71,8 +71,8 @@
   display: grid;
   grid-template-columns: 20rem minmax(0, 1fr);
   gap: 1.5rem;
-  align-items: center;
-  padding: 1.25rem;
+  align-items: start;
+  padding: 1rem 1.25rem 1.25rem;
   overflow: hidden;
   background:
     radial-gradient(circle at top right, rgba(var(--color-primario-rgb), 0.1), transparent 44%),
@@ -92,20 +92,6 @@
 
 .perfil-publico-hero__photo-frame::before {
   content: none;
-}
-
-.perfil-publico-hero__photo-frame::after {
-  content: "";
-  position: absolute;
-  right: -0.05rem;
-  bottom: -0.05rem;
-  width: 1rem;
-  height: 1rem;
-  border-radius: 9999px;
-  background: rgba(var(--color-blanco-rgb), 0.98);
-  box-shadow: 0 0 0 1px rgba(var(--color-blanco-rgb), 0.98);
-  z-index: 2;
-  pointer-events: none;
 }
 
 .perfil-publico-hero__photo {
@@ -156,6 +142,7 @@
 
 .perfil-publico-hero__content {
   min-width: 0;
+  padding-top: 0.1rem;
 }
 
 .perfil-publico-hero__eyebrow {
@@ -173,13 +160,13 @@
 }
 
 .perfil-publico-hero__title {
-  margin: 0.75rem 0 0;
+  margin: 0.15rem 0 0;
   font-size: clamp(2.35rem, 5vw, 4.4rem);
   line-height: 0.98;
 }
 
 .perfil-publico-hero__role {
-  margin: 0.4rem 0 0;
+  margin: 0.25rem 0 0;
   color: var(--color-primario);
   font-size: clamp(1.05rem, 2vw, 1.35rem);
   font-weight: 800;
@@ -193,7 +180,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.8rem;
-  margin-top: 1.1rem;
+  margin-top: 0.95rem;
 }
 
 .perfil-publico-hero__highlight {
@@ -224,7 +211,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.8rem;
-  margin-top: 1.2rem;
+  margin-top: 1rem;
 }
 
 .perfil-publico-contact {
@@ -284,7 +271,7 @@ a.perfil-publico-contact__value {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 1.2rem;
+  margin-top: 1rem;
 }
 
 .perfil-publico-link-button {
@@ -811,6 +798,15 @@ a.perfil-publico-contact__value {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.9rem;
+}
+
+.perfil-publico-project-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.perfil-publico-project-featured--list {
+  width: 100%;
 }
 
 .perfil-publico-github-grid {

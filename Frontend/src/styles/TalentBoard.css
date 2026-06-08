@@ -291,17 +291,6 @@
   border-radius: 1.4rem;
 }
 
-.talent-board-card__status {
-  position: absolute;
-  right: -0.1rem;
-  bottom: -0.1rem;
-  width: 0.95rem;
-  height: 0.95rem;
-  background: var(--color-verde);
-  border: 0.2rem solid var(--color-blanco);
-  border-radius: 9999px;
-}
-
 .talent-board-card__heading h3,
 .talent-board-detail__summary h1 {
   margin: 0;

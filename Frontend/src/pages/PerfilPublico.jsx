@@ -222,28 +222,6 @@ function formatProjectRange(project) {
   return `${start} - ${end}`;
 }
 
-function formatProjectIsoDate(project) {
-  const value = project?.start_date || project?.end_date;
-
-  if (!value) {
-    return '';
-  }
-
-  if (typeof value === 'string') {
-    const match = value.match(/^\d{4}-\d{2}-\d{2}/);
-    if (match) {
-      return match[0];
-    }
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
-
-  return date.toISOString().slice(0, 10);
-}
-
 function getSkills(profile) {
   if (!Array.isArray(profile?.skills)) {
     return [];
@@ -625,7 +603,6 @@ function PerfilPublico() {
           </div>
 
           <div className="perfil-publico-hero__content">
-            <span className="perfil-publico-hero__eyebrow">Perfil público</span>
             <h1 className="perfil-publico-hero__title">{normalizedProfile.name}</h1>
             {normalizedProfile.role ? (
               <p className="perfil-publico-hero__role">{normalizedProfile.role}</p>
@@ -882,182 +859,195 @@ function PerfilPublico() {
             {hasProjectsSection ? (
               <>
                 {projectsTabHasContent ? (
-                  <div className="perfil-publico-section-head perfil-publico-section-head--spaced perfil-publico-projects-personal-head">
-                    <div className="perfil-publico-section-head__title-wrap">
-                      <span className="perfil-publico-section-head__icon perfil-publico-section-head__icon--dark" aria-hidden="true">
-                        <Icon path={mdiFolderOutline} size={0.9} />
-                      </span>
-                      <h2>Proyectos personales</h2>
-                    </div>
-                    <span className="perfil-publico-section-head__count">{normalizedProfile.projects.length}</span>
-                  </div>
-                ) : null}
-
-                {normalizedProfile.featuredProject ? (
-                  <section className="softsave-projects-card softsave-projects-card--public perfil-publico-project-featured">
-                    <div className="softsave-projects-card__body perfil-publico-project-featured__body">
-                      <div className="softsave-projects-card__media perfil-publico-project-featured__media" aria-hidden="true">
-                        {resolveProjectImageUrl(normalizedProfile.featuredProject) ? (
-                          <img
-                            src={resolveProjectImageUrl(normalizedProfile.featuredProject)}
-                            alt={getProjectTitle(normalizedProfile.featuredProject)}
-                          />
-                        ) : (
-                          <Icon path={mdiFolderOutline} size={1.1} />
-                        )}
-                      </div>
-
-                      <div className="softsave-projects-card__summary perfil-publico-project-featured__summary">
-                        <div className="perfil-publico-project-featured__header">
-                          <div className="perfil-publico-project-featured__headline">
-                            <h3 className="softsave-projects-card__title perfil-publico-featured__title">
-                              {getProjectTitle(normalizedProfile.featuredProject)}
-                            </h3>
-                          </div>
-                        </div>
-
-                        <div className="perfil-publico-project-featured__meta">
-                          {normalizedProfile.featuredProject?.is_in_progress ? (
-                            <span className="perfil-publico-status is-active">
-                              En progreso
-                            </span>
-                          ) : null}
-                          {formatProjectIsoDate(normalizedProfile.featuredProject) ? (
-                            <p className="perfil-publico-project-featured__date">
-                              {formatProjectIsoDate(normalizedProfile.featuredProject)}
-                            </p>
-                          ) : null}
-                        </div>
-
-                        {featuredProjectDescription ? (
-                          <div
-                            className="softsave-projects-card__description softsave-projects-card__description--rich perfil-publico-project-featured__text"
-                            dangerouslySetInnerHTML={{ __html: featuredProjectDescription }}
-                          />
-                        ) : (
-                          <p className="softsave-projects-card__description perfil-publico-project-featured__text">
-                            Sin descripción disponible.
-                          </p>
-                        )}
-
-                        <div className="softsave-projects-card__links perfil-publico-project-featured__links">
-                          {normalizedProfile.featuredProject?.demo_url ? (
-                            <a
-                              href={normalizedProfile.featuredProject.demo_url}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              <Icon path={mdiOpenInNew} size={0.72} />
-                              Demo
-                            </a>
-                          ) : null}
-                          {normalizedProfile.featuredProject?.repo_url ? (
-                            <a
-                              href={normalizedProfile.featuredProject.repo_url}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              <Icon path={mdiGithub} size={0.72} />
-                              Repositorio
-                            </a>
-                          ) : null}
-                        </div>
-
-                        {getProjectTechnologies(normalizedProfile.featuredProject).length > 0 ? (
-                          <div className="softsave-project-form__chips perfil-publico-project-featured__chips" aria-label="Tecnologías del proyecto destacado">
-                            {getProjectTechnologies(normalizedProfile.featuredProject).map((technology) => (
-                              <span key={technology} className="softsave-project-form__chip softsave-project-form__chip--selected">
-                                {technology}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  </section>
-                ) : null}
-
-                {normalizedProfile.remainingProjects.length > 0 ? (
                   <section className="perfil-publico-card perfil-publico-project-grid-card">
-                    <div className="perfil-publico-section-head perfil-publico-section-head--spaced">
+                    <div className="perfil-publico-section-head perfil-publico-section-head--spaced perfil-publico-projects-personal-head">
                       <div className="perfil-publico-section-head__title-wrap">
                         <span className="perfil-publico-section-head__icon perfil-publico-section-head__icon--dark" aria-hidden="true">
                           <Icon path={mdiFolderOutline} size={0.9} />
                         </span>
-                        <h2>Otros proyectos públicos</h2>
+                        <h2>Proyectos personales</h2>
                       </div>
-                      <span className="perfil-publico-section-head__count">{normalizedProfile.remainingProjects.length}</span>
+                      <span className="perfil-publico-section-head__count">{normalizedProfile.projects.length}</span>
                     </div>
 
-                    <div className="perfil-publico-project-grid">
-                      {normalizedProfile.remainingProjects.map((project) => {
+                    {normalizedProfile.featuredProject ? (
+                      <section className="softsave-projects-card softsave-projects-card--public perfil-publico-project-featured">
+                        <div className="softsave-projects-card__body perfil-publico-project-featured__body">
+                          <div className="softsave-projects-card__media perfil-publico-project-featured__media" aria-hidden="true">
+                            {resolveProjectImageUrl(normalizedProfile.featuredProject) ? (
+                              <img
+                                src={resolveProjectImageUrl(normalizedProfile.featuredProject)}
+                                alt={getProjectTitle(normalizedProfile.featuredProject)}
+                              />
+                            ) : (
+                              <Icon path={mdiFolderOutline} size={1.1} />
+                            )}
+                          </div>
+
+                          <div className="softsave-projects-card__summary perfil-publico-project-featured__summary">
+                            <div className="perfil-publico-project-featured__header">
+                              <div className="perfil-publico-project-featured__headline">
+                                <h3 className="softsave-projects-card__title perfil-publico-featured__title">
+                                  {getProjectTitle(normalizedProfile.featuredProject)}
+                                </h3>
+                              </div>
+                            </div>
+
+                            <div className="perfil-publico-project-featured__meta">
+                              {normalizedProfile.featuredProject?.is_in_progress ? (
+                                <span className="perfil-publico-status is-active">
+                                  En progreso
+                                </span>
+                              ) : null}
+                              {formatProjectRange(normalizedProfile.featuredProject) ? (
+                                <p className="perfil-publico-project-featured__date">
+                                  {formatProjectRange(normalizedProfile.featuredProject)}
+                                </p>
+                              ) : null}
+                            </div>
+
+                            {featuredProjectDescription ? (
+                              <div
+                                className="softsave-projects-card__description softsave-projects-card__description--rich perfil-publico-project-featured__text"
+                                dangerouslySetInnerHTML={{ __html: featuredProjectDescription }}
+                              />
+                            ) : (
+                              <p className="softsave-projects-card__description perfil-publico-project-featured__text">
+                                Sin descripción disponible.
+                              </p>
+                            )}
+
+                            <div className="softsave-projects-card__links perfil-publico-project-featured__links">
+                              {normalizedProfile.featuredProject?.demo_url ? (
+                                <a
+                                  href={normalizedProfile.featuredProject.demo_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  <Icon path={mdiOpenInNew} size={0.72} />
+                                  Demo
+                                </a>
+                              ) : null}
+                              {normalizedProfile.featuredProject?.repo_url ? (
+                                <a
+                                  href={normalizedProfile.featuredProject.repo_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  <Icon path={mdiGithub} size={0.72} />
+                                  Repositorio
+                                </a>
+                              ) : null}
+                            </div>
+
+                            {getProjectTechnologies(normalizedProfile.featuredProject).length > 0 ? (
+                              <div className="softsave-project-form__chips perfil-publico-project-featured__chips" aria-label="Tecnologías del proyecto destacado">
+                                {getProjectTechnologies(normalizedProfile.featuredProject).map((technology) => (
+                                  <span key={technology} className="softsave-project-form__chip softsave-project-form__chip--selected">
+                                    {technology}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                      </section>
+                    ) : null}
+
+                    {normalizedProfile.remainingProjects.length > 0 ? (
+                      <div className="perfil-publico-project-list">
+                        {normalizedProfile.remainingProjects.map((project) => {
                         const imageUrl = resolveProjectImageUrl(project);
                         const technologies = getProjectTechnologies(project);
                         const description = sanitizeHtml(project?.description || '');
 
                         return (
-                          <article key={project.id} className="perfil-publico-project-card">
-                            <div className="perfil-publico-project-card__media">
-                              {imageUrl ? (
-                                <img src={imageUrl} alt={getProjectTitle(project)} />
-                              ) : (
-                                <div className="perfil-publico-project-card__placeholder" aria-hidden="true">
-                                  <Icon path={mdiFolderOutline} size={1.2} />
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="perfil-publico-project-card__content">
-                              <div className="perfil-publico-project-card__head">
-                                <span className={`perfil-publico-status ${project?.is_in_progress ? 'is-active' : 'is-complete'}`}>
-                                  {project?.is_in_progress ? 'En progreso' : 'Publicado'}
-                                </span>
-                                {formatProjectRange(project) ? (
-                                  <span className="perfil-publico-project-card__date">{formatProjectRange(project)}</span>
-                                ) : null}
+                          <section key={project.id} className="softsave-projects-card softsave-projects-card--public perfil-publico-project-featured perfil-publico-project-featured--list">
+                            <div className="softsave-projects-card__body perfil-publico-project-featured__body">
+                              <div className="softsave-projects-card__media perfil-publico-project-featured__media" aria-hidden="true">
+                                {imageUrl ? (
+                                  <img src={imageUrl} alt={getProjectTitle(project)} />
+                                ) : (
+                                  <Icon path={mdiFolderOutline} size={1.1} />
+                                )}
                               </div>
 
-                              <h3>{getProjectTitle(project)}</h3>
-                              {description ? (
-                                <div
-                                  className="perfil-publico-project-card__text softsave-projects-card__description--rich"
-                                  dangerouslySetInnerHTML={{ __html: description }}
-                                />
-                              ) : (
-                                <p className="perfil-publico-project-card__text">
-                                  Sin descripción disponible.
-                                </p>
-                              )}
+                              <div className="softsave-projects-card__summary perfil-publico-project-featured__summary">
+                                <div className="perfil-publico-project-featured__header">
+                                  <div className="perfil-publico-project-featured__headline">
+                                    <h3 className="softsave-projects-card__title perfil-publico-featured__title">
+                                      {getProjectTitle(project)}
+                                    </h3>
+                                  </div>
+                                </div>
 
-                              {technologies.length > 0 ? (
-                                <div className="perfil-publico-project-tags">
-                                  {technologies.slice(0, 4).map((technology) => (
-                                    <span key={technology} className="perfil-publico-project-tags__item">
-                                      {technology}
+                                <div className="perfil-publico-project-featured__meta">
+                                  {project?.is_in_progress ? (
+                                    <span className="perfil-publico-status is-active">
+                                      En progreso
                                     </span>
-                                  ))}
+                                  ) : (
+                                    <span className="perfil-publico-status is-complete">
+                                      Publicado
+                                    </span>
+                                  )}
+                                  {formatProjectRange(project) ? (
+                                    <p className="perfil-publico-project-featured__date">
+                                      {formatProjectRange(project)}
+                                    </p>
+                                  ) : null}
                                 </div>
-                              ) : null}
 
-                              <div className="perfil-publico-project-card__links">
-                                {project?.demo_url ? (
-                                  <a href={project.demo_url} target="_blank" rel="noreferrer">
-                                    Demo
-                                    <Icon path={mdiOpenInNew} size={0.68} />
-                                  </a>
-                                ) : null}
-                                {project?.repo_url ? (
-                                  <a href={project.repo_url} target="_blank" rel="noreferrer">
-                                    Repo
-                                    <Icon path={mdiGithub} size={0.68} />
-                                  </a>
+                                {description ? (
+                                  <div
+                                    className="softsave-projects-card__description softsave-projects-card__description--rich perfil-publico-project-featured__text"
+                                    dangerouslySetInnerHTML={{ __html: description }}
+                                  />
+                                ) : (
+                                  <p className="softsave-projects-card__description perfil-publico-project-featured__text">
+                                    Sin descripción disponible.
+                                  </p>
+                                )}
+
+                                <div className="softsave-projects-card__links perfil-publico-project-featured__links">
+                                  {project?.demo_url ? (
+                                    <a
+                                      href={project.demo_url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                    >
+                                      <Icon path={mdiOpenInNew} size={0.72} />
+                                      Demo
+                                    </a>
+                                  ) : null}
+                                  {project?.repo_url ? (
+                                    <a
+                                      href={project.repo_url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                    >
+                                      <Icon path={mdiGithub} size={0.72} />
+                                      Repositorio
+                                    </a>
+                                  ) : null}
+                                </div>
+
+                                {technologies.length > 0 ? (
+                                  <div className="softsave-project-form__chips perfil-publico-project-featured__chips" aria-label="Tecnologías del proyecto">
+                                    {technologies.slice(0, 4).map((technology) => (
+                                      <span key={technology} className="softsave-project-form__chip softsave-project-form__chip--selected">
+                                        {technology}
+                                      </span>
+                                    ))}
+                                  </div>
                                 ) : null}
                               </div>
                             </div>
-                          </article>
+                          </section>
                         );
-                      })}
-                    </div>
+                        })}
+                      </div>
+                    ) : null}
                   </section>
                 ) : null}
               </>
@@ -1066,8 +1056,8 @@ function PerfilPublico() {
                 <span className="perfil-publico-empty-state__icon" aria-hidden="true">
                   <Icon path={mdiFolderOutline} size={1.3} />
                 </span>
-                <h2>Sin proyectos públicos</h2>
-                <p>No hay proyectos visibles para este perfil en este momento.</p>
+                <h2>Sin proyectos personales</h2>
+                <p>No hay proyectos personales visibles para este perfil en este momento.</p>
               </section>
             )}
 

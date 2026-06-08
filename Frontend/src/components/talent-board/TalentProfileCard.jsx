@@ -51,7 +51,6 @@ function TalentProfileCard({ profile, onViewDetail }) {
               <span>{initials}</span>
             </div>
           )}
-          <span className="talent-board-card__status" />
         </div>
 
         <div className="talent-board-card__heading">
