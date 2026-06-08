@@ -511,7 +511,7 @@ function PortfolioWorkExperienceSection() {
           ? null
           : construirFechaDesdePartes(formulario.end_year, formulario.end_month)),
         is_current_job: trabajoRespuesta?.is_current_job ?? formulario.is_current_job,
-        description: trabajoRespuesta?.description ?? sanitizarTexto(formulario.description),
+        description: trabajoRespuesta?.achievements ?? trabajoRespuesta?.description ?? sanitizarTexto(formulario.description),
         evidence_url: trabajoRespuesta?.evidence_url ?? sanitizarUrl(formulario.evidence_url),
       };
 
