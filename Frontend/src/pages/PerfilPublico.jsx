@@ -15,6 +15,7 @@ import {
   mdiPhoneOutline,
   mdiSchoolOutline,
   mdiStar,
+  mdiWhatsapp,
 } from '@mdi/js';
 import api from '../services/api';
 import { getMe } from '../services/authService';
@@ -32,6 +33,11 @@ function getInitials(name) {
 
 function getTextValue(...values) {
   return values.find((value) => String(value || '').trim() !== '') || '';
+}
+
+function buildWhatsAppHref(phone) {
+  const digits = String(phone || '').replace(/\D/g, '');
+  return digits ? `https://wa.me/${digits}` : '';
 }
 
 function sanitizeHtml(description) {
@@ -496,6 +502,7 @@ function PerfilPublico() {
       jobs,
       studies,
       contact,
+      whatsappHref: buildWhatsAppHref(profile?.mobile),
     };
   }, [profile]);
 
@@ -626,8 +633,28 @@ function PerfilPublico() {
                     <span className="perfil-publico-contact__icon" aria-hidden="true">
                       <Icon path={entry.icon} size={0.8} />
                     </span>
-                    <div className="perfil-publico-contact__copy">
-                      <span className="perfil-publico-contact__label">{entry.label}</span>
+                    <div
+                      className={`perfil-publico-contact__copy ${
+                        entry.label === 'Móvil' && normalizedProfile.whatsappHref
+                          ? 'perfil-publico-contact__copy--mobile'
+                          : ''
+                      }`}
+                    >
+                      <div className="perfil-publico-contact__header">
+                        <span className="perfil-publico-contact__label">{entry.label}</span>
+                        {entry.label === 'Móvil' && normalizedProfile.whatsappHref ? (
+                          <a
+                            className="perfil-publico-contact__whatsapp-link"
+                            href={normalizedProfile.whatsappHref}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`Abrir WhatsApp para ${normalizedProfile.contact.mobile}`}
+                            title="Abrir WhatsApp"
+                          >
+                            <Icon path={mdiWhatsapp} size={0.8} />
+                          </a>
+                        ) : null}
+                      </div>
                       {entry.href ? (
                         <a className="perfil-publico-contact__value" href={entry.href}>
                           {entry.value}

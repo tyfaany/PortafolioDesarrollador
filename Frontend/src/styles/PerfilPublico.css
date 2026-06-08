@@ -247,6 +247,18 @@
   min-width: 0;
 }
 
+.perfil-publico-contact__copy--mobile {
+  position: relative;
+  padding-right: 3.45rem;
+}
+
+.perfil-publico-contact__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.5rem;
+}
+
 .perfil-publico-contact__label {
   display: block;
   color: var(--color-texto-suave);
@@ -265,6 +277,34 @@
 
 a.perfil-publico-contact__value {
   color: var(--color-texto);
+}
+
+.perfil-publico-contact__whatsapp-link {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 2.7rem;
+  height: 2.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 211, 102, 0.42);
+  background: linear-gradient(180deg, rgba(37, 211, 102, 0.16), rgba(37, 211, 102, 0.1));
+  color: #128c7e;
+  box-shadow: 0 10px 18px rgba(37, 211, 102, 0.14);
+  transition: transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  transform: translateY(-50%);
+}
+
+.perfil-publico-contact__whatsapp-link:hover,
+.perfil-publico-contact__whatsapp-link:focus-visible {
+  transform: translateY(calc(-50% - 1px));
+  background: linear-gradient(180deg, rgba(37, 211, 102, 0.22), rgba(37, 211, 102, 0.14));
+  border-color: rgba(37, 211, 102, 0.58);
+  color: #25d366;
+  box-shadow: 0 12px 22px rgba(37, 211, 102, 0.24);
 }
 
 .perfil-publico-hero__links {

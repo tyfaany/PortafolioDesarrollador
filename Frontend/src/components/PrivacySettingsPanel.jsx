@@ -50,7 +50,7 @@ const SECTIONS = [
   {
     id: 'personalInfo',
     title: 'Informacion de contacto',
-    description: 'Incluye email, telefono y ubicacion',
+    description: 'Incluye email, telefono, ubicacion y el acceso a WhatsApp derivado del movil',
     fields: ['show_phone', 'show_mobile', 'show_contact_email', 'show_address'],
   },
 ];
