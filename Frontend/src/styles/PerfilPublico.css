@@ -560,6 +560,9 @@ a.perfil-publico-contact__value {
   margin: 0.75rem 0 0;
   color: var(--color-texto-suave);
   line-height: 1.65;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .perfil-publico-inline-link {

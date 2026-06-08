@@ -740,7 +740,7 @@ function PerfilPublico() {
                         </div>
                         {getTextValue(job?.description, job?.achievements, job?.achievement, job?.achivements, job?.logros) ? (
                           <p className="perfil-publico-timeline__text">
-                            {truncateText(getTextValue(job?.description, job?.achievements, job?.achievement, job?.achivements, job?.logros), 220)}
+                            {getTextValue(job?.description, job?.achievements, job?.achievement, job?.achivements, job?.logros)}
                           </p>
                         ) : null}
                         {job?.evidence_url ? (
