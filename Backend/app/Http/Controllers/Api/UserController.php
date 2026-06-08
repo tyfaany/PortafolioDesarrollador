@@ -211,7 +211,10 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
                     $query->where(function (Builder $subQuery) use ($value): void {
                         $subQuery->where('name', 'LIKE', "%{$value}%")
                             ->orWhere('profession', 'LIKE', "%{$value}%")
-                            ->orWhere('biography', 'LIKE', "%{$value}%");
+                            ->orWhere('biography', 'LIKE', "%{$value}%")
+                            ->orWhereHas('jobs', function (Builder $jobQuery) use ($value): void {
+                                $jobQuery->where('achievements', 'LIKE', "%{$value}%");
+                            });
                     });
                 }),
                 AllowedFilter::custom('habilidades', new SkillFilter()),
