@@ -640,14 +640,14 @@ function PerfilPublico() {
   const hasProjectsSection = projectsTabHasContent || githubRepositoriesTabHasContent;
 
   const handleDescargarPDF = async () => {
-    if (!perfilImprimibleRef.current || exportandoPDF) {
+    if (exportandoPDF) {
       return;
     }
 
     setExportandoPDF(true);
 
     try {
-      await exportarPerfilPDF(perfilImprimibleRef.current, `perfil-${normalizedProfile.name}.pdf`);
+      await exportarPerfilPDF(normalizedProfile, `perfil-${normalizedProfile.name}.pdf`);
     } finally {
       setExportandoPDF(false);
     }
