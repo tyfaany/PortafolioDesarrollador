@@ -102,8 +102,21 @@
   color: var(--color-texto);
 }
 
-.talent-board-primary-button {
+.talent-board-primary-button,
+.talent-board-filters__clear,
+.talent-board-empty__action,
+.talent-board-card__action,
+.talent-board-detail__back,
+.talent-board-detail__return,
+.talent-board-detail__profile-nav button {
   min-height: 3rem;
+  border-radius: 0.95rem;
+  font-family: var(--font-titulos);
+  font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.talent-board-primary-button {
   border: 0;
   display: inline-flex;
   align-items: center;
@@ -112,9 +125,16 @@
   color: var(--color-blanco);
   background: linear-gradient(180deg, var(--color-primario) 0%, var(--color-secundario) 100%);
   font-family: var(--font-titulos);
-  font-weight: 700;
   text-decoration: none;
   box-shadow: 0 0.65rem 1.25rem rgba(var(--color-primario-rgb), 0.22);
+  padding: 0 1.15rem;
+}
+
+.talent-board-primary-button:hover:not(:disabled),
+.talent-board-empty__action:hover:not(:disabled),
+.talent-board-card__action:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0.85rem 1.45rem rgba(var(--color-primario-rgb), 0.28);
 }
 
 .talent-board-layout {
@@ -219,11 +239,24 @@
 }
 
 .talent-board-filters__clear {
-  min-height: 2.95rem;
-  border: 1.5px solid rgba(var(--color-primario-rgb), 0.38);
-  background: rgba(var(--color-primario-rgb), 0.06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 1.15rem;
+  border: 1.5px solid rgba(var(--color-primario-rgb), 0.34);
+  background: rgba(var(--color-primario-rgb), 0.08);
   color: var(--color-secundario);
-  font-weight: 700;
+  box-shadow: 0 0.45rem 1rem rgba(var(--color-texto-rgb), 0.04);
+}
+
+.talent-board-filters__clear:hover:not(:disabled),
+.talent-board-filters__clear:focus-visible {
+  background: rgba(var(--color-primario-rgb), 0.12);
+  border-color: rgba(var(--color-primario-rgb), 0.42);
+  color: var(--color-texto);
+  transform: translateY(-1px);
+  box-shadow: 0 0.65rem 1.2rem rgba(var(--color-primario-rgb), 0.16);
 }
 
 .talent-board-results {
@@ -499,7 +532,6 @@
 }
 
 .talent-board-detail__profile-nav button {
-  min-height: 2.75rem;
   padding: 0 1rem;
   display: inline-flex;
   align-items: center;
