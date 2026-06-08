@@ -12,6 +12,7 @@ import {
   mdiInstagram,
   mdiLinkedin,
   mdiGmail,
+  mdiDownload,
   mdiMapMarkerOutline,
   mdiOpenInNew,
   mdiPhoneOutline,
@@ -22,6 +23,7 @@ import {
 } from '@mdi/js';
 import api from '../services/api';
 import { getMe } from '../services/authService';
+import { exportarPerfilPDF } from '../utils/pdfExport';
 import '../styles/ProjectsPrivacyViews.css';
 import '../styles/PerfilPublico.css';
 
@@ -431,6 +433,7 @@ function PerfilPublico() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('general');
   const perfilImprimibleRef = useRef(null);
+  const [exportandoPDF, setExportandoPDF] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -636,6 +639,20 @@ function PerfilPublico() {
   const githubRepositoriesTabHasContent = normalizedProfile.githubRepositories.length > 0;
   const hasProjectsSection = projectsTabHasContent || githubRepositoriesTabHasContent;
 
+  const handleDescargarPDF = async () => {
+    if (!perfilImprimibleRef.current || exportandoPDF) {
+      return;
+    }
+
+    setExportandoPDF(true);
+
+    try {
+      await exportarPerfilPDF(perfilImprimibleRef.current, `perfil-${normalizedProfile.name}.pdf`);
+    } finally {
+      setExportandoPDF(false);
+    }
+  };
+
   return (
     <section className="perfil-publico-page">
       <span className="perfil-publico-page__orb perfil-publico-page__orb--one" aria-hidden="true" />
@@ -659,13 +676,19 @@ function PerfilPublico() {
                 )}
               </div>
             </div>
-            <div className="perfil-publico-hero__badge">
-              <span className="perfil-publico-hero__badge-value">
-                <Icon path={mdiFolderOutline} size={0.72} />
-                {visibleProjectsTotal > 0 ? visibleProjectsTotal : '0'}
+            <button
+              type="button"
+              className="perfil-publico-hero__pdf-button"
+              onClick={handleDescargarPDF}
+              disabled={exportandoPDF}
+            >
+              <span className="perfil-publico-hero__pdf-button-icon" aria-hidden="true">
+                <Icon path={mdiDownload} size={0.86} />
               </span>
-              <span className="perfil-publico-hero__badge-label">proyectos visibles</span>
-            </div>
+              <span className="perfil-publico-hero__pdf-button-text">
+                {exportandoPDF ? 'Generando...' : 'Descargar CV'}
+              </span>
+            </button>
           </div>
 
           <div className="perfil-publico-hero__content">
