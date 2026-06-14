@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\ProjectTechnology;
 use App\Models\User;
 use App\QueryFilters\TechFilter;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,6 +17,59 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class ProjectController extends Controller
 {
+    private function normalizeTechnologyName(string $technology): string
+    {
+        return trim(preg_replace('/\s+/u', ' ', $technology) ?? '');
+    }
+
+    private function resolveProjectTechnology(string $technology): ?ProjectTechnology
+    {
+        $normalizedTechnology = $this->normalizeTechnologyName($technology);
+
+        if ($normalizedTechnology === '') {
+            return null;
+        }
+
+        if (ctype_digit($normalizedTechnology)) {
+            $existingTechnology = ProjectTechnology::find((int) $normalizedTechnology);
+
+            if ($existingTechnology) {
+                return $existingTechnology;
+            }
+        }
+
+        $lowerTechnology = mb_strtolower($normalizedTechnology, 'UTF-8');
+        $existingTechnology = ProjectTechnology::query()
+            ->whereRaw('LOWER(TRIM(name)) = ?', [$lowerTechnology])
+            ->first();
+
+        if ($existingTechnology) {
+            return $existingTechnology;
+        }
+
+        return ProjectTechnology::create([
+            'name' => $normalizedTechnology,
+        ]);
+    }
+
+    /**
+     * @return array<int>
+     */
+    private function syncProjectTechnologies(array $technologies): array
+    {
+        $technologyIds = [];
+
+        foreach ($technologies as $technology) {
+            $resolvedTechnology = $this->resolveProjectTechnology((string) $technology);
+
+            if ($resolvedTechnology) {
+                $technologyIds[] = $resolvedTechnology->id;
+            }
+        }
+
+        return array_values(array_unique($technologyIds));
+    }
+
     private function getPlainTextDescriptionLength(string $description): int
     {
         $normalized = html_entity_decode($description, ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -91,7 +145,7 @@ class ProjectController extends Controller
             'title' => 'required|string|min:5|max:100', // Mínimo 5, máximo 100 caracteres[cite: 2]
             'description' => 'required|string', // Validamos el texto visible por separado
             'technologies' => 'required|array|min:1|max:15', // Selector múltiple, mín 1, máx 15[cite: 2]
-            'technologies.*' => 'exists:project_technologies,id', // Verifica que las tecnologías existan en el catálogo
+            'technologies.*' => 'required|string|max:100', // Acepta IDs del catálogo o nuevas tecnologías escritas por el usuario
             'image' => 'nullable|image|mimes:jpeg,png|max:10240', // Formato JPEG/PNG, máx 10MB[cite: 2]
             'start_date' => 'required|date',
             'end_date' => 'required_unless:is_in_progress,1|date',
@@ -149,7 +203,8 @@ class ProjectController extends Controller
             $project = Project::create($projectData);
 
             // 4. Guardar las tecnologías en la tabla intermedia
-            $project->technologies()->attach($validated['technologies']);
+            $technologyIds = $this->syncProjectTechnologies($validated['technologies']);
+            $project->technologies()->attach($technologyIds);
 
             DB::commit();
 
@@ -185,7 +240,7 @@ class ProjectController extends Controller
             'title' => 'required|string|min:5|max:100',
             'description' => 'required|string',
             'technologies' => 'required|array|min:1|max:15',
-            'technologies.*' => 'exists:project_technologies,id',
+            'technologies.*' => 'required|string|max:100',
             'image' => 'nullable|image|mimes:jpeg,png|max:10240',
             'start_date' => 'required|date',
             'end_date' => 'required_unless:is_in_progress,1|date',
@@ -242,7 +297,8 @@ class ProjectController extends Controller
             $project->update($projectData);
 
             // Sincronizamos las tecnologías (borra las viejas y pone las nuevas)
-            $project->technologies()->sync($validated['technologies']);
+            $technologyIds = $this->syncProjectTechnologies($validated['technologies']);
+            $project->technologies()->sync($technologyIds);
 
             DB::commit();
 

@@ -43,13 +43,21 @@ function toTechnologyOption(technology) {
   return null;
 }
 
+function normalizeTechnologyName(technology) {
+  if (technology && typeof technology === 'object') {
+    return String(technology.name ?? '').trim();
+  }
+
+  return typeof technology === 'string' ? technology.trim() : '';
+}
+
 function resolveTechnologyOption(technology, suggestions) {
   const directOption = toTechnologyOption(technology);
   if (directOption) {
     return directOption;
   }
 
-  const name = getTechnologyName(technology).trim().toLowerCase();
+  const name = normalizeTechnologyName(technology);
   if (!name) {
     return null;
   }
@@ -57,18 +65,21 @@ function resolveTechnologyOption(technology, suggestions) {
   const source = Array.isArray(suggestions) ? suggestions : [];
   const match = source.find((item) => {
     const option = toTechnologyOption(item);
-    return option ? option.name.trim().toLowerCase() === name : false;
+    return option ? option.name.trim().toLowerCase() === name.toLowerCase() : false;
   });
 
-  return match ? toTechnologyOption(match) : null;
+  if (match) {
+    return toTechnologyOption(match);
+  }
+
+  return {
+    id: null,
+    name,
+  };
 }
 
 function getTechnologyName(technology) {
-  if (technology && typeof technology === 'object') {
-    return technology.name ?? '';
-  }
-
-  return typeof technology === 'string' ? technology : '';
+  return normalizeTechnologyName(technology);
 }
 
 function normalizeSelectedTechnologies(technologies) {
@@ -155,7 +166,7 @@ function isValidHttpUrl(value) {
   }
 }
 
-function normalizeTechnologyIds(technologies) {
+function normalizeTechnologyValues(technologies) {
   if (!Array.isArray(technologies)) {
     return [];
   }
@@ -165,9 +176,15 @@ function normalizeTechnologyIds(technologies) {
       if (technology && typeof technology === 'object') {
         const rawId = technology.id ?? null;
         const numericId = Number(rawId);
-        return Number.isInteger(numericId) && numericId > 0 ? numericId : null;
+
+        if (Number.isInteger(numericId) && numericId > 0) {
+          return String(numericId);
+        }
+
+        return normalizeTechnologyName(technology);
       }
-      return null;
+
+      return normalizeTechnologyName(technology);
     })
     .filter((technology) => technology !== null && technology !== undefined && technology !== '');
 }
@@ -210,15 +227,15 @@ function resolveProjectImageUrl(rawUrl) {
 
 function buildFormData(formData, imageFile) {
   const payload = new FormData();
-  const technologyIds = normalizeTechnologyIds(formData.technologies);
+  const technologies = normalizeTechnologyValues(formData.technologies);
   const isInProgress = Boolean(formData.inProgress);
   const isPublic = formData.visibility !== 'private';
 
   payload.append('title', formData.title.trim());
   payload.append('description', formData.description.trim());
 
-  technologyIds.forEach((technologyId) => {
-    payload.append('technologies[]', technologyId);
+  technologies.forEach((technology) => {
+    payload.append('technologies[]', technology);
   });
 
   payload.append('is_in_progress', isInProgress ? '1' : '0');
@@ -424,16 +441,21 @@ function ProjectForm({
 
   const handleAddTechnology = (technology) => {
     const normalizedTechnology = resolveTechnologyOption(technology, technologySuggestions);
+    const normalizedTechnologyName = getTechnologyName(normalizedTechnology);
+    const normalizedTechnologyNameLower = normalizedTechnologyName.toLowerCase();
 
     if (!normalizedTechnology) {
       setErrors((current) => ({
         ...current,
-        technologies: 'Selecciona tecnologias del catalogo disponible.',
+        technologies: 'Escribe una tecnologia valida o selecciona una del catalogo.',
       }));
       return;
     }
 
-    if (selectedTechs.some((item) => item.id === normalizedTechnology.id)) {
+    if (selectedTechs.some((item) => (
+      (normalizedTechnology.id && item.id === normalizedTechnology.id)
+      || getTechnologyName(item).toLowerCase() === normalizedTechnologyNameLower
+    ))) {
       setShowTechInput(false);
       setTechInput('');
       return;
@@ -455,7 +477,13 @@ function ProjectForm({
   const handleRemoveTechnology = (technologyToRemove) => {
     updateField(
       'technologies',
-      selectedTechs.filter((technology) => technology.id !== technologyToRemove.id),
+      selectedTechs.filter((technology) => {
+        if (technology.id && technologyToRemove.id) {
+          return technology.id !== technologyToRemove.id;
+        }
+
+        return getTechnologyName(technology).toLowerCase() !== getTechnologyName(technologyToRemove).toLowerCase();
+      }),
     );
   };
 
@@ -819,7 +847,10 @@ function ProjectForm({
           <span className="softsave-project-form__label">Tecnologias utilizadas *</span>
           <div className="softsave-project-form__chips">
             {selectedTechs.map((technology) => (
-              <span key={technology.id} className="softsave-project-form__chip softsave-project-form__chip--selected">
+              <span
+                key={technology.id ?? getTechnologyName(technology).toLowerCase()}
+                className="softsave-project-form__chip softsave-project-form__chip--selected"
+              >
                 {getTechnologyName(technology)}
                 <button
                   type="button"
@@ -835,11 +866,14 @@ function ProjectForm({
             {technologySuggestions.filter((technology) => {
               const option = toTechnologyOption(technology);
               if (option) {
-                return !selectedTechs.some((selected) => selected.id === option.id);
+                return !selectedTechs.some((selected) => (
+                  selected.id === option.id
+                  || getTechnologyName(selected).toLowerCase() === option.name.toLowerCase()
+                ));
               }
 
               if (typeof technology === 'string') {
-                return !selectedTechs.some((selected) => selected.name === technology);
+                return !selectedTechs.some((selected) => getTechnologyName(selected).toLowerCase() === technology.toLowerCase());
               }
 
               return false;
@@ -886,7 +920,7 @@ function ProjectForm({
           ) : null}
 
           <span className="softsave-project-form__hint">
-            Seleccionadas {selectedTechs.length} de 15 tecnologias permitidas.
+            Seleccionadas {selectedTechs.length} de 15 tecnologias permitidas. Puedes escribir una tecnologia nueva si no aparece en el catalogo.
           </span>
           {errors.technologies ? <span className="error-text">{errors.technologies}</span> : null}
         </div>
