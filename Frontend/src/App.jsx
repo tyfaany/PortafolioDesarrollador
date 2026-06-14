@@ -47,7 +47,8 @@ function App() {
         <Route path="/perfil/contacto" element={<ProfileSettings />} />
         <Route path="/perfil/academica" element={<ProfileSettings />} />
         <Route path="/perfil/github" element={<ProfileSettings />} />
-        <Route path="/perfil/privacidad" element={<ProfileSettings />} />
+        <Route path="/perfil/ajustes" element={<ProfileSettings />} />
+        <Route path="/perfil/privacidad" element={<Navigate to="/perfil/ajustes" replace />} />
         <Route path="/perfil/*" element={<Navigate to="/perfil/contacto" replace />} />
       </Route>
 

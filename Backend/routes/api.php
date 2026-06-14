@@ -30,6 +30,7 @@ Route::middleware(['auth:sanctum', 'role:owner,admin'])->group(function () {
     Route::post('/user', [AuthController::class, 'updatePassword']);
     Route::put('/user/update', [UserController::class, 'update']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::delete('/user/account', [AuthController::class, 'destroyAccount']);
     Route::post('/user/photo', [AuthController::class, 'uploadPhoto']);
     Route::get('/user', [UserController::class, 'show']);
     Route::get('/user/contact', [UserController::class, 'showContact']);

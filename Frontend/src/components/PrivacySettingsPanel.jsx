@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Icon from '@mdi/react';
-import { mdiLockOutline, mdiLockOpenVariantOutline } from '@mdi/js';
-import { actualizarPrivacidad, obtenerPrivacidad } from '../services/authService';
+import {
+  mdiAlertCircleOutline,
+  mdiLockOutline,
+  mdiLockOpenVariantOutline,
+  mdiTrashCanOutline,
+} from '@mdi/js';
+import useAuth from '../hooks/useAuth';
+import { actualizarPrivacidad, eliminarCuenta, obtenerPrivacidad } from '../services/authService';
 import useFeedback from '../hooks/useFeedback';
+import { extractApiMessageByStatus } from '../utils/apiError';
 
 const SECTIONS = [
   {
@@ -93,11 +101,18 @@ function mapSectionVisibility(section, privacyConfig) {
 }
 
 function PrivacySettingsPanel() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const { showFeedback } = useFeedback();
+
   const [privacyConfig, setPrivacyConfig] = useState(DEFAULT_PRIVACY);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isHidingAll, setIsHidingAll] = useState(false);
-  const { showFeedback } = useFeedback();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
   const sections = useMemo(
     () => SECTIONS.map((section) => mapSectionVisibility(section, privacyConfig)),
     [privacyConfig],
@@ -217,13 +232,70 @@ function PrivacySettingsPanel() {
     }
   };
 
+  const abrirModalEliminarCuenta = () => {
+    if (isDeletingAccount) {
+      return;
+    }
+
+    setDeletePassword('');
+    setIsDeleteModalOpen(true);
+  };
+
+  const cerrarModalEliminarCuenta = () => {
+    if (isDeletingAccount) {
+      return;
+    }
+
+    setDeletePassword('');
+    setIsDeleteModalOpen(false);
+  };
+
+  const manejarEliminarCuenta = async (event) => {
+    event.preventDefault();
+
+    if (isDeletingAccount) {
+      return;
+    }
+
+    const passwordLimpio = String(deletePassword || '').trim();
+    if (!passwordLimpio) {
+      showFeedback('Debes ingresar tu contrasena actual.', 'error');
+      return;
+    }
+
+    setIsDeletingAccount(true);
+    try {
+      await eliminarCuenta(passwordLimpio);
+      setIsDeleteModalOpen(false);
+      setDeletePassword('');
+      showFeedback('Cuenta eliminada correctamente.');
+
+      try {
+        await logout();
+      } finally {
+        navigate('/login', { replace: true });
+      }
+    } catch (error) {
+      showFeedback(
+        extractApiMessageByStatus(
+          error,
+          'No se pudo eliminar la cuenta. Intenta nuevamente.',
+          { 422: 'La contrasena actual es incorrecta.' },
+        ),
+        'error',
+      );
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
   return (
     <section className="softsave-profile__form-card softsave-privacy">
       <div className="softsave-profile__section-head">
         <div>
-          <h2 className="softsave-profile__form-title">Configuracion de Privacidad</h2>
+          <h2 className="softsave-profile__form-title">Ajustes de privacidad y cuenta</h2>
           <p className="softsave-profile__form-subtitle">
-            Controla que informacion se muestra en tu portafolio publico.
+            Controla que informacion se muestra en tu portafolio publico y administra tu cuenta.
           </p>
         </div>
       </div>
@@ -290,6 +362,91 @@ function PrivacySettingsPanel() {
           ))}
         </div>
       </article>
+
+      <article className="softsave-privacy__card softsave-privacy__danger-card">
+        <div className="softsave-privacy__danger-copy">
+          <h3>Eliminar cuenta</h3>
+          <p>
+            Esta accion eliminara permanentemente tu perfil, proyectos, estudios, experiencia,
+            habilidades y el resto de datos asociados a tu cuenta.
+          </p>
+          <p className="softsave-privacy__danger-note">
+            {user?.email ? `Cuenta actual: ${user.email}` : 'La accion no se puede deshacer.'}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="softsave-button softsave-button--danger softsave-privacy__danger-action"
+          onClick={abrirModalEliminarCuenta}
+          disabled={isLoading || isDeletingAccount}
+        >
+          <Icon path={mdiTrashCanOutline} size={0.82} />
+          Eliminar mi cuenta
+        </button>
+      </article>
+
+      {isDeleteModalOpen ? (
+        <div
+          className="softsave-profile__modal-overlay softsave-profile__modal-overlay--centered"
+          role="dialog"
+          aria-modal="true"
+          onClick={cerrarModalEliminarCuenta}
+        >
+          <div
+            className="softsave-profile__modal softsave-profile__modal--confirm softsave-privacy__delete-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="softsave-profile__modal-header">
+              <div className="softsave-profile__modal-content">
+                <div className="softsave-privacy__danger-badge softsave-privacy__danger-badge--modal">
+                  <Icon path={mdiAlertCircleOutline} size={0.82} />
+                  Confirmar eliminacion
+                </div>
+                <h3 className="softsave-profile__modal-title">Eliminar cuenta</h3>
+                <p className="softsave-profile__modal-text">
+                  Escribe tu contrasena actual para confirmar esta accion. Si continuas, tu cuenta
+                  y sus datos asociados se eliminaran de forma permanente.
+                </p>
+              </div>
+            </header>
+
+            <form className="softsave-privacy__delete-form" onSubmit={manejarEliminarCuenta}>
+              <label className="softsave-privacy__delete-field">
+                <span>Contrasena actual</span>
+                <input
+                  type="password"
+                  className="softsave-input softsave-profile__input"
+                  value={deletePassword}
+                  onChange={(event) => setDeletePassword(event.target.value)}
+                  autoComplete="current-password"
+                  placeholder="Ingresa tu contrasena"
+                  disabled={isDeletingAccount}
+                  required
+                />
+              </label>
+
+              <div className="softsave-profile__modal-actions">
+                <button
+                  type="button"
+                  className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
+                  onClick={cerrarModalEliminarCuenta}
+                  disabled={isDeletingAccount}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="softsave-button softsave-button--danger"
+                  disabled={isDeletingAccount}
+                >
+                  {isDeletingAccount ? 'Eliminando...' : 'Eliminar cuenta'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

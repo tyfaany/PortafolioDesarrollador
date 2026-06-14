@@ -14,6 +14,11 @@ export const registrar = (nombre, email, password, passwordConfirmacion) => api.
 });
 
 export const logout = () => api.post('/logout');
+export const eliminarCuenta = (currentPassword) => api.delete('/user/account', {
+  data: {
+    current_password: currentPassword,
+  },
+});
 
 export const getMe = () => api.get('/user');
 

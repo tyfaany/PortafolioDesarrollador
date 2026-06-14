@@ -48,7 +48,7 @@ const SECCIONES_PERFIL = [
   { id: "contacto", label: "Información de contacto", route: "/perfil/contacto" },
   // { id: "academica", label: "Trayectoria académica", route: "/perfil/academica" },
   { id: "github", label: "Ecosistema de Git Hub", route: "/perfil/github" },
-  { id: "privacidad", label: "Privacidad", route: "/perfil/privacidad" },
+  { id: "privacidad", label: "Ajustes", route: "/perfil/ajustes" },
 ];
 
 const FOTO_LINKEDIN_MOCK = `data:image/svg+xml;utf8,${encodeURIComponent(`
@@ -79,7 +79,7 @@ function obtenerSeccionActiva(pathname) {
     ({ route }) => pathname === route,
   ); */
 
-  if (pathname === "/perfil/privacidad") {
+  if (pathname === "/perfil/privacidad" || pathname === "/perfil/ajustes") {
     return "privacidad";
   }
 

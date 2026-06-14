@@ -888,6 +888,77 @@
   transform: translateX(20px);
 }
 
+.softsave-privacy__danger-card {
+  display: grid;
+  gap: 18px;
+  border: 1px solid rgba(var(--color-error-rgb), 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(var(--color-error-rgb), 0.12), transparent 42%),
+    linear-gradient(180deg, rgba(var(--color-error-rgb), 0.06), rgba(var(--color-blanco-rgb), 0.98));
+}
+
+.softsave-privacy__danger-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.softsave-privacy__danger-copy h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.softsave-privacy__danger-copy p {
+  margin: 0;
+  color: var(--color-texto-suave);
+}
+
+.softsave-privacy__danger-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background-color: rgba(var(--color-error-rgb), 0.12);
+  color: var(--color-error);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.softsave-privacy__danger-badge--modal {
+  margin-bottom: 6px;
+}
+
+.softsave-privacy__danger-note {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
+.softsave-privacy__danger-action {
+  width: fit-content;
+}
+
+.softsave-privacy__delete-form {
+  display: grid;
+  gap: 18px;
+}
+
+.softsave-privacy__delete-field {
+  display: grid;
+  gap: 8px;
+  color: var(--color-texto);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.softsave-privacy__delete-field input {
+  width: 100%;
+}
+
 .softsave-projects-card--composer .softsave-projects-card__header {
   margin-bottom: 0;
 }
@@ -1263,6 +1334,10 @@
     grid-template-columns: 1fr;
   }
 
+  .softsave-privacy__danger-action {
+    width: 100%;
+  }
+
   .softsave-project-form__end-header {
     display: flex;
     align-items: center;
@@ -1363,5 +1438,9 @@
 
   .softsave-project-form__chip {
     font-size: 0.88rem;
+  }
+
+  .softsave-privacy__danger-card {
+    gap: 14px;
   }
 }

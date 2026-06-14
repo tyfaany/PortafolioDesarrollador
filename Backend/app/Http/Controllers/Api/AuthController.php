@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserVisibility;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -115,6 +116,41 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Sesion cerrada correctamente.'
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
+    }
+
+    /**
+     * Eliminar la cuenta del usuario autenticado.
+     */
+    public function destroyAccount(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'La contrasena actual es incorrecta.'
+            ], 422, [], JSON_INVALID_UTF8_SUBSTITUTE);
+        }
+
+        $profilePhoto = $user->profile_photo;
+
+        DB::transaction(function () use ($user) {
+            $user->tokens()->delete();
+            $user->delete();
+        });
+
+        if ($profilePhoto && !preg_match('/^https?:\/\//i', $profilePhoto)) {
+            Storage::disk('public')->delete($profilePhoto);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Cuenta eliminada correctamente.'
         ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
