@@ -252,19 +252,24 @@ function construirFormularioTrabajo(trabajo) {
 }
 
 function formatearPeriodo(fechaInicio, fechaFin) {
-  const formateador = new Intl.DateTimeFormat('es-ES', {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-
   const formatear = (valor, esFechaInicio = false) => {
     if (!valor) {
       return esFechaInicio ? 'Sin fecha de inicio' : 'Presente';
     }
 
     const fecha = new Date(`${String(valor).slice(0, 10)}T00:00:00Z`);
-    return formateador.format(fecha);
+    if (Number.isNaN(fecha.getTime())) {
+      return '';
+    }
+
+    return new Intl.DateTimeFormat('es-ES', {
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    })
+      .format(fecha)
+      .replace(/\./g, '')
+      .toUpperCase();
   };
 
   return `${formatear(fechaInicio, true)} - ${formatear(fechaFin)}`;

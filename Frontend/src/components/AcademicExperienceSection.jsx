@@ -89,20 +89,33 @@ function normalizarEstudios(estudios) {
   return ordenarEstudiosPorPeriodo(estudiosNormalizados);
 }
 
-function formatearPeriodo(fechaInicio, fechaFin) {
-  const formateador = new Intl.DateTimeFormat('es-ES', {
-    month: 'long',
+function formatearMesAbreviado(valorFecha) {
+  if (!valorFecha) {
+    return '';
+  }
+
+  const fecha = new Date(`${String(valorFecha).slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(fecha.getTime())) {
+    return '';
+  }
+
+  return new Intl.DateTimeFormat('es-ES', {
+    month: 'short',
     year: 'numeric',
     timeZone: 'UTC',
-  });
+  })
+    .format(fecha)
+    .replace(/\./g, '')
+    .toUpperCase();
+}
 
+function formatearPeriodo(fechaInicio, fechaFin) {
   const formatear = (valor) => {
     if (!valor) {
       return 'Presente';
     }
 
-    const fecha = new Date(`${String(valor).slice(0, 10)}T00:00:00Z`);
-    return formateador.format(fecha);
+    return formatearMesAbreviado(valor);
   };
 
   return `${formatear(fechaInicio)} - ${formatear(fechaFin)}`;

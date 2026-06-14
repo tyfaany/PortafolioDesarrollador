@@ -148,10 +148,15 @@
 }
 
 .softsave-profile__form-card {
-  background-color: var(--color-blanco);
-  border-radius: 16px;
-  box-shadow: 0 14px 28px rgba(var(--color-texto-rgb), 0.08);
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(var(--color-primario-rgb), 0.05), rgba(var(--color-blanco-rgb), 0.98) 24%),
+    var(--color-blanco);
+  border: 1px solid rgba(var(--color-texto-rgb), 0.08);
+  border-radius: 18px;
+  box-shadow: 0 16px 32px rgba(var(--color-texto-rgb), 0.08);
   padding: 24px;
+  overflow: hidden;
 }
 
 .softsave-profile__form-title {
@@ -173,6 +178,9 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid rgba(var(--color-texto-rgb), 0.08);
 }
 
 .softsave-profile__section-button {
@@ -954,23 +962,29 @@
 
 .softsave-profile__study-list {
   display: grid;
-  gap: 16px;
-  margin-top: 22px;
+  gap: 14px;
+  margin-top: 18px;
 }
 
 .softsave-profile__study-card {
   position: relative;
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  padding: 20px;
+  gap: 18px;
+  padding: 18px 18px 18px 20px;
   border-radius: 16px;
-  border: 1px solid var(--color-borde-tarjeta);
-  background-color: rgba(var(--color-primario-rgb), 0.05);
+  border: 1px solid rgba(var(--color-texto-rgb), 0.08);
+  background:
+    linear-gradient(135deg, rgba(var(--color-primario-rgb), 0.09), rgba(var(--color-blanco-rgb), 0.98) 56%),
+    var(--color-blanco);
+  box-shadow: 0 10px 20px rgba(var(--color-texto-rgb), 0.05);
+  overflow: hidden;
 }
 
 .softsave-profile__study-body {
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .softsave-profile__study-actions {
@@ -978,23 +992,40 @@
   align-items: flex-start;
   gap: 8px;
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .softsave-profile__study-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-family: var(--font-titulos);
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--color-texto);
+  letter-spacing: -0.01em;
 }
 
 .softsave-profile__study-degree {
-  margin: 4px 0 0;
-  color: var(--color-texto);
+  margin: 6px 0 0;
+  color: rgba(var(--color-texto-rgb), 0.82);
   font-weight: 600;
+  line-height: 1.45;
 }
 
 .softsave-profile__study-period {
-  margin: 8px 0 0;
-  color: var(--color-texto-suave);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background-color: rgba(var(--color-primario-rgb), 0.12);
+  color: var(--color-primario);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: capitalize;
+  width: fit-content;
 }
 
 .softsave-profile__academic-empty {
