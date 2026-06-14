@@ -342,6 +342,14 @@
   line-height: 1.55;
 }
 
+/* Truncar descripción/logros a una sola línea con puntos suspensivos */
+.softsave-portafolio-study-card__description,
+.softsave-profile__study-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .softsave-portafolio-evidence-link {
   margin-top: 12px;
   display: inline-flex;

@@ -478,6 +478,11 @@ function PortfolioWorkExperienceSection() {
       nuevosErrores.evidence_url = 'Ingresa una URL válida (http:// o https://).';
     }
 
+    const descripcion = sanitizarTexto(formulario.description);
+    if (descripcion.length > 500) {
+      nuevosErrores.description = 'La descripción no puede superar 500 caracteres.';
+    }
+
     setErrores(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
   };
@@ -832,6 +837,11 @@ function PortfolioWorkExperienceSection() {
                   onChange={manejarCambio}
                   className="softsave-input softsave-profile__textarea"
                 />
+                {errores.description ? (
+                  <span className="error-text softsave-profile__error-text" role="alert">
+                    {errores.description}
+                  </span>
+                ) : null}
               </label>
 
               <label className="softsave-profile__field">

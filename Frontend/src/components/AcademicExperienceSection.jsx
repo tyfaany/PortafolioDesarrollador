@@ -263,6 +263,11 @@ function AcademicExperienceSection({
       nuevosErrores.end_month = 'La fecha de inicio no puede ser posterior a la fecha de fin.';
     }
 
+    const logros = sanitizarTexto(formularioEstudio.achievements);
+    if (logros.length > 500) {
+      nuevosErrores.achievements = 'Los logros no pueden superar 500 caracteres.';
+    }
+
     setErroresEstudio(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
   };
@@ -433,6 +438,11 @@ function AcademicExperienceSection({
                   <p className={esPortafolio ? 'softsave-portafolio-study-card__period' : 'softsave-profile__study-period'}>
                     {formatearPeriodo(estudio.start_date, estudio.end_date)}
                   </p>
+                  {estudio.achievements ? (
+                    <p className={esPortafolio ? 'softsave-portafolio-study-card__description' : 'softsave-profile__study-description'}>
+                      {estudio.achievements}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className={esPortafolio ? 'softsave-portafolio-study-card__actions' : 'softsave-profile__study-actions'}>
@@ -586,6 +596,11 @@ function AcademicExperienceSection({
                   className="softsave-input softsave-profile__textarea"
                   placeholder="Describe tus logros, proyectos o distinciones obtenidas."
                 />
+                {erroresEstudio.achievements ? (
+                  <span className="error-text softsave-profile__error-text" role="alert">
+                    {erroresEstudio.achievements}
+                  </span>
+                ) : null}
               </label>
 
               {mensajeAcademicoError ? (
