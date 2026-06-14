@@ -46,7 +46,7 @@ import "../styles/ProjectsPrivacyViews.css";
 
 const SECCIONES_PERFIL = [
   { id: "contacto", label: "Información de contacto", route: "/perfil/contacto" },
-  { id: "academica", label: "Trayectoria académica", route: "/perfil/academica" },
+  // { id: "academica", label: "Trayectoria académica", route: "/perfil/academica" },
   { id: "github", label: "Ecosistema de Git Hub", route: "/perfil/github" },
   { id: "privacidad", label: "Privacidad", route: "/perfil/privacidad" },
 ];

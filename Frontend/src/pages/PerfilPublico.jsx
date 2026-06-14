@@ -162,25 +162,204 @@ function truncateText(value, maxLength = 180) {
   return `${text.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
 }
 
-function formatDateLabel(value) {
+const MONTH_LABELS = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+
+function parseDateValue(value) {
   if (!value) {
+    return null;
+  }
+
+  const date = new Date(`${String(value).slice(0, 10)}T00:00:00Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatDateLabel(value) {
+  const date = parseDateValue(value);
+  if (!date) {
     return '';
   }
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
+  const month = MONTH_LABELS[date.getUTCMonth()] || '';
+  const year = date.getUTCFullYear();
+
+  return month ? `${month} ${year}` : String(year);
+}
+
+function getMonthLabel(value) {
+  if (value === null || value === undefined || value === '') {
     return '';
   }
 
-  return new Intl.DateTimeFormat('es-ES', {
-    month: 'short',
-    year: 'numeric',
-  }).format(date);
+  const normalizedValue = String(value).trim();
+  if (!normalizedValue) {
+    return '';
+  }
+
+  const numericMonth = Number.parseInt(normalizedValue, 10);
+  if (!Number.isNaN(numericMonth) && numericMonth >= 1 && numericMonth <= 12) {
+    return MONTH_LABELS[numericMonth - 1];
+  }
+
+  const lowerValue = normalizedValue.toLowerCase();
+  const monthNames = {
+    enero: 'ENE',
+    february: 'FEB',
+    febrero: 'FEB',
+    march: 'MAR',
+    marzo: 'MAR',
+    april: 'ABR',
+    abril: 'ABR',
+    may: 'MAY',
+    mayo: 'MAY',
+    june: 'JUN',
+    junio: 'JUN',
+    july: 'JUL',
+    julio: 'JUL',
+    august: 'AGO',
+    agosto: 'AGO',
+    september: 'SEP',
+    septiembre: 'SEP',
+    setiembre: 'SEP',
+    october: 'OCT',
+    octubre: 'OCT',
+    november: 'NOV',
+    noviembre: 'NOV',
+    december: 'DIC',
+    diciembre: 'DIC',
+  };
+
+  return monthNames[lowerValue] || '';
+}
+
+function resolveMonthNumber(value) {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  const normalizedValue = String(value).trim();
+  const numericMonth = Number.parseInt(normalizedValue, 10);
+
+  if (!Number.isNaN(numericMonth) && numericMonth >= 1 && numericMonth <= 12) {
+    return numericMonth;
+  }
+
+  const lowerValue = normalizedValue.toLowerCase();
+  const monthNumbers = {
+    enero: 1,
+    february: 2,
+    febrero: 2,
+    march: 3,
+    marzo: 3,
+    april: 4,
+    abril: 4,
+    may: 5,
+    mayo: 5,
+    june: 6,
+    junio: 6,
+    july: 7,
+    julio: 7,
+    august: 8,
+    agosto: 8,
+    september: 9,
+    septiembre: 9,
+    setiembre: 9,
+    october: 10,
+    octubre: 10,
+    november: 11,
+    noviembre: 11,
+    december: 12,
+    diciembre: 12,
+  };
+
+  return monthNumbers[lowerValue] || null;
+}
+
+function formatMonthYear(valueMonth, valueYear) {
+  const monthLabel = getMonthLabel(valueMonth);
+  const year = String(valueYear || '').trim();
+
+  if (monthLabel && year) {
+    return `${monthLabel} ${year}`;
+  }
+
+  if (year) {
+    return year;
+  }
+
+  return monthLabel;
+}
+
+function getStudySortTimestamp(study, edge = 'end') {
+  const value = edge === 'start' ? study?.start_date : study?.end_date;
+  const date = value ? parseDateValue(value) : null;
+
+  if (!date) {
+    return edge === 'end' && !study?.end_date ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+  }
+
+  return date.getTime();
+}
+
+function sortStudiesByPeriod(studies) {
+  return [...studies].sort((studyA, studyB) => {
+    const endA = getStudySortTimestamp(studyA, 'end');
+    const endB = getStudySortTimestamp(studyB, 'end');
+
+    if (endA !== endB) {
+      return endB - endA;
+    }
+
+    const startA = getStudySortTimestamp(studyA, 'start');
+    const startB = getStudySortTimestamp(studyB, 'start');
+
+    if (startA !== startB) {
+      return startB - startA;
+    }
+
+    return String(studyB?.id || '').localeCompare(String(studyA?.id || ''));
+  });
+}
+
+function getJobSortTimestamp(job, edge = 'end') {
+  const isCurrent = Boolean(job?.is_current_job);
+  if (edge === 'end' && isCurrent) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const year = Number.parseInt(String(job?.[`${edge}_year`] || ''), 10);
+  const month = resolveMonthNumber(job?.[`${edge}_month`]);
+
+  if (Number.isNaN(year)) {
+    return edge === 'end' && isCurrent ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+  }
+
+  const safeMonth = month || 1;
+  return new Date(Date.UTC(year, Math.max(0, safeMonth - 1), 1)).getTime();
+}
+
+function sortJobsByPeriod(jobs) {
+  return [...jobs].sort((jobA, jobB) => {
+    const endA = getJobSortTimestamp(jobA, 'end');
+    const endB = getJobSortTimestamp(jobB, 'end');
+
+    if (endA !== endB) {
+      return endB - endA;
+    }
+
+    const startA = getJobSortTimestamp(jobA, 'start');
+    const startB = getJobSortTimestamp(jobB, 'start');
+
+    if (startA !== startB) {
+      return startB - startA;
+    }
+
+    return String(jobB?.id || '').localeCompare(String(jobA?.id || ''));
+  });
 }
 
 function formatStudyRange(study) {
   const start = formatDateLabel(study?.start_date);
-  const end = study?.end_date ? formatDateLabel(study.end_date) : 'Presente';
+  const end = study?.end_date ? formatDateLabel(study.end_date) : 'PRESENTE';
 
   if (!start && !end) {
     return '';
@@ -194,10 +373,10 @@ function formatStudyRange(study) {
 }
 
 function formatJobRange(job) {
-  const start = [job?.start_month, job?.start_year].filter(Boolean).join('/');
+  const start = formatMonthYear(job?.start_month, job?.start_year);
   const end = job?.is_current_job
-    ? 'Presente'
-    : [job?.end_month, job?.end_year].filter(Boolean).join('/');
+    ? 'PRESENTE'
+    : formatMonthYear(job?.end_month, job?.end_year);
 
   if (!start && !end) {
     return '';
@@ -484,8 +663,8 @@ function PerfilPublico() {
     );
     const skills = getSkills(profile);
     const softSkills = getSoftSkills(profile);
-    const jobs = Array.isArray(profile?.jobs) ? profile.jobs : [];
-    const studies = Array.isArray(profile?.studies) ? profile.studies : [];
+    const jobs = sortJobsByPeriod(Array.isArray(profile?.jobs) ? profile.jobs : []);
+    const studies = sortStudiesByPeriod(Array.isArray(profile?.studies) ? profile.studies : []);
     const contact = {
       phone: getTextValue(profile?.phone),
       mobile: getTextValue(profile?.mobile),
