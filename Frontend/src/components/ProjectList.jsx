@@ -19,6 +19,48 @@ function normalizeProjectsResponse(responseData) {
   return [];
 }
 
+function sortProjects(projects) {
+  return [...projects].sort((projectA, projectB) => {
+    const isPresentA = Boolean(projectA?.is_in_progress) || !projectA?.end_date;
+    const isPresentB = Boolean(projectB?.is_in_progress) || !projectB?.end_date;
+
+    if (isPresentA !== isPresentB) {
+      return isPresentA ? -1 : 1;
+    }
+
+    if (!isPresentA) {
+      const endA = Date.parse(projectA?.end_date || '');
+      const endB = Date.parse(projectB?.end_date || '');
+      const endValA = Number.isNaN(endA) ? Number.NEGATIVE_INFINITY : endA;
+      const endValB = Number.isNaN(endB) ? Number.NEGATIVE_INFINITY : endB;
+
+      if (endValA !== endValB) {
+        return endValB - endValA;
+      }
+    }
+
+    const startA = Date.parse(projectA?.start_date || '');
+    const startB = Date.parse(projectB?.start_date || '');
+    const startValA = Number.isNaN(startA) ? Number.NEGATIVE_INFINITY : startA;
+    const startValB = Number.isNaN(startB) ? Number.NEGATIVE_INFINITY : startB;
+
+    if (startValA !== startValB) {
+      return startValB - startValA;
+    }
+
+    const createdA = Date.parse(projectA?.created_at || '');
+    const createdB = Date.parse(projectB?.created_at || '');
+    const createdValA = Number.isNaN(createdA) ? Number.NEGATIVE_INFINITY : createdA;
+    const createdValB = Number.isNaN(createdB) ? Number.NEGATIVE_INFINITY : createdB;
+
+    if (createdValA !== createdValB) {
+      return createdValB - createdValA;
+    }
+
+    return String(projectB?.id || '').localeCompare(String(projectA?.id || ''));
+  });
+}
+
 function ProjectList({ refreshKey = 0 }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -172,9 +214,11 @@ function ProjectList({ refreshKey = 0 }) {
     return <p className="softsave-project-form__hint">Aun no tienes proyectos registrados.</p>;
   }
 
+  const sortedProjects = sortProjects(projects);
+
   return (
     <section className="softsave-projects-list" aria-label="Listado de proyectos">
-      {projects.map((project) => {
+      {sortedProjects.map((project) => {
         const isPending = pendingToggleIds.includes(project.id);
 
         return (

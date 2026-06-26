@@ -117,8 +117,8 @@ class ProjectController extends Controller
                 AllowedFilter::exact('is_public'),
                 AllowedFilter::custom('tech_filter', new TechFilter()),
             ])
-            ->allowedSorts(['created_at', 'name'])
-            ->defaultSort('-created_at')
+            ->allowedSorts(['created_at', 'name', 'is_in_progress', 'end_date', 'start_date'])
+            ->defaultSort('-is_in_progress', '-end_date', '-start_date', '-created_at')
             ->paginate($perPage)
             ->appends($request->query());
 
@@ -129,6 +129,9 @@ class ProjectController extends Controller
     {
         $query = Project::with('technologies')
             ->where('user_id', $user->id)
+            ->orderBy('is_in_progress', 'desc')
+            ->orderBy('end_date', 'desc')
+            ->orderBy('start_date', 'desc')
             ->orderBy('created_at', 'desc');
 
         $query->where('is_public', true);

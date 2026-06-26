@@ -570,19 +570,40 @@ function getProjectTitle(project) {
 
 function sortProjects(projects) {
   return [...projects].sort((projectA, projectB) => {
-    const startA = Date.parse(projectA?.start_date || '');
-    const startB = Date.parse(projectB?.start_date || '');
-    const createdA = Date.parse(projectA?.created_at || '');
-    const createdB = Date.parse(projectB?.created_at || '');
+    const isPresentA = Boolean(projectA?.is_in_progress) || !projectA?.end_date;
+    const isPresentB = Boolean(projectB?.is_in_progress) || !projectB?.end_date;
 
-    if (!Number.isNaN(startA) || !Number.isNaN(startB)) {
-      return (Number.isNaN(startB) ? Number.NEGATIVE_INFINITY : startB)
-        - (Number.isNaN(startA) ? Number.NEGATIVE_INFINITY : startA);
+    if (isPresentA !== isPresentB) {
+      return isPresentA ? -1 : 1;
     }
 
-    if (!Number.isNaN(createdA) || !Number.isNaN(createdB)) {
-      return (Number.isNaN(createdB) ? Number.NEGATIVE_INFINITY : createdB)
-        - (Number.isNaN(createdA) ? Number.NEGATIVE_INFINITY : createdA);
+    if (!isPresentA) {
+      const endA = Date.parse(projectA?.end_date || '');
+      const endB = Date.parse(projectB?.end_date || '');
+      const endValA = Number.isNaN(endA) ? Number.NEGATIVE_INFINITY : endA;
+      const endValB = Number.isNaN(endB) ? Number.NEGATIVE_INFINITY : endB;
+
+      if (endValA !== endValB) {
+        return endValB - endValA;
+      }
+    }
+
+    const startA = Date.parse(projectA?.start_date || '');
+    const startB = Date.parse(projectB?.start_date || '');
+    const startValA = Number.isNaN(startA) ? Number.NEGATIVE_INFINITY : startA;
+    const startValB = Number.isNaN(startB) ? Number.NEGATIVE_INFINITY : startB;
+
+    if (startValA !== startValB) {
+      return startValB - startValA;
+    }
+
+    const createdA = Date.parse(projectA?.created_at || '');
+    const createdB = Date.parse(projectB?.created_at || '');
+    const createdValA = Number.isNaN(createdA) ? Number.NEGATIVE_INFINITY : createdA;
+    const createdValB = Number.isNaN(createdB) ? Number.NEGATIVE_INFINITY : createdB;
+
+    if (createdValA !== createdValB) {
+      return createdValB - createdValA;
     }
 
     return String(projectB?.id || '').localeCompare(String(projectA?.id || ''));
