@@ -105,6 +105,10 @@ function esProfesionValida(valor) {
   return /^(?=.*\p{L})[\p{L}\p{N}]+(?:[ .,&()/-][\p{L}\p{N}]+)*$/u.test(valor);
 }
 
+function esNombreValido(valor) {
+  return /^\p{L}+(?: \p{L}+)*$/u.test(valor);
+}
+
 function esEmailValido(valor) {
   if (!valor) {
     return true;
@@ -564,6 +568,8 @@ function ProfileSettings() {
       nuevosErrores.nombreCompleto = "El nombre es obligatorio.";
     } else if (nombreLimpio.length > 50) {
       nuevosErrores.nombreCompleto = "El nombre debe tener máximo 50 caracteres.";
+    } else if (!esNombreValido(nombreLimpio)) {
+      nuevosErrores.nombreCompleto = "El nombre solo puede contener letras y espacios individuales.";
     }
 
     if (!profesionLimpia) {

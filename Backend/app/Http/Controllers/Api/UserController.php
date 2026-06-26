@@ -36,7 +36,7 @@ class UserController extends Controller
     $user = $request->user();
 
     $validated = $request->validate([
-        'name'         => 'required|string|max:255',
+        'name'         => "required|string|max:255|regex:/^\pL+(?: \pL+)*$/u",
         'profession'   => 'nullable|string|max:100|regex:/^(?=.*\pL)[\pL\pN]+(?:[ .,&()\/-][\pL\pN]+)*$/u',
         'biography'    => 'nullable|string|max:1000',
         'github_url'   => [
@@ -47,6 +47,8 @@ class UserController extends Controller
             'nullable', 'url', 'max:200',
             'regex:/^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/i'
         ],
+    ], [
+        'name.regex' => 'El nombre solo puede contener letras y espacios.',
     ]);
 
     $sanitized = array_map(function($value) {

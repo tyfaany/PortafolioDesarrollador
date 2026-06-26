@@ -3,6 +3,7 @@ import * as Yup from 'yup';
 const registerSchema = Yup.object({
   nombre: Yup.string()
     .max(50, 'El nombre no debe superar 50 caracteres')
+    .matches(/^\p{L}+(?: \p{L}+)*$/u, 'El nombre solo puede contener letras y espacios individuales')
     .required('El nombre es obligatorio'),
   email: Yup.string()
     .email('Formato de correo invalido')

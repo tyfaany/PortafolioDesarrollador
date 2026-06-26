@@ -35,9 +35,11 @@ class AuthController extends Controller
 
         // 2. Validamos
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255', "regex:/^\pL+(?: \pL+)*$/u"],
             'email' => 'required|email|unique:users',
             'password' => 'required|min:8|confirmed',
+        ], [
+            'name.regex' => 'El nombre solo puede contener letras y espacios.',
         ]);
 
         // 3. Creamos el usuario
