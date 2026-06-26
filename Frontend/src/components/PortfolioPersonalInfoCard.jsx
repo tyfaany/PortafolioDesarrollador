@@ -129,7 +129,9 @@ function PortfolioPersonalInfoCard() {
       nuevosErrores.profesion = 'El título debe tener palabras válidas y no secuencias de símbolos.';
     }
 
-    if (biografiaLimpia.length > 1000) {
+    if (!biografiaLimpia) {
+      nuevosErrores.biografia = 'La biografía es obligatoria.';
+    } else if (biografiaLimpia.length > 1000) {
       nuevosErrores.biografia = 'La biografía debe tener máximo 1000 caracteres.';
     }
 
@@ -276,6 +278,7 @@ function PortfolioPersonalInfoCard() {
                   name="biografia"
                   value={formulario.biografia}
                   onChange={manejarCambio}
+                  required
                   className="softsave-input softsave-profile__textarea"
                   placeholder="Describe brevemente tu perfil profesional."
                 />

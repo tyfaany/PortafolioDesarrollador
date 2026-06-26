@@ -16,194 +16,198 @@ use Spatie\QueryBuilder\QueryBuilder;
 class UserController extends Controller
 {
     public function show(Request $request)
-{
-    $user = $request->user();
-    $user->load([
-        'studies', 
-        'jobs', 
-        'skills',
-        'softSkills',
-        'visibility',
-    ]);
+    {
+        $user = $request->user();
+        $user->load([
+            'studies',
+            'jobs',
+            'skills',
+            'softSkills',
+            'visibility',
+        ]);
 
-    return response()->json($user, 200);
-}
+        return response()->json($user, 200);
+    }
+
     /**
      * Actualizar datos del usuario autenticado
      */
-   public function update(Request $request)
-{
-    $user = $request->user();
+    public function update(Request $request)
+    {
+        $user = $request->user();
 
-    $validated = $request->validate([
-        'name'         => "required|string|max:255|regex:/^\pL+(?: \pL+)*$/u",
-        'profession'   => 'nullable|string|max:100|regex:/^(?=.*\pL)[\pL\pN]+(?:[ .,&()\/-][\pL\pN]+)*$/u',
-        'biography'    => 'nullable|string|max:1000',
-        'github_url'   => [
-            'nullable', 'url', 'max:200',
-            'regex:/^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9_.-]+/i'
-        ],
-        'linkedin_url' => [
-            'nullable', 'url', 'max:200',
-            'regex:/^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/i'
-        ],
-    ], [
-        'name.regex' => 'El nombre solo puede contener letras y espacios.',
-    ]);
+        $validated = $request->validate([
+            'name'         => "required|string|max:255|regex:/^\pL+(?: \pL+)*$/u",
+            'profession'   => 'nullable|string|max:100|regex:/^(?=.*\pL)[\pL\pN]+(?:[ .,&()\/-][\pL\pN]+)*$/u',
+            'biography'    => 'required|string|max:1000',
+            'github_url'   => [
+                'nullable',
+                'url',
+                'max:200',
+                'regex:/^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9_.-]+/i',
+            ],
+            'linkedin_url' => [
+                'nullable',
+                'url',
+                'max:200',
+                'regex:/^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/i',
+            ],
+        ], [
+            'name.regex' => 'El nombre solo puede contener letras y espacios.',
+        ]);
 
-    $sanitized = array_map(function($value) {
-        return is_string($value) ? strip_tags($value) : $value;
-    }, $validated);
+        $sanitized = array_map(function ($value) {
+            return is_string($value) ? strip_tags($value) : $value;
+        }, $validated);
 
-    $isComplete = $this->checkIfProfileIsComplete($user, $sanitized);
-    $sanitized['profile_completed'] = $isComplete;
+        $isComplete = $this->checkIfProfileIsComplete($user, $sanitized);
+        $sanitized['profile_completed'] = $isComplete;
 
-    $contactData = Arr::only($sanitized, ['name', 'profession', 'biography', 'github_url', 'linkedin_url', 'profile_completed']);
-    $user->fill($contactData);
-    $user->save();
+        $contactData = Arr::only($sanitized, ['name', 'profession', 'biography', 'github_url', 'linkedin_url', 'profile_completed']);
+        $user->fill($contactData);
+        $user->save();
 
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Información actualizada.',
-        
-        'user' => $user->fresh() 
-    ], 200);
-}
-private function checkIfProfileIsComplete(User $user, array $newData): bool
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Información actualizada.',
+            'user' => $user->fresh(),
+        ], 200);
+    }
+
+    private function checkIfProfileIsComplete(User $user, array $newData): bool
     {
         $requiredFields = ['name', 'profession', 'biography'];
 
         foreach ($requiredFields as $field) {
-            // Buscamos en los datos nuevos, si no están, buscamos en los que ya tiene el usuario
             $value = $newData[$field] ?? $user->$field;
 
-            if (empty($value)) {
-                return false; 
+            if (trim((string) $value) === '') {
+                return false;
             }
         }
 
-        return true; 
+        return true;
     }
-   public function showContact(Request $request)
-{
-    $user = $request->user();
+    public function showContact(Request $request)
+    {
+        $user = $request->user();
 
-    return response()->json([
-        'phone' => $user->phone,
-        'mobile' => $user->mobile,
-        'contact_email' => $user->contact_email,
-        'address' => $user->address,
-        'instagram_url' => $user->instagram_url,
-        'facebook_url' => $user->facebook_url,
-
-        'show_phone' => $user->show_phone,
-        'show_mobile' => $user->show_mobile,
-        'show_contact_email' => $user->show_contact_email,
-        'show_address' => $user->show_address,
-        'show_instagram' => $user->show_instagram,
-        'show_facebook' => $user->show_facebook,
-    ]);
-}
-     public function updateContact(UpdateContactRequest $request)
-{
-    $user = $request->user();
-
-    $data = $request->validated();
-
-    // Sanitizar strings
-    $sanitized = array_map(function($value) {
-        return is_string($value) ? strip_tags($value) : $value;
-    }, $data);
-
-    $visibilityData = Arr::only($sanitized, [
-        'show_phone',
-        'show_mobile',
-        'show_contact_email',
-        'show_address',
-        'show_instagram',
-        'show_facebook',
-    ]);
-    $contactData = Arr::only($sanitized, [
-        'phone',
-        'mobile',
-        'contact_email',
-        'address',
-        'instagram_url',
-        'facebook_url',
-    ]);
-
-    $user->fill($contactData);
-    $user->save();
-
-    if (! empty($visibilityData)) {
-        $visibility = $user->visibility()->firstOrCreate(
-            ['user_id' => $user->id],
-            UserVisibility::defaults()
-        );
-
-        $visibility->fill($visibilityData);
-        $visibility->save();
-    }
-
-    $visibility = $user->visibility()->firstOrCreate(
-        ['user_id' => $user->id],
-        UserVisibility::defaults()
-    );
-
-    return response()->json([
-        'message' => 'Información de contacto actualizada correctamente',
-        'contact' => [
+        return response()->json([
             'phone' => $user->phone,
             'mobile' => $user->mobile,
             'contact_email' => $user->contact_email,
             'address' => $user->address,
             'instagram_url' => $user->instagram_url,
             'facebook_url' => $user->facebook_url,
-            'show_phone' => $visibility->show_phone,
-            'show_mobile' => $visibility->show_mobile,
-            'show_contact_email' => $visibility->show_contact_email,
-            'show_address' => $visibility->show_address,
-            'show_instagram' => $visibility->show_instagram,
-            'show_facebook' => $visibility->show_facebook,
-        ]
-    ]);
-}
-   public function showPublicContact($id)
-{
-    $user = \App\Models\User::findOrFail($id);
 
-    $data = [];
-
-    if ($user->show_phone) {
-        $data['phone'] = $user->phone;
+            'show_phone' => $user->show_phone,
+            'show_mobile' => $user->show_mobile,
+            'show_contact_email' => $user->show_contact_email,
+            'show_address' => $user->show_address,
+            'show_instagram' => $user->show_instagram,
+            'show_facebook' => $user->show_facebook,
+        ]);
     }
 
-    if ($user->show_mobile) {
-        $data['mobile'] = $user->mobile;
-        $data['whatsapp_url'] = preg_replace('/\D+/', '', (string) $user->mobile)
-            ? 'https://wa.me/' . preg_replace('/\D+/', '', (string) $user->mobile)
-            : null;
-    }
+    public function updateContact(UpdateContactRequest $request)
+    {
+        $user = $request->user();
 
-    if ($user->show_contact_email) {
-        $data['contact_email'] = $user->contact_email;
-    }
+        $data = $request->validated();
 
-    if ($user->show_address) {
-        $data['address'] = $user->address;
-    }
+        // Sanitizar strings
+        $sanitized = array_map(function ($value) {
+            return is_string($value) ? strip_tags($value) : $value;
+        }, $data);
 
-    if ($user->show_instagram) {
-        $data['instagram_url'] = $user->instagram_url;
-    }
+        $visibilityData = Arr::only($sanitized, [
+            'show_phone',
+            'show_mobile',
+            'show_contact_email',
+            'show_address',
+            'show_instagram',
+            'show_facebook',
+        ]);
+        $contactData = Arr::only($sanitized, [
+            'phone',
+            'mobile',
+            'contact_email',
+            'address',
+            'instagram_url',
+            'facebook_url',
+        ]);
 
-    if ($user->show_facebook) {
-        $data['facebook_url'] = $user->facebook_url;
-    }
+        $user->fill($contactData);
+        $user->save();
 
-    return response()->json($data);
-    
-}
+        if (! empty($visibilityData)) {
+            $visibility = $user->visibility()->firstOrCreate(
+                ['user_id' => $user->id],
+                UserVisibility::defaults()
+            );
+
+            $visibility->fill($visibilityData);
+            $visibility->save();
+        }
+
+        $visibility = $user->visibility()->firstOrCreate(
+            ['user_id' => $user->id],
+            UserVisibility::defaults()
+        );
+
+        return response()->json([
+            'message' => 'Información de contacto actualizada correctamente',
+            'contact' => [
+                'phone' => $user->phone,
+                'mobile' => $user->mobile,
+                'contact_email' => $user->contact_email,
+                'address' => $user->address,
+                'instagram_url' => $user->instagram_url,
+                'facebook_url' => $user->facebook_url,
+                'show_phone' => $visibility->show_phone,
+                'show_mobile' => $visibility->show_mobile,
+                'show_contact_email' => $visibility->show_contact_email,
+                'show_address' => $visibility->show_address,
+                'show_instagram' => $visibility->show_instagram,
+                'show_facebook' => $visibility->show_facebook,
+            ]
+        ]);
+    }
+    public function showPublicContact($id)
+    {
+        $user = \App\Models\User::findOrFail($id);
+
+        $data = [];
+
+        if ($user->show_phone) {
+            $data['phone'] = $user->phone;
+        }
+
+        if ($user->show_mobile) {
+            $data['mobile'] = $user->mobile;
+            $data['whatsapp_url'] = preg_replace('/\D+/', '', (string) $user->mobile)
+                ? 'https://wa.me/' . preg_replace('/\D+/', '', (string) $user->mobile)
+                : null;
+        }
+
+        if ($user->show_contact_email) {
+            $data['contact_email'] = $user->contact_email;
+        }
+
+        if ($user->show_address) {
+            $data['address'] = $user->address;
+        }
+
+        if ($user->show_instagram) {
+            $data['instagram_url'] = $user->instagram_url;
+        }
+
+        if ($user->show_facebook) {
+            $data['facebook_url'] = $user->facebook_url;
+        }
+
+        return response()->json($data);
+    }
 
     public function indexPublicProfilesFull(Request $request)
     {
@@ -261,10 +265,10 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
 
         return response()->json($users, 200);
     }
-   public function showPublicProfile(User $user)
-{
-  // 1. Cargamos todas las relaciones de este usuario de forma eficiente
-    $user->load([
+    public function showPublicProfile(User $user)
+    {
+        // 1. Cargamos todas las relaciones de este usuario de forma eficiente
+        $user->load([
             'projects.technologies',
             'studies',
             'jobs',
@@ -279,8 +283,8 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
 
         // 3. Devolvemos la respuesta
         return response()->json($profile, 200);
-}
-private function filterProfilePrivacy(User $user): array
+    }
+    private function filterProfilePrivacy(User $user): array
     {
         // Datos básicos que siempre son visibles
         $profile = [
