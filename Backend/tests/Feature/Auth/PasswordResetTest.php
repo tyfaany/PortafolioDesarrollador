@@ -18,8 +18,9 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $response = $this->post('/api/forgot-password', ['email' => $user->email]);
 
+        $response->assertStatus(200);
         Notification::assertSentTo($user, ResetPassword::class);
     }
 
@@ -29,19 +30,19 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $response = $this->post('/api/forgot-password', ['email' => $user->email]);
+        $response->assertStatus(200);
 
         Notification::assertSentTo($user, ResetPassword::class, function (object $notification) use ($user) {
-            $response = $this->post('/reset-password', [
+            $response = $this->post('/api/reset-password', [
                 'token' => $notification->token,
                 'email' => $user->email,
                 'password' => 'password',
                 'password_confirmation' => 'password',
             ]);
 
-            $response
-                ->assertSessionHasNoErrors()
-                ->assertStatus(200);
+            $response->assertStatus(200);
+            $response->assertJsonFragment(['status' => 'success']);
 
             return true;
         });

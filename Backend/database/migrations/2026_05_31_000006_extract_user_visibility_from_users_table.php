@@ -82,7 +82,7 @@ return new class extends Migration
             'linkedin_id',
         ], fn (string $column) => Schema::hasColumn('users', $column)));
 
-        if (! empty($columnsToDrop)) {
+        if (! empty($columnsToDrop) && \Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
             Schema::table('users', function (Blueprint $table) use ($columnsToDrop) {
                 $table->dropColumn($columnsToDrop);
             });
@@ -108,7 +108,7 @@ return new class extends Migration
             'linkedin_id',
         ], fn (string $column) => ! Schema::hasColumn('users', $column)));
 
-        if (! empty($columnsToAdd)) {
+        if (! empty($columnsToAdd) && \Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
             Schema::table('users', function (Blueprint $table) use ($columnsToAdd) {
                 foreach ($columnsToAdd as $column) {
                     match ($column) {

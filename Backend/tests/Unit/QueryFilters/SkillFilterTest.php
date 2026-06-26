@@ -16,7 +16,7 @@ class SkillFilterTest extends TestCase
 
         $this->assertStringContainsString('technical_skills', $query->toSql());
         $this->assertStringContainsString('exists', strtolower($query->toSql()));
-        $this->assertSame(['Laravel'], $query->getBindings());
+        $this->assertSame(['laravel'], $query->getBindings());
     }
 
     public function test_it_filters_users_by_multiple_skills_separated_by_comma(): void
@@ -26,7 +26,7 @@ class SkillFilterTest extends TestCase
         (new SkillFilter())($query, 'Laravel, React,  ', 'habilidades');
 
         $this->assertStringContainsString('technical_skills', $query->toSql());
-        $this->assertSame(['Laravel', 'React'], $query->getBindings());
+        $this->assertSame(['laravel', 'react'], $query->getBindings());
     }
 
     public function test_it_does_not_modify_query_for_empty_skill_values(): void

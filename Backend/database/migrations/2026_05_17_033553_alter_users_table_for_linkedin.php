@@ -18,7 +18,9 @@ return new class extends Migration
             }
             
             // 2. Modificamos tu contraseña actual para que permita valores vacíos (null)
-            $table->string('password')->nullable()->change();
+            if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
+                $table->string('password')->nullable()->change();
+            }
         });
     }
     /**
@@ -28,7 +30,9 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('linkedin_id');
-            $table->string('password')->nullable(false)->change(); // Revierte el cambio si eliminas la migración
+            if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
+                $table->string('password')->nullable(false)->change(); // Revierte el cambio si eliminas la migración
+            }
         });
     }
 };

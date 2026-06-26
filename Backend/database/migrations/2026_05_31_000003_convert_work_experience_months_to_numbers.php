@@ -46,8 +46,10 @@ return new class extends Migration
             );
         }
 
-        DB::statement('ALTER TABLE work_experiences MODIFY start_month TINYINT UNSIGNED NOT NULL');
-        DB::statement('ALTER TABLE work_experiences MODIFY end_month TINYINT UNSIGNED NULL');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE work_experiences MODIFY start_month TINYINT UNSIGNED NOT NULL');
+            DB::statement('ALTER TABLE work_experiences MODIFY end_month TINYINT UNSIGNED NULL');
+        }
     }
 
     public function down(): void
@@ -97,7 +99,9 @@ return new class extends Migration
             );
         }
 
-        DB::statement('ALTER TABLE work_experiences MODIFY start_month VARCHAR(20) NOT NULL');
-        DB::statement('ALTER TABLE work_experiences MODIFY end_month VARCHAR(20) NULL');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE work_experiences MODIFY start_month VARCHAR(20) NOT NULL');
+            DB::statement('ALTER TABLE work_experiences MODIFY end_month VARCHAR(20) NULL');
+        }
     }
 };

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('user_skills')) {
+        if (Schema::hasTable('user_skills') && \Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
             Schema::table('user_skills', function (Blueprint $table) {
                 if (Schema::hasColumn('user_skills', 'level_id')) {
                     $table->dropForeign('developer_skills_level_id_foreign');
@@ -38,7 +38,7 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasTable('levels')) {
+        if (Schema::hasTable('levels') && \Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
             Schema::drop('levels');
         }
     }
@@ -53,7 +53,7 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasTable('user_skills')) {
+        if (Schema::hasTable('user_skills') && \Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
             Schema::table('user_skills', function (Blueprint $table) {
                 if (! Schema::hasColumn('user_skills', 'level_id')) {
                     $table->foreignId('level_id')
