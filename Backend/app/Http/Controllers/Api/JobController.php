@@ -4,26 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Job;
+use App\Support\PortfolioDateValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
 class JobController extends Controller
 {
-    private const MONTHS = [
-        'enero' => 1,
-        'febrero' => 2,
-        'marzo' => 3,
-        'abril' => 4,
-        'mayo' => 5,
-        'junio' => 6,
-        'julio' => 7,
-        'agosto' => 8,
-        'septiembre' => 9,
-        'octubre' => 10,
-        'noviembre' => 11,
-        'diciembre' => 12,
-    ];
-
     /**
      * Obtener todos los trabajos del usuario logueado (Para que el frontend los dibuje)
      */
@@ -41,10 +27,17 @@ class JobController extends Controller
     {
         $this->validateJob($request);
 
-        if (!$this->checkDateLogic($request)) {
+        $dateError = PortfolioDateValidator::validateJobDates(
+            $request->start_year,
+            $request->start_month,
+            $request->end_year,
+            $request->end_month,
+            (bool) $request->is_current_job,
+        );
+        if ($dateError !== null) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'La fecha de inicio no puede ser posterior a la fecha de fin.'
+                'message' => $dateError
             ], 422);
         }
 
@@ -74,10 +67,17 @@ class JobController extends Controller
 
         $this->validateJob($request);
 
-        if (!$this->checkDateLogic($request)) {
+        $dateError = PortfolioDateValidator::validateJobDates(
+            $request->start_year,
+            $request->start_month,
+            $request->end_year,
+            $request->end_month,
+            (bool) $request->is_current_job,
+        );
+        if ($dateError !== null) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'La fecha de inicio no puede ser posterior a la fecha de fin.'
+                'message' => $dateError
             ], 422);
         }
 
@@ -129,30 +129,13 @@ class JobController extends Controller
         ]);
     }
 
-    private function normalizeMonthValue($value): ?int
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        if (is_numeric($value)) {
-            $month = (int) $value;
-
-            return $month >= 1 && $month <= 12 ? $month : null;
-        }
-
-        $normalized = mb_strtolower(trim((string) $value), 'UTF-8');
-
-        return self::MONTHS[$normalized] ?? null;
-    }
-
     private function prepareData(Request $request)
     {
         $job = new Job();
         $table = $job->getTable();
         $columnas = Schema::getColumnListing($table);
-        $startMonth = $this->normalizeMonthValue($request->input('start_month'));
-        $endMonth = $this->normalizeMonthValue($request->input('end_month'));
+        $startMonth = PortfolioDateValidator::normalizeMonthValue($request->input('start_month'));
+        $endMonth = PortfolioDateValidator::normalizeMonthValue($request->input('end_month'));
         $data = $request->only([
             'company_name',
             'position',
@@ -198,21 +181,4 @@ class JobController extends Controller
         return array_intersect_key($data, array_flip($columnas));
     }
 
-    private function checkDateLogic(Request $request)
-    {
-        if ($request->is_current_job) return true; // Si es actual, no hay fecha de fin con qué comparar
-
-        $sYear = $request->start_year;
-        $eYear = $request->end_year;
-        $sMonthNum = $this->normalizeMonthValue($request->start_month) ?? 0;
-        $eMonthNum = $this->normalizeMonthValue($request->end_month) ?? 0;
-        
-        if ($sYear > $eYear) return false;
-        
-        if ($sYear == $eYear) {
-            if ($sMonthNum > $eMonthNum) return false;
-        }
-
-        return true;
-    }
 }

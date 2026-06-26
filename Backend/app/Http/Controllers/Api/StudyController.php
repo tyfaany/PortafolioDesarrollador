@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Study;
 use App\Models\User;
+use App\Support\PortfolioDateValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -38,9 +39,21 @@ class StudyController extends Controller
             'academic_institution' => 'required|string|max:100',
             'degree'               => 'required|string|max:100',
             'start_date'           => 'required|date',
-            'end_date'             => 'nullable|date|after_or_equal:start_date',
+            'end_date'             => 'nullable|date',
             'achievements'         => 'nullable|string',
         ]);
+
+        $dateError = PortfolioDateValidator::validateStudyDates(
+            $validated['start_date'],
+            $validated['end_date'] ?? null,
+        );
+
+        if ($dateError !== null) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $dateError,
+            ], 422);
+        }
 
         // Se crea asociado al usuario autenticado
         $study = Auth::user()->studies()->create($validated);
@@ -65,9 +78,21 @@ class StudyController extends Controller
             'academic_institution' => 'required|string|max:100',
             'degree'               => 'required|string|max:100',
             'start_date'           => 'required|date',
-            'end_date'             => 'nullable|date|after_or_equal:start_date',
+            'end_date'             => 'nullable|date',
             'achievements'         => 'nullable|string',
         ]);
+
+        $dateError = PortfolioDateValidator::validateStudyDates(
+            $validated['start_date'],
+            $validated['end_date'] ?? null,
+        );
+
+        if ($dateError !== null) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $dateError,
+            ], 422);
+        }
 
         $study->update($validated);
 

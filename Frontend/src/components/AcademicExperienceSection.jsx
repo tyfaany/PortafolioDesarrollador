@@ -6,6 +6,7 @@ import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import { actualizarEstudio, crearEstudio, eliminarEstudio } from '../services/authService';
 import { extractApiMessageByStatus, getApiStatus } from '../utils/apiError';
+import { getCurrentMonthKey, isFutureMonthKey, isMonthKeyAfter } from '../utils/portfolioDates';
 
 const FORMULARIO_ESTUDIO_INICIAL = {
   id: null,
@@ -140,6 +141,7 @@ function AcademicExperienceSection({
 }) {
   const { user, refreshUser } = useAuth();
   const { showFeedback } = useFeedback();
+  const mesActual = getCurrentMonthKey();
   const [estudios, setEstudios] = useState(() => normalizarEstudios(user?.studies));
   const [estaModalEstudioAbierto, setEstaModalEstudioAbierto] = useState(false);
   const [erroresEstudio, setErroresEstudio] = useState({});
@@ -234,11 +236,6 @@ function AcademicExperienceSection({
     const nuevosErrores = {};
     const institucion = sanitizarTexto(formularioEstudio.academic_institution);
     const titulo = sanitizarTexto(formularioEstudio.degree);
-    const hoy = new Date();
-    const inicio = formularioEstudio.start_month ? new Date(`${formularioEstudio.start_month}-01T00:00:00Z`) : null;
-    const fin = formularioEstudio.end_month ? new Date(`${formularioEstudio.end_month}-01T00:00:00Z`) : null;
-    const mesActual = new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), 1));
-
     if (!institucion) {
       nuevosErrores.academic_institution = 'La institución es obligatoria.';
     }
@@ -249,17 +246,17 @@ function AcademicExperienceSection({
 
     if (!formularioEstudio.start_month) {
       nuevosErrores.start_month = 'La fecha de inicio es obligatoria.';
-    } else if (inicio && inicio > mesActual) {
+    } else if (isFutureMonthKey(formularioEstudio.start_month, mesActual)) {
       nuevosErrores.start_month = 'La fecha de inicio no puede ser posterior a la fecha actual.';
     }
 
     if (!formularioEstudio.currentlyStudying && !formularioEstudio.end_month) {
       nuevosErrores.end_month = 'La fecha de fin es obligatoria.';
-    } else if (!formularioEstudio.currentlyStudying && fin && fin > mesActual) {
+    } else if (!formularioEstudio.currentlyStudying && isFutureMonthKey(formularioEstudio.end_month, mesActual)) {
       nuevosErrores.end_month = 'La fecha de fin no puede ser posterior a la fecha actual.';
     }
 
-    if (inicio && fin && inicio > fin) {
+    if (formularioEstudio.start_month && formularioEstudio.end_month && isMonthKeyAfter(formularioEstudio.start_month, formularioEstudio.end_month)) {
       nuevosErrores.end_month = 'La fecha de inicio no puede ser posterior a la fecha de fin.';
     }
 
@@ -540,7 +537,7 @@ function AcademicExperienceSection({
                     value={formularioEstudio.start_month}
                     onChange={manejarCambioEstudio}
                     className="softsave-input softsave-profile__input"
-                    max={new Date().toISOString().slice(0, 7)}
+                    max={mesActual}
                   />
                   {erroresEstudio.start_month ? (
                     <span className="error-text softsave-profile__error-text" role="alert">
@@ -577,6 +574,7 @@ function AcademicExperienceSection({
                       value={formularioEstudio.end_month}
                       onChange={manejarCambioEstudio}
                       className="softsave-input softsave-profile__input"
+                      max={mesActual}
                     />
                   )}
                   {erroresEstudio.end_month ? (

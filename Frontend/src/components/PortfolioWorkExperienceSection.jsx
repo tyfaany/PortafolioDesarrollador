@@ -14,6 +14,12 @@ import useFeedback from '../hooks/useFeedback';
 import { actualizarJob, crearJob, eliminarJob, obtenerJobs } from '../services/authService';
 import { getPortfolioCache, setPortfolioCache } from '../services/portfolioCache';
 import { extractApiMessageByStatus, getApiStatus } from '../utils/apiError';
+import {
+  buildMonthKey,
+  getCurrentMonthKey,
+  isFutureMonthKey,
+  isMonthKeyAfter,
+} from '../utils/portfolioDates';
 
 const FORMULARIO_LABORAL_INICIAL = {
   id: null,
@@ -279,7 +285,7 @@ function PortfolioWorkExperienceSection() {
   const { user } = useAuth();
   const { showFeedback } = useFeedback();
   const aniosDisponibles = useMemo(() => obtenerAniosDisponibles(), []);
-  const mesActual = useMemo(() => new Date().toISOString().slice(0, 7), []);
+  const mesActual = useMemo(() => getCurrentMonthKey(), []);
   const trabajosDesdeContexto = useMemo(
     () => normalizarTrabajos(user?.jobs),
     [user?.jobs],
@@ -449,10 +455,8 @@ function PortfolioWorkExperienceSection() {
     const nuevosErrores = {};
     const empresa = sanitizarTexto(formulario.company_name);
     const cargo = sanitizarTexto(formulario.position);
-    const fechaInicio = construirFechaDesdePartes(formulario.start_year, formulario.start_month);
-    const fechaFin = construirFechaDesdePartes(formulario.end_year, formulario.end_month);
-    const inicio = fechaInicio ? new Date(`${fechaInicio}T00:00:00`) : null;
-    const fin = fechaFin ? new Date(`${fechaFin}T00:00:00`) : null;
+    const fechaInicio = buildMonthKey(formulario.start_year, formulario.start_month);
+    const fechaFin = buildMonthKey(formulario.end_year, formulario.end_month);
 
     if (!empresa) {
       nuevosErrores.company_name = 'El nombre de la empresa es obligatorio.';
@@ -470,7 +474,15 @@ function PortfolioWorkExperienceSection() {
       nuevosErrores.end_month = 'La fecha de fin es obligatoria.';
     }
 
-    if (!formulario.is_current_job && inicio && fin && inicio > fin) {
+    if (fechaInicio && isFutureMonthKey(fechaInicio, mesActual)) {
+      nuevosErrores.start_month = 'La fecha de inicio no puede ser posterior a la fecha actual.';
+    }
+
+    if (!formulario.is_current_job && fechaFin && isFutureMonthKey(fechaFin, mesActual)) {
+      nuevosErrores.end_month = 'La fecha de fin no puede ser posterior a la fecha actual.';
+    }
+
+    if (!formulario.is_current_job && fechaInicio && fechaFin && isMonthKeyAfter(fechaInicio, fechaFin)) {
       nuevosErrores.end_month = 'La fecha de inicio no puede ser posterior a la fecha de fin.';
     }
 
