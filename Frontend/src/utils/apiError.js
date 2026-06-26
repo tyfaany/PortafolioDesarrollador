@@ -16,6 +16,16 @@ function extractFromValidationErrors(errors) {
   return String(firstValue || '').trim();
 }
 
+function normalizarMensajeValidacion(message) {
+  const limpio = String(message || '').trim();
+
+  if (limpio === 'validation.unique') {
+    return 'El correo electrónico ya está registrado.';
+  }
+
+  return limpio;
+}
+
 export function getApiStatus(error) {
   const status = Number(error?.response?.status);
   return Number.isFinite(status) ? status : 0;
@@ -37,12 +47,12 @@ export function extractApiMessage(error, fallback = 'Ocurrió un error. Intenta 
   const backendMessage = String(data?.message || '').trim();
 
   if (backendMessage) {
-    return backendMessage;
+    return normalizarMensajeValidacion(backendMessage);
   }
 
   const validationMessage = extractFromValidationErrors(data?.errors);
   if (validationMessage) {
-    return validationMessage;
+    return normalizarMensajeValidacion(validationMessage);
   }
 
   if (!error?.response) {

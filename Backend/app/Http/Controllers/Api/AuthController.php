@@ -40,6 +40,7 @@ class AuthController extends Controller
             'password' => 'required|min:8|confirmed',
         ], [
             'name.regex' => 'El nombre solo puede contener letras y espacios.',
+            'email.unique' => 'El correo electrónico ya está registrado.',
         ]);
 
         // 3. Creamos el usuario

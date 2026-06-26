@@ -27,6 +27,7 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ], [
             'name.regex' => 'El nombre solo puede contener letras y espacios.',
+            'email.unique' => 'El correo electrónico ya está registrado.',
         ]);
 
         $user = User::create([
