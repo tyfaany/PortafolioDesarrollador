@@ -428,8 +428,9 @@ class AuthController extends Controller
             ? base64_encode(json_encode(['link_token' => $linkToken], JSON_INVALID_UTF8_SUBSTITUTE))
             : null;
 
-        $driver = Socialite::driver('linkedin-openid')
-            ->scopes(['openid', 'profile', 'email'])
+        /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
+        $driver = Socialite::driver('linkedin-openid');
+        $driver->scopes(['openid', 'profile', 'email'])
             ->stateless();
 
         if (!empty($state)) {
@@ -443,9 +444,9 @@ class AuthController extends Controller
 {
     try {
 
-        $linkedinUser = Socialite::driver('linkedin-openid')
-            ->stateless()
-            ->user();
+        /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
+        $driver = Socialite::driver('linkedin-openid');
+        $linkedinUser = $driver->stateless()->user();
 
         $statePayload = null;
         $stateRaw = request()->query('state');
