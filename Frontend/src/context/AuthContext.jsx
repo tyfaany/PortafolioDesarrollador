@@ -113,9 +113,7 @@ export const AuthProvider = ({ children }) => {
   // Registrar nuevo usuario y guardar sesion automaticamente
   const registrar = async (nombre, email, password, passwordConfirmacion) => {
     const respuesta = await registrarService(nombre, email, password, passwordConfirmacion);
-    const { token } = respuesta.data;
-    inicializarSesion(token);
-    return cargarUsuarioAutenticado();
+    return respuesta;
   };
 
   // Logout

@@ -659,6 +659,7 @@ function ProfileSettings() {
       setMensajeGuardadoExito("Información actualizada correctamente");
 
       if (location.state?.completarPerfil) {
+        sessionStorage.removeItem("post_register");
         navigate("/perfil/contacto", { replace: true });
       }
     } catch (error) {
@@ -1654,7 +1655,7 @@ function ProfileSettings() {
                 {erroresFormulario.profesion ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.profesion}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Biografía</span>
+                <span className="softsave-profile__label">Biografía *</span>
                 <textarea name="biografia" value={formularioPerfil.biografia} onChange={manejarCambioFormulario} maxLength={1000} required className="softsave-input softsave-profile__textarea" placeholder="Cuéntanos sobre tu enfoque, experiencia y tecnologías favoritas." />
                 {erroresFormulario.biografia ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.biografia}</span> : null}
               </label>

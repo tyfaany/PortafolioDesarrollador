@@ -15,6 +15,7 @@ use App\Http\Controllers\GithubController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/email/verification-resend', [AuthController::class, 'resendVerification']);
 Route::get('/auth/linkedin/redirect', [AuthController::class, 'redirect']);
 Route::get('/auth/linkedin/callback', [AuthController::class, 'handleLinkedInCallback']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);

@@ -80,7 +80,8 @@ const Registro = () => {
           formData.passwordConfirmacion
         );
         sessionStorage.setItem('post_register', 'true');
-        navigate('/perfil/contacto', { state: { completarPerfil: true }, replace: true });
+        sessionStorage.setItem('verification_pending', 'Tu cuenta fue creada. Revisa tu correo para verificar tu cuenta antes de iniciar sesión.');
+        navigate('/login', { replace: true });
       } catch (error) {
         if (error.response?.status === 422) {
           const erroresBackend = error?.response?.data?.errors;

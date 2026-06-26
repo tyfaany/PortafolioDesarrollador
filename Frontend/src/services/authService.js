@@ -13,6 +13,8 @@ export const registrar = (nombre, email, password, passwordConfirmacion) => api.
   password_confirmation: passwordConfirmacion,
 });
 
+export const reenviarVerificacion = (email) => api.post('/email/verification-resend', { email });
+
 export const logout = () => api.post('/logout');
 export const eliminarCuenta = (currentPassword) => api.delete('/user/account', {
   data: {

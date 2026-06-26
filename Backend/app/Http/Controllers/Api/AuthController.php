@@ -54,13 +54,11 @@ class AuthController extends Controller
 
         $user->visibility()->create(UserVisibility::defaults());
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        event(new \Illuminate\Auth\Events\Registered($user));
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Usuario registrado correctamente.',
-            'user' => $user,
-            'token' => $token,
+            'message' => 'Usuario registrado correctamente. Revisa tu correo para verificar tu cuenta.',
         ], 201, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
@@ -93,6 +91,13 @@ class AuthController extends Controller
         }
 
         $user = User::where('email', $request->email)->first();
+        if ($user && method_exists($user, 'hasVerifiedEmail') && ! $user->hasVerifiedEmail()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Debes verificar tu correo electrónico antes de iniciar sesión.',
+            ], 403, [], JSON_INVALID_UTF8_SUBSTITUTE);
+        }
+
         $user->tokens()->delete();
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -106,6 +111,39 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
             ]
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
+    }
+
+    /**
+     * Reenviar enlace de verificacion para una cuenta existente.
+     */
+    public function resendVerification(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $user = User::where('email', Str::lower(Str::squish($validated['email'])))->first();
+
+        if (! $user) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Si la cuenta existe, enviamos un nuevo enlace de verificación.',
+            ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
+        }
+
+        if (method_exists($user, 'hasVerifiedEmail') && $user->hasVerifiedEmail()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Tu correo ya está verificado. Puedes iniciar sesión.',
+            ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Te enviamos un nuevo enlace de verificación a tu correo.',
         ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 

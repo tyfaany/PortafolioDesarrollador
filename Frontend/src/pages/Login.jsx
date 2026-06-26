@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import Icon from '@mdi/react';
 import { mdiEmailOutline, mdiEyeOffOutline, mdiEyeOutline, mdiLockOutline } from '@mdi/js';
@@ -9,8 +9,9 @@ import { extractApiMessageByStatus } from '../utils/apiError';
 
 // Formulario de inicio de sesion
 const Login = () => {
-  const { login, isAuthenticated, loading } = useAuth();
+  const { login, isAuthenticated, loading, user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -20,8 +21,10 @@ const Login = () => {
   const [errores, setErrores] = useState({});
   const [errorServidor, setErrorServidor] = useState('');
   const [mensajeSesionExpirada, setMensajeSesionExpirada] = useState('');
+  const [mensajeVerificacion, setMensajeVerificacion] = useState('');
   const [cargando, setCargando] = useState(false);
   const [mostrarPassword, setMostrarPassword] = useState(false);
+  const completarPerfilPendiente = sessionStorage.getItem('post_register') === 'true';
 
   useEffect(() => {
     const sesionExpirada = sessionStorage.getItem('session_expired');
@@ -29,10 +32,28 @@ const Login = () => {
       setMensajeSesionExpirada('Su sesión ha expirado');
       sessionStorage.removeItem('session_expired');
     }
-  }, []);
+
+    const verificacionPendiente = sessionStorage.getItem('verification_pending');
+    if (verificacionPendiente) {
+      setMensajeVerificacion(verificacionPendiente);
+      sessionStorage.removeItem('verification_pending');
+    }
+
+    if (searchParams.get('verified') === '1') {
+      setMensajeVerificacion('Tu correo fue verificado correctamente. Ahora puedes iniciar sesión.');
+    }
+  }, [searchParams]);
 
   if (loading) {
     return <p>Cargando...</p>;
+  }
+
+  if (isAuthenticated && completarPerfilPendiente && !loading) {
+    if (user?.profile_completed) {
+      sessionStorage.removeItem('post_register');
+    } else {
+      return <Navigate to="/perfil/contacto" state={{ completarPerfil: true }} replace />;
+    }
   }
 
   if (isAuthenticated) {
@@ -68,9 +89,18 @@ const Login = () => {
           extractApiMessageByStatus(
             error,
             'No se pudo iniciar sesión. Intenta de nuevo.',
-            { 401: 'Credenciales no coinciden con nuestros registros. Intenta de nuevo.' },
+            {
+              401: 'Credenciales no coinciden con nuestros registros. Intenta de nuevo.',
+              403: 'Debes verificar tu correo electrónico antes de iniciar sesión.',
+            },
           ),
         );
+        if (error.response?.status === 403) {
+          navigate('/verificacion-pendiente', {
+            replace: true,
+            state: { email: formData.email },
+          });
+        }
       } finally {
         setCargando(false);
       }
@@ -163,6 +193,12 @@ const Login = () => {
             <h2>Iniciar Sesión</h2>
             <p>Ingresa tus credenciales para continuar</p>
           </div>
+
+          {mensajeVerificacion && (
+            <div className="success-alert" role="status">
+              {mensajeVerificacion}
+            </div>
+          )}
 
           <form className="auth-form" onSubmit={handleSubmit} autoComplete="on">
             <Field

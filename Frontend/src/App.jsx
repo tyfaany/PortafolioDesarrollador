@@ -11,6 +11,7 @@ import Portafolio from './pages/Portafolio';
 import ProfileSettings from './pages/ProfileSettings';
 import Registro from './pages/Registro';
 import ResetPassword from './pages/ResetPassword';
+import VerificationPending from './pages/VerificationPending';
 
 // Definicion de rutas de la aplicacion
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/password-reset/:token" element={<ResetPassword />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/verificacion-pendiente" element={<VerificationPending />} />
       </Route>
 
       <Route
