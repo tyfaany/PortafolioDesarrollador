@@ -1636,12 +1636,12 @@ function ProfileSettings() {
 
             <form className="softsave-profile__form" onSubmit={manejarGuardarCambios}>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Nombre Completo</span>
+                <span className="softsave-profile__label">Nombre Completo *</span>
                 <input type="text" name="nombreCompleto" value={formularioPerfil.nombreCompleto} onChange={manejarCambioFormulario} maxLength={50} className="softsave-input softsave-profile__input" placeholder="Ej. Alejandra García" />
                 {erroresFormulario.nombreCompleto ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.nombreCompleto}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Profesión</span>
+                <span className="softsave-profile__label">Profesión *</span>
                 <input type="text" name="profesion" value={formularioPerfil.profesion} onChange={manejarCambioFormulario} maxLength={100} className="softsave-input softsave-profile__input" placeholder="Ej. Senior Full Stack Engineer" />
                 {erroresFormulario.profesion ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.profesion}</span> : null}
               </label>
