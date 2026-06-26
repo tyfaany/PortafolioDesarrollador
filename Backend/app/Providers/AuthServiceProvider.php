@@ -52,6 +52,17 @@ class AuthServiceProvider extends ServiceProvider
             return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
         });
 
+        ResetPassword::toMailUsing(function (object $notifiable, string $url) {
+            return (new MailMessage)
+                ->subject('Restablecimiento de contraseña')
+                ->greeting('Hola '.$notifiable->name.',')
+                ->line('Recibiste este mensaje porque solicitaste restablecer tu contraseña en DevStack.')
+                ->line('Haz clic en el botón de abajo para elegir una nueva contraseña.')
+                ->action('Restablecer contraseña', $url)
+                ->salutation('DevStack')
+                ->line('Si no solicitaste este cambio, puedes ignorar este correo.');
+        });
+
         //
     }
 }
