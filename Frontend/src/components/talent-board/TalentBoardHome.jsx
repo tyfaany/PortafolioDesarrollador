@@ -77,7 +77,6 @@ function mapPublicProfile(profile) {
     profile_photo_url: profile?.profile_photo_url || '',
     bio: profile?.biography || 'Sin biografía disponible.',
     biography: profile?.biography || '',
-    calificacion: Number(profile?.rating || 5),
     proyectos: Array.isArray(profile?.projects) ? profile.projects.length : 0,
     projects: Array.isArray(profile?.projects) ? profile.projects : [],
     email: profile?.contact_email || profile?.email || '',

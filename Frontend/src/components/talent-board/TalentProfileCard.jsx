@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
-import { mdiArrowRight, mdiStar } from '@mdi/js';
+import { mdiArrowRight } from '@mdi/js';
 import { useNavigate } from 'react-router-dom';
 
 function getInitials(name) {
@@ -28,7 +28,6 @@ function TalentProfileCard({ profile, onViewDetail }) {
   const navigate = useNavigate();
   const name = profile?.name || profile?.nombre || 'Perfil sin nombre';
   const profession = profile?.profession || profile?.rol || 'Profesional';
-  const rating = Number(profile?.rating || profile?.calificacion || 5);
   const projects = Array.isArray(profile?.projects)
     ? profile.projects.length
     : Number(profile?.proyectos || 0);
@@ -47,7 +46,10 @@ function TalentProfileCard({ profile, onViewDetail }) {
           {photoUrl ? (
             <img className="talent-board-card__avatar" src={photoUrl} alt="" />
           ) : (
-            <div className="talent-board-card__avatar" style={{ background: fallbackBackground }}>
+            <div
+              className="talent-board-card__avatar"
+              style={{ background: fallbackBackground }}
+            >
               <span>{initials}</span>
             </div>
           )}
@@ -56,11 +58,8 @@ function TalentProfileCard({ profile, onViewDetail }) {
         <div className="talent-board-card__heading">
           <h3>{name}</h3>
           <p>{profession}</p>
-          <div className="talent-board-card__rating">
-            <Icon path={mdiStar} size={0.68} />
-            <span>
-              {rating.toFixed(1)} {`(${projects} proyectos)`}
-            </span>
+          <div className="talent-board-card__proyects">
+            <span>{`${projects} proyecto/s`}</span>
           </div>
         </div>
       </div>
@@ -101,7 +100,6 @@ TalentProfileCard.propTypes = {
     rol: PropTypes.string,
     biography: PropTypes.string,
     bio: PropTypes.string,
-    rating: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     calificacion: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     projects: PropTypes.array,
     proyectos: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
