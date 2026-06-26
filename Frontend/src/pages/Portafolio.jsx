@@ -1,12 +1,14 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Icon from '@mdi/react';
-import { mdiClose, mdiPlus } from '@mdi/js';
+import { mdiClose, mdiOpenInNew, mdiPlus } from '@mdi/js';
 import AcademicExperienceSection from '../components/AcademicExperienceSection';
 import ProjectForm from '../components/ProjectForm';
 import ProjectList from '../components/ProjectList';
 import PortfolioPersonalInfoCard from '../components/PortfolioPersonalInfoCard';
 import PortfolioSkillsSection from '../components/PortfolioSkillsSection';
 import PortfolioWorkExperienceSection from '../components/PortfolioWorkExperienceSection';
+import useAuth from '../hooks/useAuth';
 import '../styles/ProfileSettings.css';
 import '../styles/ProjectsPrivacyViews.css';
 import '../styles/portafolio.css';
@@ -31,6 +33,8 @@ const PROJECT_DRAFT = {
 };
 
 function Portfolio() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [tabActiva, setTabActiva] = useState('general');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [refreshProjectsKey, setRefreshProjectsKey] = useState(0);
@@ -42,25 +46,50 @@ function Portfolio() {
     setIsCreateModalOpen(false);
   };
 
+  const verPerfilPublico = () => {
+    if (!user?.id) {
+      return;
+    }
+
+    navigate(`/users/${user.id}/profile`, {
+      state: {
+        backTo: '/portafolio',
+        backLabel: 'Volver al portafolio',
+      },
+    });
+  };
+
   return (
     <div className="softsave-portafolio-shell softsave-portafolio-shell--portfolio">
       <div className="softsave-portafolio-content">
-        <div className="softsave-portafolio-tabs" role="tablist" aria-label="Secciones de portafolio">
-          {TABS_PORTAFOLIO.map((tab) => (
-            <button
-              key={tab.id}
-              id={`portafolio-tab-${tab.id}`}
-              type="button"
-              role="tab"
-              aria-controls={`portafolio-panel-${tab.id}`}
-              aria-selected={tabActiva === tab.id}
-              tabIndex={tabActiva === tab.id ? 0 : -1}
-              className={`softsave-portafolio-tab ${tabActiva === tab.id ? 'is-active' : ''}`}
-              onClick={() => setTabActiva(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="softsave-portafolio-tabs-bar">
+          <div className="softsave-portafolio-tabs" role="tablist" aria-label="Secciones de portafolio">
+            {TABS_PORTAFOLIO.map((tab) => (
+              <button
+                key={tab.id}
+                id={`portafolio-tab-${tab.id}`}
+                type="button"
+                role="tab"
+                aria-controls={`portafolio-panel-${tab.id}`}
+                aria-selected={tabActiva === tab.id}
+                tabIndex={tabActiva === tab.id ? 0 : -1}
+                className={`softsave-portafolio-tab ${tabActiva === tab.id ? 'is-active' : ''}`}
+                onClick={() => setTabActiva(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className="softsave-button softsave-button--compact softsave-portafolio-preview-button"
+            onClick={verPerfilPublico}
+            disabled={!user?.id}
+          >
+            <Icon path={mdiOpenInNew} size={0.8} />
+            Ver perfil público
+          </button>
         </div>
 
         {tabActiva === 'general' ? (

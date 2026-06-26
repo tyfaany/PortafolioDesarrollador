@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Icon from '@mdi/react';
 import {
   mdiArrowLeft,
@@ -626,6 +626,7 @@ function sortGithubRepositories(repositories) {
 
 function PerfilPublico() {
   const { user } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
@@ -722,6 +723,8 @@ function PerfilPublico() {
       };
 
   const visibleProjectsTotal = normalizedProfile.projects.length + normalizedProfile.githubRepositories.length;
+  const backTo = location.state?.backTo || '/inicio';
+  const backLabel = location.state?.backLabel || 'Volver a la búsqueda';
 
   const publicHighlights = [
     { label: 'Proyectos públicos', value: visibleProjectsTotal },
@@ -859,9 +862,9 @@ function PerfilPublico() {
       <span className="perfil-publico-page__orb perfil-publico-page__orb--two" aria-hidden="true" />
 
       <div className="perfil-publico-page__container">
-        <button type="button" className="perfil-publico-back" onClick={() => navigate('/inicio')}>
+        <button type="button" className="perfil-publico-back" onClick={() => navigate(backTo)}>
           <Icon path={mdiArrowLeft} size={0.8} />
-          Volver a la búsqueda
+          {backLabel}
         </button>
 
         <div ref={perfilImprimibleRef} className="perfil-publico-pdf-region">

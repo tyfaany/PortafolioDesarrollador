@@ -54,6 +54,24 @@
   margin: 0 auto;
 }
 
+.softsave-portafolio-tabs-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.softsave-portafolio-tabs-bar .softsave-portafolio-tabs {
+  flex: 1 1 auto;
+  margin-bottom: 0;
+}
+
+.softsave-portafolio-preview-button {
+  min-width: 196px;
+  margin-bottom: 2px;
+  flex: 0 0 auto;
+}
+
 .softsave-portafolio-shell--portfolio .softsave-portafolio-header {
   margin-bottom: 16px;
 }
@@ -152,6 +170,20 @@
   transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease, color 0.16s ease;
 }
 
+.softsave-portafolio-module-card__action--text {
+  width: auto;
+  height: auto;
+  min-height: 34px;
+  min-width: 0;
+  padding: 0 14px;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.softsave-portafolio-module-card__action--text svg {
+  flex: 0 0 auto;
+}
+
 .softsave-portafolio-module-card__action--primary {
   background-color: var(--color-primario);
   color: var(--color-blanco);
@@ -161,6 +193,13 @@
   border: 1px solid var(--color-borde-tarjeta);
   background-color: var(--color-blanco);
   color: var(--color-texto);
+}
+
+.softsave-portafolio-module-card__action--repo {
+  border-color: rgba(var(--color-primario-rgb), 0.18);
+  background-color: var(--color-primario);
+  color: var(--color-blanco);
+  box-shadow: 0 10px 18px rgba(var(--color-primario-rgb), 0.18);
 }
 
 .softsave-portafolio-module-card__action--danger {
@@ -185,6 +224,15 @@
   transform: translateY(-1px);
 }
 
+.softsave-portafolio-module-card__action--repo:hover,
+.softsave-portafolio-module-card__action--repo:focus-visible {
+  border-color: rgba(var(--color-primario-rgb), 0.36);
+  background-color: var(--color-secundario);
+  color: var(--color-blanco);
+  box-shadow: 0 12px 20px rgba(var(--color-primario-rgb), 0.24);
+  transform: translateY(-1px);
+}
+
 .softsave-portafolio-module-card__action--danger:hover,
 .softsave-portafolio-module-card__action--danger:focus-visible {
   border-color: rgba(var(--color-error-rgb), 0.35);
@@ -205,6 +253,19 @@
 .softsave-portafolio-module-card__action:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.softsave-portafolio-module-card__action--text:disabled {
+  background-color: var(--color-blanco);
+  color: var(--color-texto-suave);
+  box-shadow: none;
+  transform: none;
+}
+
+.softsave-portafolio-module-card__action--repo:disabled {
+  background-color: rgba(var(--color-primario-rgb), 0.4);
+  border-color: transparent;
+  color: var(--color-blanco);
 }
 
 .softsave-portafolio-module-card__alert {
@@ -999,6 +1060,13 @@
     width: 40px;
     height: 40px;
     border-radius: 10px;
+  }
+
+  .softsave-portafolio-module-card__action--text {
+    width: auto;
+    height: auto;
+    min-height: 40px;
+    padding: 0 12px;
   }
 
   .softsave-portafolio-module-card__subtitle {

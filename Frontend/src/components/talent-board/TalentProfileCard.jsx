@@ -77,7 +77,12 @@ function TalentProfileCard({ profile, onViewDetail }) {
         className="talent-board-primary-button talent-board-card__action"
         onClick={() => {
           if (profile?.id) {
-            navigate(`/users/${profile.id}/profile`);
+            navigate(`/users/${profile.id}/profile`, {
+              state: {
+                backTo: '/inicio',
+                backLabel: 'Volver a la búsqueda',
+              },
+            });
             return;
           }
 

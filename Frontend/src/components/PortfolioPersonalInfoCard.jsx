@@ -177,7 +177,6 @@ function PortfolioPersonalInfoCard() {
             <Icon path={mdiAccount} size={1} className="softsave-portafolio-module-card__icon" />
             <h2 className="softsave-portafolio-module-card__title">Información personal</h2>
           </div>
-
           <div className="softsave-portafolio-module-card__actions">
             <button
               type="button"
