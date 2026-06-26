@@ -1,15 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon from '@mdi/react';
-import { mdiAccountCircle, mdiFolder, mdiHome, mdiLogoutVariant } from '@mdi/js';
+import { mdiFolder, mdiHome, mdiLogoutVariant } from '@mdi/js';
 import useAuth from '../hooks/useAuth';
 import "../styles/MainNavbar.css";
 
 const NAV_ITEMS = [
   { id: 'inicio', label: 'Inicio', route: '/inicio', icon: mdiHome },
   { id: 'portafolio', label: 'Mi portafolio', route: '/portafolio', icon: mdiFolder },
-  { id: 'perfil', label: 'Mi perfil', route: '/perfil', icon: mdiAccountCircle },
+  { id: 'perfil', label: 'Mi perfil', route: '/perfil' },
 ];
+
+function obtenerIniciales(nombreCompleto) {
+  return String(nombreCompleto || '')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((parteNombre) => parteNombre[0]?.toUpperCase())
+    .join('') || 'U';
+}
 
 function obtenerNavActivo(pathname) {
   if (pathname.startsWith('/perfil')) {
@@ -30,9 +39,17 @@ function obtenerNavActivo(pathname) {
 function MainNavbar() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const navActivo = obtenerNavActivo(pathname);
   const [cerrandoSesion, setCerrandoSesion] = useState(false);
+  const [fotoPerfilFallida, setFotoPerfilFallida] = useState(false);
+
+  const fotoPerfil = user?.profile_photo_url || '';
+  const inicialesPerfil = useMemo(() => obtenerIniciales(user?.name || user?.nombre), [user?.name, user?.nombre]);
+
+  useEffect(() => {
+    setFotoPerfilFallida(false);
+  }, [fotoPerfil]);
 
   const manejarCerrarSesion = async () => {
     if (cerrandoSesion) {
@@ -66,11 +83,28 @@ function MainNavbar() {
             <Link
               key={item.id}
               to={item.route}
-              className={`softsave-navbar__nav-item ${navActivo === item.id ? 'is-active' : ''}`}
+              className={`softsave-navbar__nav-item ${item.id === 'perfil' ? 'softsave-navbar__nav-item--perfil' : ''} ${navActivo === item.id ? 'is-active' : ''}`}
               aria-current={navActivo === item.id ? 'page' : undefined}
             >
               <span className="softsave-navbar__nav-icon" aria-hidden="true">
-                <Icon path={item.icon} size={1.5} />
+                {item.id === 'perfil' ? (
+                  <span className="softsave-navbar__nav-avatar">
+                    {fotoPerfil && !fotoPerfilFallida ? (
+                      <img
+                        className="softsave-navbar__nav-avatar-image"
+                        src={fotoPerfil}
+                        alt=""
+                        onError={() => setFotoPerfilFallida(true)}
+                      />
+                    ) : (
+                      <span className="softsave-navbar__nav-avatar-fallback">
+                        {inicialesPerfil}
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <Icon path={item.icon} size={1.5} />
+                )}
               </span>
               <span>{item.label}</span>
             </Link>
