@@ -248,7 +248,7 @@ function TalentBoardHome() {
         <h1>Explora talento, proyectos y trayectoria en una sola vista</h1>
         <p>
           Una experiencia de discovery pensada para encontrar perfiles que encajan con tu stack,
-          tus retos tecnicos y la narrativa visual de SoftSave.
+          tus retos tecnicos y la narrativa visual de DevStack.
         </p>
 
         <form

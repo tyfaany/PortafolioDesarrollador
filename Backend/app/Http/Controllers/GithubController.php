@@ -22,7 +22,7 @@ class GithubController extends Controller
         try {
             // 2. Consumimos la API pública de GitHub
             $response = Http::withHeaders([
-                'User-Agent' => 'SoftSaveApp',
+                'User-Agent' => 'DevStackApp',
                 'Accept' => 'application/vnd.github+json',
             ])->get("https://api.github.com/users/{$username}/repos", [
                 'per_page' => 100,
@@ -52,7 +52,7 @@ class GithubController extends Controller
                 GithubRepository::updateOrCreate(
                     [
                         // Condición para buscar si ya existe
-                        'github_id' => $repo['id'], 
+                        'github_id' => $repo['id'],
                         'user_id' => $userId
                     ],
                     [
@@ -86,8 +86,8 @@ class GithubController extends Controller
     public function index()
     {
         $userId = auth()->id();
-        
-        // Obtenemos los repositorios ordenados por la actualización más reciente 
+
+        // Obtenemos los repositorios ordenados por la actualización más reciente
         $repos = GithubRepository::where('user_id', $userId)
                     ->orderBy('pushed_at', 'desc')
                     ->get();
@@ -98,7 +98,7 @@ class GithubController extends Controller
     // Función para guardar los repositorios seleccionados (Máximo 15)
     public function saveSelection(Request $request)
     {
-        // Validamos que sea un arreglo y que máximo tenga 15 elementos 
+        // Validamos que sea un arreglo y que máximo tenga 15 elementos
         $request->validate([
             'selected_repos' => 'present|array|max:15',
             'selected_repos.*' => 'integer'
@@ -136,7 +136,7 @@ class GithubController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Selección guardada exitosamente' // Mensaje exacto requerido por el PDF 
+                'message' => 'Selección guardada exitosamente' // Mensaje exacto requerido por el PDF
             ], 200);
 
         } catch (\Exception $e) {
