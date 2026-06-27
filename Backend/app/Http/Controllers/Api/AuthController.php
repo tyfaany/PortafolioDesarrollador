@@ -8,6 +8,7 @@ use App\Models\UserVisibility;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
@@ -337,6 +338,74 @@ class AuthController extends Controller
     }
 
     /**
+     * Descargar una imagen externa y guardarla en el disco público.
+     */
+    private function guardarImagenExternaEnPublico(string $imageUrl, ?User $user = null): ?string
+    {
+        if (preg_match('/^https?:\/\//i', $imageUrl) !== 1) {
+            return null;
+        }
+
+        $response = Http::timeout(20)->get($imageUrl);
+
+        if (! $response->successful()) {
+            return null;
+        }
+
+        $contentType = strtolower(trim((string) $response->header('Content-Type')));
+
+        if ($contentType === '' || ! str_starts_with($contentType, 'image/')) {
+            return null;
+        }
+
+        $extension = match ($contentType) {
+            'image/jpeg', 'image/jpg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            'image/gif' => 'gif',
+            'image/bmp' => 'bmp',
+            'image/svg+xml' => 'svg',
+            default => 'jpg',
+        };
+
+        $disk = Storage::disk('public');
+        if (! $disk->exists('profile_photos')) {
+            $disk->makeDirectory('profile_photos');
+        }
+
+        $prefix = $user?->id ? 'linkedin_' . $user->id . '_' : 'linkedin_';
+        $fileName = $prefix . Str::uuid()->toString() . '.' . $extension;
+        $path = 'profile_photos/' . $fileName;
+
+        $saved = $disk->put($path, $response->body());
+
+        return $saved ? $path : null;
+    }
+
+    /**
+     * Convierte una referencia de foto almacenada en una URL pública consumible por el frontend.
+     */
+    private function resolverUrlFotoPerfil(?string $photoValue): ?string
+    {
+        if (! $photoValue) {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//i', $photoValue)) {
+            return $photoValue;
+        }
+
+        $relativePath = 'storage/' . ltrim($photoValue, '/');
+        $request = request();
+
+        if ($request) {
+            return rtrim($request->getSchemeAndHttpHost(), '/') . '/' . $relativePath;
+        }
+
+        return asset($relativePath);
+    }
+
+    /**
      * Obtener datos de perfil importables desde una cuenta LinkedIn vinculada.
      */
     public function getLinkedInProfile(Request $request)
@@ -367,7 +436,8 @@ class AuthController extends Controller
             $user->save();
         }
 
-        $fotografia = $socialAccount->avatar ?: $user->profile_photo_url;
+        $fotografia = $this->resolverUrlFotoPerfil($socialAccount->avatar)
+            ?: $user->profile_photo_url;
 
         return response()->json([
             'status' => 'success',
@@ -437,9 +507,23 @@ class AuthController extends Controller
         }
 
         if ($payload['import_photo'] && !empty($socialAccount->avatar)) {
-            $user->profile_photo = $socialAccount->avatar;
-            $cambiosAplicados[] = 'foto';
-            $debeGuardar = true;
+            $fotoLocal = $socialAccount->avatar;
+
+            if (preg_match('/^https?:\/\//i', $fotoLocal)) {
+                $fotoDescargada = $this->guardarImagenExternaEnPublico($fotoLocal, $user);
+
+                if (!empty($fotoDescargada)) {
+                    $socialAccount->avatar = $fotoDescargada;
+                    $fotoLocal = $fotoDescargada;
+                }
+            }
+
+            if (!empty($fotoLocal)) {
+                $user->profile_photo = $fotoLocal;
+                $cambiosAplicados[] = 'foto';
+                $debeGuardar = true;
+                $socialAccount->save();
+            }
         }
 
         if ($debeGuardar) {
@@ -535,10 +619,6 @@ class AuthController extends Controller
                 $socialAccount->full_name = $nombreActualizado;
             }
             $socialAccount->save();
-
-            if (!empty($avatarActualizado) && empty($user->profile_photo)) {
-                $user->profile_photo = $avatarActualizado;
-            }
             $user->linkedin_linked = true;
             $user->save();
         } else {
@@ -574,10 +654,6 @@ class AuthController extends Controller
                 'avatar' => $avatarLinkedin,
                 'full_name' => $linkedinUser->getName(),
             ]);
-
-            if (!empty($avatarLinkedin) && empty($user->profile_photo)) {
-                $user->profile_photo = $avatarLinkedin;
-            }
             $user->linkedin_linked = true;
             $user->save();
         }
