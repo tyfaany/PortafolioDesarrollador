@@ -185,6 +185,19 @@ function formatDateLabel(value) {
   return month ? `${month} ${year}` : String(year);
 }
 
+function formatProjectDateLabel(value) {
+  const date = parseDateValue(value);
+  if (!date) {
+    return '';
+  }
+
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const month = MONTH_LABELS[date.getUTCMonth()] || '';
+  const year = date.getUTCFullYear();
+
+  return month ? `${day} ${month} ${year}` : `${day} ${year}`;
+}
+
 function getMonthLabel(value) {
   if (value === null || value === undefined || value === '') {
     return '';
@@ -394,8 +407,8 @@ function formatJobRange(job) {
 }
 
 function formatProjectRange(project) {
-  const start = formatDateLabel(project?.start_date);
-  const end = formatDateLabel(project?.end_date);
+  const start = formatProjectDateLabel(project?.start_date);
+  const end = formatProjectDateLabel(project?.end_date);
 
   if (!start && !end) {
     return '';
@@ -1208,15 +1221,15 @@ function PerfilPublico() {
                             </div>
 
                             <div className="perfil-publico-project-featured__meta">
-                              {normalizedProfile.featuredProject?.is_in_progress ? (
-                                <span className="perfil-publico-status is-active">
-                                  En progreso
-                                </span>
-                              ) : null}
                               {formatProjectRange(normalizedProfile.featuredProject) ? (
                                 <p className="perfil-publico-project-featured__date">
                                   {formatProjectRange(normalizedProfile.featuredProject)}
                                 </p>
+                              ) : null}
+                              {normalizedProfile.featuredProject?.is_in_progress ? (
+                                <span className="perfil-publico-status is-active">
+                                  En progreso
+                                </span>
                               ) : null}
                             </div>
 
@@ -1296,6 +1309,11 @@ function PerfilPublico() {
                                 </div>
 
                                 <div className="perfil-publico-project-featured__meta">
+                                  {formatProjectRange(project) ? (
+                                    <p className="perfil-publico-project-featured__date">
+                                      {formatProjectRange(project)}
+                                    </p>
+                                  ) : null}
                                   {project?.is_in_progress ? (
                                     <span className="perfil-publico-status is-active">
                                       En progreso
@@ -1305,11 +1323,6 @@ function PerfilPublico() {
                                       Publicado
                                     </span>
                                   )}
-                                  {formatProjectRange(project) ? (
-                                    <p className="perfil-publico-project-featured__date">
-                                      {formatProjectRange(project)}
-                                    </p>
-                                  ) : null}
                                 </div>
 
                                 {description ? (
