@@ -50,6 +50,7 @@ Route::middleware(['auth:sanctum', 'role:owner,admin'])->group(function () {
     Route::get('/user/technical-skills/catalog', [TechnicalSkillController::class, 'catalog']);
     Route::post('/user/technical-skills/sync', [TechnicalSkillController::class, 'sync']);
     Route::get('/user/soft-skills', [SoftSkillController::class, 'index']);
+    Route::get('/user/soft-skills/catalog', [SoftSkillController::class, 'catalog']);
     Route::post('/user/soft-skills/sync', [SoftSkillController::class, 'sync']);
 
     // --- Rutas del Equipo (Estudios) ---

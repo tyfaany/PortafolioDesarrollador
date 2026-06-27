@@ -17,15 +17,25 @@ class SoftSkillController extends Controller
     }
 
     /**
+     * Catálogo global de habilidades blandas.
+     */
+    public function catalog()
+    {
+        $skills = SoftSkill::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return response()->json($skills, 200);
+    }
+
+    /**
      * HU-14: Asignar y crear habilidades blandas dinámicamente
      */
     public function sync(Request $request)
     {
-        // Validamos que sea un arreglo de strings (legacy) u objetos {name, evidence_url}
         $request->validate([
             'skills' => 'present|array',
-            'skills.*' => 'required',
-            'skills.*.name' => 'sometimes|required|string|max:50',
+            'skills.*.id' => 'required|integer|exists:soft_skills,id',
             'skills.*.evidence_url' => 'nullable|url|max:255',
         ]);
 
@@ -33,29 +43,15 @@ class SoftSkillController extends Controller
         $syncData = [];
 
         foreach ($request->skills as $skillItem) {
-            $isObject = is_array($skillItem);
-            $skillName = $isObject ? ($skillItem['name'] ?? null) : $skillItem;
-            $evidenceUrl = $isObject ? ($skillItem['evidence_url'] ?? null) : null;
+            $softSkill = SoftSkill::find((int) ($skillItem['id'] ?? 0));
+            $evidenceUrl = $skillItem['evidence_url'] ?? null;
 
-            if (!is_string($skillName) || trim($skillName) === '') {
+            if (!$softSkill) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Cada habilidad debe ser un texto o un objeto con el campo name.'
+                    'message' => 'Selecciona una habilidad blanda del catálogo.',
                 ], 422);
             }
-
-            $skillName = trim($skillName);
-            if (mb_strlen($skillName, 'UTF-8') > 50) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'El nombre de la habilidad no puede superar los 50 caracteres.'
-                ], 422);
-            }
-
-            // Buscamos o creamos la habilidad en el catálogo global.
-            $softSkill = SoftSkill::firstOrCreate([
-                'name' => mb_strtolower($skillName, 'UTF-8')
-            ]);
 
             $syncData[$softSkill->id] = [
                 'evidence_url' => $evidenceUrl

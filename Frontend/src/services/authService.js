@@ -77,6 +77,7 @@ export const sincronizarSkillsTecnicas = (skills) =>
   api.post('/user/technical-skills/sync', { skills });
 
 export const obtenerSoftSkills = () => api.get('/user/soft-skills');
+export const obtenerCatalogoSoftSkills = () => api.get('/user/soft-skills/catalog');
 
 export const sincronizarSoftSkills = (skills) =>
   api.post('/user/soft-skills/sync', { skills });

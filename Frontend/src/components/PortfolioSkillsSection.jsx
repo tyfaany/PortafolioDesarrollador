@@ -5,6 +5,7 @@ import CatalogSearchInput from './CatalogSearchInput';
 import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import {
+  obtenerCatalogoSoftSkills,
   obtenerCatalogoSkillsTecnicas,
   obtenerSkillsTecnicas,
   obtenerSoftSkills,
@@ -20,15 +21,6 @@ const ICON_SIZES = {
   action: 0.85,
   chipRemove: 0.6,
 };
-const SUGERENCIAS_BLANDAS = [
-  'Liderazgo',
-  'Comunicación',
-  'Adaptabilidad',
-  'Creatividad',
-  'Pensamiento crítico',
-  'Gestión del tiempo',
-  'Resolución de problemas',
-];
 
 function sanitizarTexto(valor) {
   return String(valor || '').replace(/\s+/g, ' ').trim();
@@ -222,6 +214,7 @@ function PortfolioSkillsSection() {
   const [tecnicas, setTecnicas] = useState(() => tecnicasDesdeContexto);
   const [blandas, setBlandas] = useState(() => blandasDesdeContexto);
   const [catalogoTecnico, setCatalogoTecnico] = useState([]);
+  const [catalogoBlando, setCatalogoBlando] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [mostrandoAgregarBlanda, setMostrandoAgregarBlanda] = useState(false);
@@ -229,6 +222,7 @@ function PortfolioSkillsSection() {
   const [nivelNuevo, setNivelNuevo] = useState('Intermedio');
   const [evidenciaTecnicaNueva, setEvidenciaTecnicaNueva] = useState('');
   const [skillBlandaNueva, setSkillBlandaNueva] = useState('');
+  const [skillBlandaSeleccionada, setSkillBlandaSeleccionada] = useState(null);
   const [evidenciaBlandaNueva, setEvidenciaBlandaNueva] = useState('');
   const [indiceBlandaEditando, setIndiceBlandaEditando] = useState(null);
   const [nombresTecnicosEditando, setNombresTecnicosEditando] = useState({});
@@ -316,6 +310,28 @@ function PortfolioSkillsSection() {
   }, []);
 
   useEffect(() => {
+    let sigueMontado = true;
+
+    obtenerCatalogoSoftSkills()
+      .then((respuesta) => {
+        if (!sigueMontado) {
+          return;
+        }
+
+        setCatalogoBlando(normalizarCatalogoSkillsTecnicas(respuesta?.data));
+      })
+      .catch(() => {
+        if (sigueMontado) {
+          setCatalogoBlando([]);
+        }
+      });
+
+    return () => {
+      sigueMontado = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!mensajeExito) {
       return;
     }
@@ -356,6 +372,7 @@ function PortfolioSkillsSection() {
       } else {
         setMostrandoAgregarBlanda(false);
         setSkillBlandaNueva('');
+        setSkillBlandaSeleccionada(null);
         setEvidenciaBlandaNueva('');
         setIndiceBlandaEditando(null);
         setNombresTecnicosEditando({});
@@ -375,6 +392,7 @@ function PortfolioSkillsSection() {
         setNivelNuevo('Intermedio');
         setEvidenciaTecnicaNueva('');
         setSkillBlandaNueva('');
+        setSkillBlandaSeleccionada(null);
         setEvidenciaBlandaNueva('');
         setIndiceBlandaEditando(null);
         setNombresTecnicosEditando({});
@@ -408,11 +426,17 @@ function PortfolioSkillsSection() {
   };
 
   const persistirSoftSkills = async (blandasActuales) => {
+    if (blandasActuales.some((skill) => !skill?.id)) {
+      setErrores({ blanda: 'Selecciona habilidades blandas desde el catálogo.' });
+      return false;
+    }
+
     const payload = blandasActuales.map((skill) => ({
-      name: skill.name,
+      id: skill.id,
       evidence_url: sanitizarUrl(skill.evidence_url) || null,
     }));
     await sincronizarSoftSkills(payload);
+    return true;
   };
 
   const agregarHabilidadTecnica = async () => {
@@ -425,7 +449,7 @@ function PortfolioSkillsSection() {
     }
 
     if (!tecnicaCatalogo) {
-      setErrores({ tecnica: 'Selecciona una habilidad del catálogo técnico.' });
+      setErrores({ tecnica: 'Selecciona una habilidad del catálogo de habilidades técnicas.' });
       return;
     }
 
@@ -627,9 +651,10 @@ function PortfolioSkillsSection() {
 
   const guardarBlanda = async () => {
     const nombre = sanitizarTexto(skillBlandaNueva);
+    const skillCatalogo = skillBlandaSeleccionada;
 
-    if (!nombre) {
-      setErrores({ blanda: 'Ingresa una habilidad blanda.' });
+    if (!skillCatalogo?.id || !nombre) {
+      setErrores({ blanda: 'Selecciona una habilidad blanda del catálogo.' });
       return;
     }
 
@@ -640,7 +665,7 @@ function PortfolioSkillsSection() {
     }
 
     const duplicada = blandas.some((skill, indice) =>
-      skill.name.toLowerCase() === nombre.toLowerCase() && indice !== indiceBlandaEditando);
+      String(skill.id) === String(skillCatalogo.id) && indice !== indiceBlandaEditando);
 
     if (duplicada) {
       setErrores({ blanda: 'Esa habilidad blanda ya existe.' });
@@ -649,12 +674,13 @@ function PortfolioSkillsSection() {
 
     if (
       indiceBlandaEditando !== null
-      && sanitizarTexto(blandas[indiceBlandaEditando]?.name).toLowerCase() === nombre.toLowerCase()
+      && String(blandas[indiceBlandaEditando]?.id) === String(skillCatalogo.id)
       && sanitizarUrl(blandas[indiceBlandaEditando]?.evidence_url) === evidencia
     ) {
       setErrores((actual) => ({ ...actual, blanda: '' }));
       setMensajeExito('');
       setSkillBlandaNueva('');
+      setSkillBlandaSeleccionada(null);
       setEvidenciaBlandaNueva('');
       setIndiceBlandaEditando(null);
       setMostrandoAgregarBlanda(false);
@@ -663,9 +689,9 @@ function PortfolioSkillsSection() {
 
     const nuevasBlandas = indiceBlandaEditando !== null
       ? blandas.map((skill, indice) => (indice === indiceBlandaEditando
-        ? { ...skill, name: nombre, evidence_url: evidencia }
+        ? { ...skill, id: skillCatalogo.id, name: skillCatalogo.name, evidence_url: evidencia }
         : skill))
-      : [...blandas, { id: `soft-${Date.now()}-${nombre}`, name: nombre, evidence_url: evidencia }];
+      : [...blandas, { id: skillCatalogo.id, name: skillCatalogo.name, evidence_url: evidencia }];
     const blandasPrevias = blandas;
 
     setBlandas(nuevasBlandas);
@@ -674,8 +700,14 @@ function PortfolioSkillsSection() {
     setMensajeExito('');
 
     try {
-      await persistirSoftSkills(nuevasBlandas);
+      const persistido = await persistirSoftSkills(nuevasBlandas);
+      if (!persistido) {
+        setBlandas(blandasPrevias);
+        actualizarCacheSkills(tecnicas, blandasPrevias);
+        return;
+      }
       setSkillBlandaNueva('');
+      setSkillBlandaSeleccionada(null);
       setEvidenciaBlandaNueva('');
       setIndiceBlandaEditando(null);
       setMostrandoAgregarBlanda(false);
@@ -694,6 +726,9 @@ function PortfolioSkillsSection() {
 
   const editarBlanda = (skill, indice) => {
     setSkillBlandaNueva(skill.name);
+    setSkillBlandaSeleccionada(
+      catalogoBlando.find((item) => String(item.id) === String(skill.id)) || null,
+    );
     setEvidenciaBlandaNueva(skill.evidence_url || '');
     setIndiceBlandaEditando(indice);
     setMostrandoAgregarBlanda(true);
@@ -717,29 +752,6 @@ function PortfolioSkillsSection() {
       setBlandas(blandasPrevias);
       actualizarCacheSkills(tecnicas, blandasPrevias);
       setErrores({ blanda: extractApiMessageByStatus(error, 'No se pudo eliminar la habilidad blanda.') });
-    }
-  };
-
-  const agregarDesdeSugerencia = async (skill) => {
-    if (blandas.some((actual) => actual.name.toLowerCase() === skill.toLowerCase())) {
-      return;
-    }
-
-    const nuevasBlandas = [...blandas, { id: `soft-${Date.now()}-${skill}`, name: skill, evidence_url: '' }];
-    const blandasPrevias = blandas;
-
-    setBlandas(nuevasBlandas);
-    actualizarCacheSkills(tecnicas, nuevasBlandas);
-    setErrores((actual) => ({ ...actual, blanda: '' }));
-    setMensajeExito('');
-
-    try {
-      await persistirSoftSkills(nuevasBlandas);
-      setMensajeExito('Habilidad sugerida agregada correctamente.');
-    } catch (error) {
-      setBlandas(blandasPrevias);
-      actualizarCacheSkills(tecnicas, blandasPrevias);
-      setErrores({ blanda: extractApiMessageByStatus(error, 'No se pudo agregar la habilidad sugerida.') });
     }
   };
 
@@ -957,7 +969,7 @@ function PortfolioSkillsSection() {
                     }}
                     placeholder="Buscar una habilidad técnica..."
                     emptyText="No hay coincidencias en el catálogo de habilidades técnicas."
-                    helperText="Selecciona una habilidad del catálogo técnico."
+                    helperText="Selecciona una habilidad del catálogo de habilidades técnicas."
                     error={errores.tecnica}
                     required
                   />
@@ -1064,6 +1076,7 @@ function PortfolioSkillsSection() {
                     setMostrandoAgregarBlanda(true);
                     setIndiceBlandaEditando(null);
                     setSkillBlandaNueva("");
+                    setSkillBlandaSeleccionada(null);
                     setEvidenciaBlandaNueva("");
                     setErrores((actual) => ({ ...actual, blanda: "" }));
                     setMensajeExito("");
@@ -1076,16 +1089,27 @@ function PortfolioSkillsSection() {
 
             {(isAdding || isEditing) && mostrandoAgregarBlanda ? (
               <div className="softsave-portafolio-skills__soft-form">
-                <input
-                  type="text"
+                <CatalogSearchInput
+                  label="Habilidad blanda"
+                  catalog={catalogoBlando}
                   value={skillBlandaNueva}
-                  onChange={(evento) => {
-                    setSkillBlandaNueva(evento.target.value);
-                    setErrores((actual) => ({ ...actual, blanda: "" }));
-                    setMensajeExito("");
+                  onChange={(valor) => {
+                    setSkillBlandaNueva(valor);
+                    setSkillBlandaSeleccionada(null);
+                    setErrores((actual) => ({ ...actual, blanda: '' }));
+                    setMensajeExito('');
                   }}
-                  className="softsave-input softsave-profile__input"
-                  placeholder="Escribe una habilidad blanda"
+                  onSelect={(skillCatalogo) => {
+                    setSkillBlandaNueva(skillCatalogo?.name || '');
+                    setSkillBlandaSeleccionada(skillCatalogo?.raw || skillCatalogo || null);
+                    setErrores((actual) => ({ ...actual, blanda: '' }));
+                    setMensajeExito('');
+                  }}
+                  placeholder="Buscar una habilidad blanda..."
+                  emptyText="No hay coincidencias en el catálogo de habilidades blandas."
+                  helperText="Selecciona una habilidad del catálogo de habilidades blandas."
+                  error={errores.blanda}
+                  required
                 />
                 <input
                   type="url"
@@ -1105,6 +1129,7 @@ function PortfolioSkillsSection() {
                     onClick={() => {
                       setMostrandoAgregarBlanda(false);
                       setSkillBlandaNueva("");
+                      setSkillBlandaSeleccionada(null);
                       setEvidenciaBlandaNueva("");
                       setIndiceBlandaEditando(null);
                       setErrores((actual) => ({ ...actual, blanda: "" }));
@@ -1123,43 +1148,6 @@ function PortfolioSkillsSection() {
               </div>
             ) : null}
 
-            {errores.blanda ? (
-              <span
-                className="error-text softsave-profile__error-text"
-                role="alert"
-              >
-                {errores.blanda}
-              </span>
-            ) : null}
-
-            {isAdding ? (
-              <>
-                <div className="softsave-portafolio-skills__suggestions-head">
-                  <span className="softsave-portafolio-skills__suggestions-title">
-                    Habilidades sugeridas
-                  </span>
-                </div>
-
-                <div className="softsave-portafolio-skills__suggestions">
-                  {SUGERENCIAS_BLANDAS.filter(
-                    (skill) =>
-                      !blandas.some(
-                        (actual) =>
-                          actual.name.toLowerCase() === skill.toLowerCase(),
-                      ),
-                  ).map((skill) => (
-                    <button
-                      key={skill}
-                      type="button"
-                      className="softsave-portafolio-skills__suggestion"
-                      onClick={() => agregarDesdeSugerencia(skill)}
-                    >
-                      {skill}
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : null}
           </section>
         </div>
       </section>
