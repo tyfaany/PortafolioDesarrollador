@@ -57,6 +57,7 @@ function CatalogSearchInput({
   const listId = `${inputId}-list`;
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
+  const suppressNextOpenRef = useRef(false);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
 
@@ -93,6 +94,7 @@ function CatalogSearchInput({
 
     return normalizedOptions
       .filter((option) => option.labelLower.includes(query))
+      .filter((option) => option.labelLower !== query)
       .sort((optionA, optionB) => {
         const aStarts = optionA.labelLower.startsWith(query);
         const bStarts = optionB.labelLower.startsWith(query);
@@ -106,8 +108,25 @@ function CatalogSearchInput({
       .slice(0, Math.max(1, maxResults));
   }, [maxResults, normalizedOptions, value]);
 
+  const hasExactMatch = useMemo(() => {
+    const query = normalizeQuery(value);
+
+    if (!query) {
+      return false;
+    }
+
+    return normalizedOptions.some((option) => option.labelLower === query);
+  }, [normalizedOptions, value]);
+
   useEffect(() => {
-    if (!normalizeQuery(value)) {
+    if (suppressNextOpenRef.current) {
+      suppressNextOpenRef.current = false;
+      setIsOpen(false);
+      setActiveIndex(-1);
+      return;
+    }
+
+    if (!normalizeQuery(value) || hasExactMatch) {
       setIsOpen(false);
       setActiveIndex(-1);
       return;
@@ -115,7 +134,7 @@ function CatalogSearchInput({
 
     setIsOpen(filteredOptions.length > 0);
     setActiveIndex(filteredOptions.length > 0 ? 0 : -1);
-  }, [filteredOptions.length, value]);
+  }, [filteredOptions.length, hasExactMatch, value]);
 
   useEffect(() => {
     const handlePointerDown = (event) => {
@@ -135,6 +154,7 @@ function CatalogSearchInput({
   }, []);
 
   const selectOption = (option) => {
+    suppressNextOpenRef.current = true;
     onChange(option.label);
     onSelect?.(option.raw, option);
     setIsOpen(false);
@@ -224,7 +244,12 @@ function CatalogSearchInput({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onFocus={(event) => {
-            if (normalizeQuery(value) && filteredOptions.length > 0) {
+            if (suppressNextOpenRef.current) {
+              onFocus?.(event);
+              return;
+            }
+
+            if (normalizeQuery(value) && filteredOptions.length > 0 && !hasExactMatch) {
               setIsOpen(true);
             }
             onFocus?.(event);
@@ -261,7 +286,7 @@ function CatalogSearchInput({
           </button>
         ) : null}
 
-        {showDropdown || (normalizeQuery(value) && !filteredOptions.length) ? (
+        {showDropdown || (normalizeQuery(value) && !filteredOptions.length && !hasExactMatch) ? (
           <CatalogSuggestionDropdown
             listId={listId}
             options={filteredOptions}
@@ -270,7 +295,7 @@ function CatalogSearchInput({
             onOptionHover={setActiveIndex}
             emptyText={emptyText}
             showEmpty={Boolean(
-              normalizeQuery(value) && !filteredOptions.length,
+              normalizeQuery(value) && !filteredOptions.length && !hasExactMatch,
             )}
             optionActionText=""
           />

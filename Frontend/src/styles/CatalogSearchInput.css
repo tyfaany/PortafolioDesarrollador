@@ -2,6 +2,7 @@
   position: relative;
   display: grid;
   gap: 0.45rem;
+  z-index: 2;
 }
 
 .softsave-catalog-search__label {
@@ -18,6 +19,7 @@
 
 .softsave-catalog-search__control {
   position: relative;
+  z-index: 2;
   border-radius: 16px;
   border: 1.5px solid var(--color-borde-input);
   background: linear-gradient(180deg, #ffffff 0%, #fffaf7 100%);

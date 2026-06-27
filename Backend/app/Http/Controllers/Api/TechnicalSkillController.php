@@ -34,11 +34,9 @@ class TechnicalSkillController extends Controller
      */
     public function sync(Request $request)
     {
-        // Validamos que envíen el arreglo y que el nivel sea correcto
-        // Fíjate que YA NO validamos 'exists:technical_skills,id'
         $request->validate([
             'skills' => 'present|array',
-            'skills.*.name' => 'required|string|max:100', // Ahora pedimos el NOMBRE, no el ID
+            'skills.*.id' => 'required|integer|exists:technical_skills,id',
             'skills.*.level' => 'required|in:Basico,Intermedio,Avanzado',
             'skills.*.evidence_url' => 'nullable|url|max:255',
         ]);
@@ -47,20 +45,21 @@ class TechnicalSkillController extends Controller
         $syncData = [];
 
         foreach ($request->skills as $skillData) {
-            // Buscamos si la habilidad ya existe en el catálogo general.
-            // Si no existe, la CREAMOS al vuelo (firstOrCreate).
-            $technicalSkill = TechnicalSkill::firstOrCreate([
-                'name' => mb_strtolower(trim($skillData['name']), 'UTF-8')
-            ]);
+            $technicalSkill = TechnicalSkill::find((int) ($skillData['id'] ?? 0));
 
-            // Preparamos los datos para sincronizar usando el ID que encontramos o acabamos de crear
+            if (!$technicalSkill) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Selecciona una habilidad técnica del catálogo.',
+                ], 422);
+            }
+
             $syncData[$technicalSkill->id] = [
                 'level' => $skillData['level'],
                 'evidence_url' => $skillData['evidence_url'] ?? null
             ];
         }
 
-        // Sincronizamos (asigna nuevas, actualiza niveles, y borra las que el usuario quitó)
         $user->skills()->sync($syncData);
 
         return response()->json([

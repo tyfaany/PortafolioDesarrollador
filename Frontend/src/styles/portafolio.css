@@ -543,6 +543,7 @@
 
 .softsave-portafolio-skills__table-head,
 .softsave-portafolio-skills__row {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(180px, 1fr) minmax(280px, 320px);
   gap: 20px;
@@ -551,6 +552,11 @@
   border: 1px solid rgba(var(--color-texto-rgb), 0.06);
   border-radius: 14px;
   background-color: rgba(var(--color-blanco-rgb), 0.92);
+  overflow: visible;
+}
+
+.softsave-portafolio-skills__row:focus-within {
+  z-index: 30;
 }
 
 .softsave-portafolio-skills__table-head > :first-child,
@@ -609,6 +615,8 @@
 }
 
 .softsave-portafolio-skills__name-edit-wrap {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 8px;
 }

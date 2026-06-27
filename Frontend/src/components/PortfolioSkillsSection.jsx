@@ -219,8 +219,10 @@ function PortfolioSkillsSection() {
   const [isEditing, setIsEditing] = useState(false);
   const [mostrandoAgregarBlanda, setMostrandoAgregarBlanda] = useState(false);
   const [skillTecnicaNueva, setSkillTecnicaNueva] = useState('');
+  const [skillTecnicaSeleccionada, setSkillTecnicaSeleccionada] = useState(null);
   const [nivelNuevo, setNivelNuevo] = useState('Intermedio');
   const [evidenciaTecnicaNueva, setEvidenciaTecnicaNueva] = useState('');
+  const [tecnicasSeleccionadasEditando, setTecnicasSeleccionadasEditando] = useState({});
   const [skillBlandaNueva, setSkillBlandaNueva] = useState('');
   const [skillBlandaSeleccionada, setSkillBlandaSeleccionada] = useState(null);
   const [evidenciaBlandaNueva, setEvidenciaBlandaNueva] = useState('');
@@ -369,6 +371,13 @@ function PortfolioSkillsSection() {
         setEvidenciasTecnicasEditando(
           tecnicas.reduce((acumulado, skill) => ({ ...acumulado, [skill.id]: skill.evidence_url || '' }), {}),
         );
+        setTecnicasSeleccionadasEditando(
+          tecnicas.reduce((acumulado, skill) => {
+            const match = catalogoTecnico.find((item) => String(item.id) === String(skill.id))
+              || { id: skill.id, name: skill.name };
+            return { ...acumulado, [skill.id]: match };
+          }, {}),
+        );
       } else {
         setMostrandoAgregarBlanda(false);
         setSkillBlandaNueva('');
@@ -377,6 +386,7 @@ function PortfolioSkillsSection() {
         setIndiceBlandaEditando(null);
         setNombresTecnicosEditando({});
         setEvidenciasTecnicasEditando({});
+        setTecnicasSeleccionadasEditando({});
       }
       return siguiente;
     });
@@ -389,6 +399,7 @@ function PortfolioSkillsSection() {
       if (!siguiente) {
         setMostrandoAgregarBlanda(false);
         setSkillTecnicaNueva('');
+        setSkillTecnicaSeleccionada(null);
         setNivelNuevo('Intermedio');
         setEvidenciaTecnicaNueva('');
         setSkillBlandaNueva('');
@@ -397,12 +408,18 @@ function PortfolioSkillsSection() {
         setIndiceBlandaEditando(null);
         setNombresTecnicosEditando({});
         setEvidenciasTecnicasEditando({});
+        setTecnicasSeleccionadasEditando({});
       } else {
         setIsEditing(false);
         setMostrandoAgregarBlanda(false);
         setIndiceBlandaEditando(null);
         setNombresTecnicosEditando({});
         setEvidenciasTecnicasEditando({});
+        setTecnicasSeleccionadasEditando({});
+        setSkillTecnicaNueva('');
+        setSkillTecnicaSeleccionada(null);
+        setNivelNuevo('Intermedio');
+        setEvidenciaTecnicaNueva('');
       }
       return siguiente;
     });
@@ -417,7 +434,7 @@ function PortfolioSkillsSection() {
     }
 
     const payload = skillsActuales.map((skill) => ({
-      name: skill.name,
+      id: skill.id,
       level: normalizarNivel(skill.level).normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
       evidence_url: sanitizarUrl(skill.evidence_url) || null,
     }));
@@ -441,14 +458,10 @@ function PortfolioSkillsSection() {
 
   const agregarHabilidadTecnica = async () => {
     const nombre = sanitizarTexto(skillTecnicaNueva);
-    const tecnicaCatalogo = catalogoTecnico.find((skill) => skill.name.toLowerCase() === nombre.toLowerCase());
+    const tecnicaCatalogo = skillTecnicaSeleccionada
+      || catalogoTecnico.find((skill) => skill.name.toLowerCase() === nombre.toLowerCase());
 
-    if (!nombre) {
-      setErrores({ tecnica: 'Ingresa una habilidad técnica.' });
-      return;
-    }
-
-    if (!tecnicaCatalogo) {
+    if (!tecnicaCatalogo?.id || !nombre) {
       setErrores({ tecnica: 'Selecciona una habilidad del catálogo de habilidades técnicas.' });
       return;
     }
@@ -463,7 +476,7 @@ function PortfolioSkillsSection() {
       return;
     }
 
-    if (tecnicas.some((skill) => skill.name.toLowerCase() === tecnicaCatalogo.name.toLowerCase())) {
+    if (tecnicas.some((skill) => String(skill.id) === String(tecnicaCatalogo.id))) {
       setErrores({ tecnica: 'Esa habilidad técnica ya existe.' });
       return;
     }
@@ -471,7 +484,7 @@ function PortfolioSkillsSection() {
     const nuevasTecnicas = [
       ...tecnicas,
       {
-        id: `tech-${Date.now()}-${tecnicaCatalogo.name}`,
+        id: tecnicaCatalogo.id,
         name: tecnicaCatalogo.name,
         level: nivelNuevo,
         evidence_url: sanitizarUrl(evidenciaTecnicaNueva),
@@ -492,6 +505,7 @@ function PortfolioSkillsSection() {
         return;
       }
       setSkillTecnicaNueva('');
+      setSkillTecnicaSeleccionada(null);
       setNivelNuevo('Intermedio');
       setEvidenciaTecnicaNueva('');
       setErrores({});
@@ -587,11 +601,11 @@ function PortfolioSkillsSection() {
       return;
     }
 
-    const nombreEditado = sanitizarTexto(nombresTecnicosEditando[id] ?? skillActual.name);
+    const nombreEditado = sanitizarTexto(nombresTecnicosEditando[id] ?? '');
+    const skillSeleccionada = tecnicasSeleccionadasEditando[id] || null;
     const evidenciaEditada = sanitizarUrl(evidenciasTecnicasEditando[id] ?? (skillActual.evidence_url || ''));
-    if (!nombreEditado) {
-      setErrores({ tecnica: 'El nombre de la habilidad técnica es obligatorio.' });
-      setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
+    if (!skillSeleccionada?.id || !nombreEditado) {
+      setErrores({ tecnica: 'Selecciona una habilidad del catálogo técnico.' });
       return;
     }
 
@@ -602,16 +616,14 @@ function PortfolioSkillsSection() {
     }
 
     const nombreDuplicado = tecnicas.some(
-      (skill) => String(skill.id) !== String(id) && skill.name.toLowerCase() === nombreEditado.toLowerCase(),
+      (skill) => String(skill.id) !== String(id) && String(skill.id) === String(skillSeleccionada.id),
     );
     if (nombreDuplicado) {
       setErrores({ tecnica: 'Esa habilidad técnica ya existe.' });
-      setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
       return;
     }
 
-    if (nombreEditado === skillActual.name && evidenciaEditada === sanitizarUrl(skillActual.evidence_url)) {
-      setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
+    if (String(skillSeleccionada.id) === String(skillActual.id) && evidenciaEditada === sanitizarUrl(skillActual.evidence_url)) {
       setEvidenciasTecnicasEditando((actual) => ({ ...actual, [id]: skillActual.evidence_url || '' }));
       return;
     }
@@ -619,7 +631,12 @@ function PortfolioSkillsSection() {
     const tecnicasPrevias = tecnicas;
     const tecnicasActualizadas = tecnicas.map(
       (skill) => (String(skill.id) === String(id)
-        ? { ...skill, name: nombreEditado, evidence_url: evidenciaEditada }
+        ? {
+          ...skill,
+          id: skillSeleccionada.id,
+          name: skillSeleccionada.name || nombreEditado,
+          evidence_url: evidenciaEditada,
+        }
         : skill),
     );
 
@@ -627,7 +644,6 @@ function PortfolioSkillsSection() {
     actualizarCacheSkills(tecnicasActualizadas, blandas);
     setErrores((actual) => ({ ...actual, tecnica: '' }));
     setMensajeExito('');
-    setNombresTecnicosEditando((actual) => ({ ...actual, [id]: nombreEditado }));
     setEvidenciasTecnicasEditando((actual) => ({ ...actual, [id]: evidenciaEditada }));
 
     try {
@@ -636,6 +652,7 @@ function PortfolioSkillsSection() {
         setTecnicas(tecnicasPrevias);
         actualizarCacheSkills(tecnicasPrevias, blandas);
         setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
+        setTecnicasSeleccionadasEditando((actual) => ({ ...actual, [id]: skillActual }));
         setEvidenciasTecnicasEditando((actual) => ({ ...actual, [id]: skillActual.evidence_url || '' }));
         return;
       }
@@ -644,6 +661,7 @@ function PortfolioSkillsSection() {
       setTecnicas(tecnicasPrevias);
       actualizarCacheSkills(tecnicasPrevias, blandas);
       setNombresTecnicosEditando((actual) => ({ ...actual, [id]: skillActual.name }));
+      setTecnicasSeleccionadasEditando((actual) => ({ ...actual, [id]: skillActual }));
       setEvidenciasTecnicasEditando((actual) => ({ ...actual, [id]: skillActual.evidence_url || '' }));
       setErrores({ tecnica: extractApiMessageByStatus(error, 'No se pudo actualizar la habilidad técnica.') });
     }
@@ -816,31 +834,40 @@ function PortfolioSkillsSection() {
                   >
                     {isEditing ? (
                       <div className="softsave-portafolio-skills__name-edit-wrap">
-                        <input
-                          type="text"
-                          value={
-                            nombresTecnicosEditando[skill.id] ?? skill.name
-                          }
-                          onChange={(evento) => {
+                        <CatalogSearchInput
+                          label="Habilidad"
+                          catalog={catalogoTecnico}
+                          value={nombresTecnicosEditando[skill.id] ?? ''}
+                          onChange={(valor) => {
+                            const texto = sanitizarTexto(valor);
+                            setTecnicasSeleccionadasEditando((actual) => ({
+                              ...actual,
+                              [skill.id]: null,
+                            }));
                             setNombresTecnicosEditando((actual) => ({
                               ...actual,
-                              [skill.id]: evento.target.value,
+                              [skill.id]: texto,
                             }));
-                            setErrores((actual) => ({
+                            setErrores((actual) => ({ ...actual, tecnica: '' }));
+                            setMensajeExito('');
+                          }}
+                          onSelect={(skillCatalogo) => {
+                            const nombreCatalogo = sanitizarTexto(skillCatalogo?.name || '');
+                            setTecnicasSeleccionadasEditando((actual) => ({
                               ...actual,
-                              tecnica: "",
+                              [skill.id]: skillCatalogo?.raw || skillCatalogo || null,
                             }));
-                            setMensajeExito("");
+                            setNombresTecnicosEditando((actual) => ({
+                              ...actual,
+                              [skill.id]: nombreCatalogo,
+                            }));
+                            setErrores((actual) => ({ ...actual, tecnica: '' }));
+                            setMensajeExito('');
                           }}
-                          onBlur={() => confirmarEdicionNombreTecnico(skill.id)}
-                          onKeyDown={(evento) => {
-                            if (evento.key === "Enter") {
-                              evento.preventDefault();
-                              evento.currentTarget.blur();
-                            }
-                          }}
-                          className="softsave-input softsave-profile__input softsave-portafolio-skills__name-input"
-                          aria-label={`Nombre de la habilidad técnica ${skill.name}`}
+                          placeholder="Buscar una habilidad técnica..."
+                          emptyText="No hay coincidencias en el catálogo de habilidades técnicas."
+                          helperText=""
+                          required
                         />
                         <input
                           type="url"
@@ -955,18 +982,20 @@ function PortfolioSkillsSection() {
                 <div className="softsave-portafolio-skills__form-grid">
                   <CatalogSearchInput
                     label="Habilidad"
-                    catalog={catalogoTecnico}
-                    value={skillTecnicaNueva}
-                    onChange={(valor) => {
-                      setSkillTecnicaNueva(valor);
-                      setErrores((actual) => ({ ...actual, tecnica: "" }));
-                      setMensajeExito("");
-                    }}
-                    onSelect={(skillCatalogo) => {
-                      setSkillTecnicaNueva(skillCatalogo?.name || "");
-                      setErrores((actual) => ({ ...actual, tecnica: "" }));
-                      setMensajeExito("");
-                    }}
+                  catalog={catalogoTecnico}
+                  value={skillTecnicaNueva}
+                  onChange={(valor) => {
+                    setSkillTecnicaNueva(valor);
+                    setSkillTecnicaSeleccionada(null);
+                    setErrores((actual) => ({ ...actual, tecnica: "" }));
+                    setMensajeExito("");
+                  }}
+                  onSelect={(skillCatalogo) => {
+                    setSkillTecnicaNueva(skillCatalogo?.name || "");
+                    setSkillTecnicaSeleccionada(skillCatalogo?.raw || skillCatalogo || null);
+                    setErrores((actual) => ({ ...actual, tecnica: "" }));
+                    setMensajeExito("");
+                  }}
                     placeholder="Buscar una habilidad técnica..."
                     emptyText="No hay coincidencias en el catálogo de habilidades técnicas."
                     helperText="Selecciona una habilidad del catálogo de habilidades técnicas."

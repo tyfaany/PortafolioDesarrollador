@@ -3,7 +3,7 @@
   top: calc(100% + 0.5rem);
   left: 0;
   right: 0;
-  z-index: 20;
+  z-index: 60;
   overflow: hidden;
   border: 1px solid rgba(var(--color-texto-rgb), 0.1);
   border-radius: 16px;
