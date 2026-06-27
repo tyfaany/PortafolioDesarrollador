@@ -22,6 +22,14 @@ function sanitizarTexto(valor) {
   return String(valor || '').replace(/\s+/g, ' ').trim();
 }
 
+function sanitizarTextoMultilinea(valor) {
+  return String(valor || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function transformarMesAFecha(valorMes) {
   if (!valorMes) {
     return null;
@@ -260,7 +268,7 @@ function AcademicExperienceSection({
       nuevosErrores.end_month = 'La fecha de inicio no puede ser posterior a la fecha de fin.';
     }
 
-    const logros = sanitizarTexto(formularioEstudio.achievements);
+    const logros = sanitizarTextoMultilinea(formularioEstudio.achievements);
     if (logros.length > 500) {
       nuevosErrores.achievements = 'Los logros no pueden superar 500 caracteres.';
     }
@@ -281,7 +289,7 @@ function AcademicExperienceSection({
       degree: sanitizarTexto(formularioEstudio.degree),
       start_date: transformarMesAFecha(formularioEstudio.start_month),
       end_date: formularioEstudio.currentlyStudying ? null : transformarMesAFecha(formularioEstudio.end_month),
-      achievements: sanitizarTexto(formularioEstudio.achievements) || null,
+      achievements: sanitizarTextoMultilinea(formularioEstudio.achievements) || null,
     };
 
     setGuardandoEstudio(true);

@@ -302,6 +302,9 @@
 
 .softsave-profile__contact-value--bio {
   color: var(--color-texto-suave);
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .softsave-profile__linkedin-toggles {
@@ -1753,6 +1756,9 @@
 .softsave-profile__repo-card-description {
   color: var(--color-texto-suave);
   line-height: 1.55;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .softsave-profile__repo-card-stats {

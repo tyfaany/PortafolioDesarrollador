@@ -315,6 +315,9 @@
 
 .softsave-portafolio-module-card__value--bio {
   line-height: 1.65;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .softsave-portafolio-module-card__empty {
@@ -401,14 +404,19 @@
   color: var(--color-texto);
   font-size: 0.9rem;
   line-height: 1.55;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
-/* Truncar descripción/logros a una sola línea con puntos suspensivos */
-.softsave-portafolio-study-card__description,
 .softsave-profile__study-description {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin: 12px 0 0;
+  color: var(--color-texto);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .softsave-portafolio-evidence-link {

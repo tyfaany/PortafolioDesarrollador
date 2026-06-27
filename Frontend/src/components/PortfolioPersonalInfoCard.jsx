@@ -10,6 +10,14 @@ function sanitizarTexto(valor) {
   return String(valor || '').replace(/\s+/g, ' ').trim();
 }
 
+function sanitizarTextoMultilinea(valor) {
+  return String(valor || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function normalizarProfesion(valor) {
   return String(valor || '').replace(/[^\p{L}\p{N}\s.,/()&-]/gu, '');
 }
@@ -111,7 +119,7 @@ function PortfolioPersonalInfoCard() {
     const nuevosErrores = {};
     const nombreLimpio = sanitizarTexto(formulario.nombreCompleto);
     const profesionLimpia = sanitizarTexto(formulario.profesion);
-    const biografiaLimpia = sanitizarTexto(formulario.biografia);
+    const biografiaLimpia = sanitizarTextoMultilinea(formulario.biografia);
 
     if (!nombreLimpio) {
       nuevosErrores.nombreCompleto = 'El nombre es obligatorio.';
@@ -149,7 +157,7 @@ function PortfolioPersonalInfoCard() {
     const payload = {
       name: sanitizarTexto(formulario.nombreCompleto),
       profession: sanitizarTexto(formulario.profesion),
-      biography: sanitizarTexto(formulario.biografia),
+      biography: sanitizarTextoMultilinea(formulario.biografia),
       github_url: user?.github_url || null,
       linkedin_url: user?.linkedin_url || null,
     };

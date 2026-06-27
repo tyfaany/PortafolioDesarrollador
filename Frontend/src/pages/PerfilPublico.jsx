@@ -1092,7 +1092,7 @@ function PerfilPublico() {
                           {getTextValue(study?.academic_institution, study?.institution, 'Institución no especificada')}
                         </p>
                         {getTextValue(study?.achievements) ? (
-                          <p className="perfil-publico-stack-item__text">{truncateText(study.achievements, 180)}</p>
+                          <p className="perfil-publico-stack-item__text">{study.achievements}</p>
                         ) : null}
                       </article>
                     ))}

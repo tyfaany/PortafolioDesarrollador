@@ -53,6 +53,14 @@ function sanitizarTexto(valor) {
   return String(valor || '').replace(/\s+/g, ' ').trim();
 }
 
+function sanitizarTextoMultilinea(valor) {
+  return String(valor || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function sanitizarUrl(valor) {
   return String(valor || '').trim();
 }
@@ -152,7 +160,7 @@ function construirPayloadTrabajo(formulario) {
   return {
     company_name: sanitizarTexto(formulario.company_name),
     position: sanitizarTexto(formulario.position),
-    achievements: sanitizarTexto(formulario.description) || null,
+    achievements: sanitizarTextoMultilinea(formulario.description) || null,
     start_month: obtenerNombreMes(formulario.start_month),
     start_year: Number(formulario.start_year),
     end_month: formulario.is_current_job ? null : obtenerNombreMes(formulario.end_month),
@@ -490,7 +498,7 @@ function PortfolioWorkExperienceSection() {
       nuevosErrores.evidence_url = 'Ingresa una URL válida (http:// o https://).';
     }
 
-    const descripcion = sanitizarTexto(formulario.description);
+    const descripcion = sanitizarTextoMultilinea(formulario.description);
     if (descripcion.length > 500) {
       nuevosErrores.description = 'La descripción no puede superar 500 caracteres.';
     }
@@ -533,7 +541,7 @@ function PortfolioWorkExperienceSection() {
           ? null
           : construirFechaDesdePartes(formulario.end_year, formulario.end_month)),
         is_current_job: trabajoRespuesta?.is_current_job ?? formulario.is_current_job,
-        description: trabajoRespuesta?.achievements ?? trabajoRespuesta?.description ?? sanitizarTexto(formulario.description),
+        description: trabajoRespuesta?.achievements ?? trabajoRespuesta?.description ?? sanitizarTextoMultilinea(formulario.description),
         evidence_url: trabajoRespuesta?.evidence_url ?? sanitizarUrl(formulario.evidence_url),
       };
 

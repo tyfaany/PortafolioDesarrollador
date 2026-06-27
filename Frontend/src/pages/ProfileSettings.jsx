@@ -93,6 +93,14 @@ function sanitizarTexto(valor) {
     .trim();
 }
 
+function sanitizarTextoMultilinea(valor) {
+  return String(valor || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/[^\S\n]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function tieneTexto(valor) {
   return Boolean(sanitizarTexto(valor));
 }
@@ -578,7 +586,7 @@ function ProfileSettings() {
     const nuevosErrores = {};
     const nombreLimpio = sanitizarTexto(formularioPerfil.nombreCompleto);
     const profesionLimpia = sanitizarTexto(formularioPerfil.profesion);
-    const biografiaLimpia = sanitizarTexto(formularioPerfil.biografia);
+    const biografiaLimpia = sanitizarTextoMultilinea(formularioPerfil.biografia);
     const telefonoLimpio = sanitizarTexto(formularioPerfil.telefono);
     const movilLimpio = sanitizarTexto(formularioPerfil.movil);
     const correoContactoLimpio = sanitizarTexto(formularioPerfil.correoContacto);
@@ -651,7 +659,7 @@ function ProfileSettings() {
     const payloadPerfil = {
       name: sanitizarTexto(formularioPerfil.nombreCompleto),
       profession: sanitizarTexto(formularioPerfil.profesion),
-      biography: sanitizarTexto(formularioPerfil.biografia),
+      biography: sanitizarTextoMultilinea(formularioPerfil.biografia),
       github_url: normalizarUrlExterna(formularioPerfil.githubUrl) || null,
       linkedin_url: normalizarUrlExterna(formularioPerfil.linkedinUrl) || null,
     };

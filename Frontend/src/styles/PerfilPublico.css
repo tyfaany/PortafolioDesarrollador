@@ -45,14 +45,14 @@
 .perfil-publico-empty-state {
   border: 1px solid rgba(var(--color-texto-rgb), 0.08);
   border-radius: 2rem;
-  background: rgba(var(--color-blanco-rgb), 0.94);
+  background: transparent;
   box-shadow: 0 16px 34px rgba(var(--color-texto-rgb), 0.08);
 }
 
 .perfil-publico-pdf-region {
   display: grid;
   gap: 1rem;
-  background: #ffffff;
+  background: transparent;
   color: var(--color-texto);
   font-size: 16px;
   line-height: 1.5;
@@ -91,9 +91,7 @@
   align-items: start;
   padding: 1rem 1.25rem 1.25rem;
   overflow: hidden;
-  background:
-    radial-gradient(circle at top right, rgba(var(--color-primario-rgb), 0.1), transparent 44%),
-    linear-gradient(135deg, rgba(255, 250, 246, 0.96), rgba(255, 255, 255, 0.98));
+  background: transparent;
 }
 
 .perfil-publico-hero__media {
@@ -629,6 +627,9 @@ a.perfil-publico-contact__value {
   color: var(--color-texto-suave);
   font-size: 1rem;
   line-height: 1.75;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .perfil-publico-tabs {
@@ -752,6 +753,7 @@ a.perfil-publico-contact__value {
   max-width: 100%;
   overflow-wrap: break-word;
   word-break: break-word;
+  white-space: pre-line;
 }
 
 .perfil-publico-inline-link {
@@ -1106,6 +1108,9 @@ a.perfil-publico-contact__value {
   margin: 0;
   color: var(--color-texto-suave);
   line-height: 1.55;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .perfil-publico-github-card__stats {
