@@ -23,8 +23,10 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::get('users/{user}/studies', [StudyController::class, 'indexPublic']);
 Route::get('/users/{id}/contact', [UserController::class, 'showPublicContact']);
 Route::get('/users/{user}/profile', [UserController::class, 'showPublicProfile']);
+Route::get('/users/{user}/profile-photo', [UserController::class, 'showPublicProfilePhoto']);
 Route::get('/project-technologies', [ProjectTechnologyController::class, 'index']);
 Route::get('/users/{user}/projects', [ProjectController::class, 'indexPublic']);
+Route::get('/projects/{project}/image', [ProjectController::class, 'showPublicImage']);
 Route::get('profiles', [UserController::class, 'indexPublicProfilesFull']);
 
 Route::middleware(['auth:sanctum', 'role:owner,admin'])->group(function () {

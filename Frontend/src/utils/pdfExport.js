@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import api from '../services/api';
 
 const PAGE = {
   width: 210,
@@ -25,28 +26,744 @@ function cleanText(value) {
     .trim();
 }
 
+function resolveProjectImageUrl(rawUrl) {
+  if (!rawUrl) {
+    return '';
+  }
+
+  if (/^https?:\/\//i.test(rawUrl) || rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) {
+    return rawUrl;
+  }
+
+  const apiBase = import.meta.env.VITE_LARAVEL_API_URL;
+  if (!apiBase) {
+    return rawUrl;
+  }
+
+  let backendOrigin = '';
+  try {
+    backendOrigin = new URL(apiBase).origin;
+  } catch {
+    return rawUrl;
+  }
+
+  if (rawUrl.startsWith('/storage/')) {
+    return `${backendOrigin}${rawUrl}`;
+  }
+
+  if (rawUrl.startsWith('storage/')) {
+    return `${backendOrigin}/${rawUrl}`;
+  }
+
+  if (rawUrl.startsWith('projects/')) {
+    return `${backendOrigin}/storage/${rawUrl}`;
+  }
+
+  return `${backendOrigin}/${rawUrl.replace(/^\/+/, '')}`;
+}
+
+async function resolvePublicImageDataUrl(rawUrl) {
+  const imageUrl = resolveProjectImageUrl(rawUrl);
+  if (!imageUrl) {
+    return '';
+  }
+
+  if (String(imageUrl).startsWith('data:')) {
+    return imageUrl;
+  }
+
+  try {
+    const response = await fetch(imageUrl, { mode: 'cors' });
+    if (!response.ok) {
+      return '';
+    }
+
+    const blob = await response.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('No se pudo leer la imagen del proyecto.'));
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return '';
+  }
+}
+
+function getProjectImageSource(project) {
+  return (
+    project?.image_url ||
+    project?.image_path ||
+    project?.currentImagePreview ||
+    ''
+  );
+}
+
+async function resolveProjectImageDataUrl(project) {
+  const imageSource = getProjectImageSource(project);
+  if (!imageSource) {
+    return '';
+  }
+
+  if (String(imageSource).startsWith('data:')) {
+    return imageSource;
+  }
+
+  if (project?.id) {
+    try {
+      const response = await api.get(`/projects/${project.id}/image`, {
+        responseType: 'blob',
+      });
+
+      const blob = response?.data;
+      if (blob instanceof Blob && blob.size > 0) {
+        return await blobToDataUrl(blob);
+      }
+    } catch {
+      // Intentamos la URL pública como respaldo.
+    }
+  }
+
+  return await resolvePublicImageDataUrl(imageSource);
+}
+
 function stripHtml(value) {
-  const raw = cleanText(value);
+  const raw = String(value || '');
   if (!raw) {
     return '';
   }
 
+  const normalized = raw
+    .replace(/<\s*br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6]|ul|ol)>/gi, '\n')
+    .replace(/<li\b[^>]*>/gi, '\n• ');
+
   if (typeof document === 'undefined') {
-    return raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    return normalized
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\r/g, '')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n[ \t]+/g, '\n')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
   }
 
   const wrapper = document.createElement('div');
-  wrapper.innerHTML = raw;
-  return cleanText(wrapper.textContent || wrapper.innerText || '');
+  wrapper.innerHTML = normalized;
+  return String(wrapper.textContent || wrapper.innerText || '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\r/g, '')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 function splitLines(doc, text, maxWidth) {
-  const content = cleanText(text);
+  const content = String(text || '').replace(/\r/g, '').trim();
   if (!content) {
     return [];
   }
 
-  return doc.splitTextToSize(content, maxWidth);
+  const paragraphs = content.split(/\n+/);
+  const lines = [];
+
+  paragraphs.forEach((paragraph, index) => {
+    const normalized = cleanText(paragraph);
+
+    if (normalized) {
+      lines.push(...doc.splitTextToSize(normalized, maxWidth));
+    }
+
+    if (index < paragraphs.length - 1) {
+      lines.push('');
+    }
+  });
+
+  return lines;
+}
+
+const RICH_BLOCK_TAGS = new Set(['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote']);
+
+const RICH_LIST_TAGS = new Set(['ul', 'ol']);
+
+const RICH_INLINE_TAGS = new Set(['span', 'strong', 'b', 'em', 'i', 'u', 's', 'strike', 'del', 'sub', 'sup']);
+
+function cloneRichStyle(style = {}) {
+  return {
+    bold: false,
+    italic: false,
+    underline: false,
+    strike: false,
+    script: '',
+    size: 9.2,
+    ...style,
+  };
+}
+
+function resolveRichFontSize(value, fallback = 9.2) {
+  if (value === null || value === undefined || value === '') {
+    return fallback;
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  const text = String(value).toLowerCase();
+
+  if (text.includes('small')) return 8.1;
+  if (text.includes('large')) return 10.6;
+  if (text.includes('huge')) return 12.2;
+
+  const parsed = Number.parseFloat(text);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    if (text.includes('em') || text.includes('rem')) {
+      return fallback * parsed;
+    }
+
+    if (text.includes('px')) {
+      return parsed * 0.75;
+    }
+
+    if (text.includes('pt')) {
+      return parsed * 0.3528;
+    }
+
+    if (text.includes('%')) {
+      return fallback * (parsed / 100);
+    }
+
+    return parsed;
+  }
+
+  return fallback;
+}
+
+function resolveRichFontStyle(style = {}) {
+  if (style.bold && style.italic) return 'bolditalic';
+  if (style.bold) return 'bold';
+  if (style.italic) return 'italic';
+  return 'normal';
+}
+
+function applyRichStyleFromElement(element, inherited = {}) {
+  const next = cloneRichStyle(inherited);
+  const tagName = element.tagName.toLowerCase();
+
+  if (tagName === 'strong' || tagName === 'b') {
+    next.bold = true;
+  }
+
+  if (tagName === 'em' || tagName === 'i') {
+    next.italic = true;
+  }
+
+  if (tagName === 'u') {
+    next.underline = true;
+  }
+
+  if (tagName === 's' || tagName === 'strike' || tagName === 'del') {
+    next.strike = true;
+  }
+
+  if (tagName === 'sub') {
+    next.script = 'sub';
+    next.size = Math.max(6.2, next.size * 0.78);
+  }
+
+  if (tagName === 'sup') {
+    next.script = 'super';
+    next.size = Math.max(6.2, next.size * 0.78);
+  }
+
+  if (tagName === 'h1') {
+    next.bold = true;
+    next.size = Math.max(next.size, 13.5);
+  } else if (tagName === 'h2') {
+    next.bold = true;
+    next.size = Math.max(next.size, 12.6);
+  } else if (tagName === 'h3') {
+    next.bold = true;
+    next.size = Math.max(next.size, 11.6);
+  } else if (tagName === 'h4') {
+    next.bold = true;
+    next.size = Math.max(next.size, 10.7);
+  } else if (tagName === 'h5' || tagName === 'h6') {
+    next.bold = true;
+    next.size = Math.max(next.size, 10.1);
+  }
+
+  const classNames = Array.from(element.classList || []);
+  classNames.forEach((className) => {
+    if (className === 'ql-size-small') {
+      next.size = 8.1;
+    }
+    if (className === 'ql-size-large') {
+      next.size = Math.max(next.size, 10.6);
+    }
+    if (className === 'ql-size-huge') {
+      next.size = Math.max(next.size, 12.2);
+    }
+  });
+
+  const inlineFontWeight = String(element.style?.fontWeight || '').toLowerCase();
+  if (inlineFontWeight === 'bold' || Number.parseInt(inlineFontWeight, 10) >= 600) {
+    next.bold = true;
+  }
+
+  const inlineFontStyle = String(element.style?.fontStyle || '').toLowerCase();
+  if (inlineFontStyle === 'italic' || inlineFontStyle === 'oblique') {
+    next.italic = true;
+  }
+
+  const inlineDecoration = String(element.style?.textDecoration || '').toLowerCase();
+  if (inlineDecoration.includes('underline')) {
+    next.underline = true;
+  }
+  if (inlineDecoration.includes('line-through')) {
+    next.strike = true;
+  }
+
+  const inlineFontSize = resolveRichFontSize(element.style?.fontSize, next.size);
+  if (inlineFontSize) {
+    next.size = inlineFontSize;
+  }
+
+  return next;
+}
+
+function collectRichRuns(node, inheritedStyle = cloneRichStyle(), runs = []) {
+  Array.from(node.childNodes || []).forEach((child) => {
+    if (child.nodeType === Node.TEXT_NODE) {
+      const text = String(child.textContent || '').replace(/\r/g, '');
+      if (text) {
+        const parts = text.split('\n');
+        parts.forEach((part, index) => {
+          const normalized = part.replace(/\u00A0/g, ' ').replace(/[ \t]+/g, ' ');
+          if (normalized.trim()) {
+            runs.push({
+              text: normalized,
+              style: cloneRichStyle(inheritedStyle),
+            });
+          }
+
+          if (index < parts.length - 1) {
+            runs.push({ text: '\n', style: cloneRichStyle(inheritedStyle) });
+          }
+        });
+      }
+      return;
+    }
+
+    if (child.nodeType !== Node.ELEMENT_NODE) {
+      return;
+    }
+
+    const element = child;
+    const tagName = element.tagName.toLowerCase();
+
+    if (tagName === 'br') {
+      runs.push({ text: '\n', style: cloneRichStyle(inheritedStyle) });
+      return;
+    }
+
+    const nextStyle = applyRichStyleFromElement(element, inheritedStyle);
+    collectRichRuns(element, nextStyle, runs);
+  });
+
+  return runs;
+}
+
+function parseRichBlocks(value) {
+  const raw = String(value || '');
+  if (!raw.trim()) {
+    return [];
+  }
+
+  if (typeof document === 'undefined') {
+    return [{
+      type: 'paragraph',
+      runs: [{ text: stripHtml(raw), style: cloneRichStyle() }],
+      indent: 0,
+      marker: '',
+      baseSize: 9.2,
+    }];
+  }
+
+  const parser = new DOMParser();
+  const parsed = parser.parseFromString(`<div>${raw}</div>`, 'text/html');
+  const root = parsed.body.firstElementChild;
+
+  if (!root) {
+    return [];
+  }
+
+  const blocks = [];
+  const inlineBuffer = [];
+
+  const flushInlineBuffer = () => {
+    if (!inlineBuffer.length) {
+      return;
+    }
+
+    const runs = inlineBuffer.map((entry) => ({
+      text: entry.text,
+      style: cloneRichStyle(entry.style),
+    }));
+    if (runs.length) {
+      blocks.push({
+        type: 'paragraph',
+        runs,
+        indent: 0,
+        marker: '',
+        baseSize: 9.2,
+      });
+    }
+
+    inlineBuffer.length = 0;
+  };
+
+  const pushBlock = (element, meta = {}) => {
+    const runs = collectRichRuns(element, cloneRichStyle(), []);
+    blocks.push({
+      type: meta.type || 'paragraph',
+      runs,
+      indent: meta.indent || 0,
+      marker: meta.marker || '',
+      baseSize: meta.baseSize || 9.2,
+    });
+  };
+
+    Array.from(root.childNodes).forEach((child) => {
+    if (child.nodeType === Node.TEXT_NODE) {
+      const text = String(child.textContent || '').replace(/\r/g, '');
+      if (text) {
+        const parts = text.split('\n');
+        parts.forEach((part, index) => {
+          const normalized = part.replace(/\u00A0/g, ' ').replace(/[ \t]+/g, ' ');
+          if (normalized.trim()) {
+            inlineBuffer.push({ text: normalized, style: cloneRichStyle() });
+          }
+
+          if (index < parts.length - 1) {
+            inlineBuffer.push({ text: '\n', style: cloneRichStyle() });
+          }
+        });
+      }
+      return;
+    }
+
+    if (child.nodeType !== Node.ELEMENT_NODE) {
+      return;
+    }
+
+    const element = child;
+    const tagName = element.tagName.toLowerCase();
+
+    if (RICH_LIST_TAGS.has(tagName)) {
+      flushInlineBuffer();
+      Array.from(element.children).forEach((li, index) => {
+        if (li.tagName.toLowerCase() !== 'li') {
+          return;
+        }
+
+        pushBlock(li, {
+          type: 'list-item',
+          marker: tagName === 'ol' ? `${index + 1}.` : '•',
+          indent: tagName === 'ol' ? 8.5 : 6,
+          baseSize: 9.2,
+        });
+      });
+      return;
+    }
+
+    if (RICH_BLOCK_TAGS.has(tagName)) {
+      flushInlineBuffer();
+      pushBlock(element, {
+        type: tagName === 'blockquote' ? 'blockquote' : tagName.startsWith('h') ? 'heading' : 'paragraph',
+        indent: tagName === 'blockquote' ? 5 : 0,
+        baseSize: tagName === 'h1'
+          ? 13.5
+          : tagName === 'h2'
+            ? 12.6
+            : tagName === 'h3'
+              ? 11.6
+              : tagName === 'h4'
+                ? 10.7
+                : tagName === 'h5' || tagName === 'h6'
+                  ? 10.1
+                  : 9.2,
+      });
+      return;
+    }
+
+    if (RICH_INLINE_TAGS.has(tagName)) {
+      collectRichRuns(element, cloneRichStyle(), inlineBuffer);
+      return;
+    }
+
+    collectRichRuns(element, cloneRichStyle(), inlineBuffer);
+  });
+
+  flushInlineBuffer();
+  return blocks;
+}
+
+function tokenizeRichRuns(runs) {
+  const tokens = [];
+
+  runs.forEach((run) => {
+    const text = String(run?.text || '');
+    if (!text) {
+      return;
+    }
+
+    if (text === '\n') {
+      tokens.push({ newline: true });
+      return;
+    }
+
+    text.split(/(\s+)/).forEach((part) => {
+      if (!part) {
+        return;
+      }
+
+      if (part === '\n') {
+        tokens.push({ newline: true });
+        return;
+      }
+
+      if (/^\s+$/.test(part)) {
+        tokens.push({
+          space: true,
+          text: ' ',
+          style: cloneRichStyle(run.style),
+        });
+        return;
+      }
+
+      tokens.push({
+        text: part,
+        style: cloneRichStyle(run.style),
+      });
+    });
+  });
+
+  return tokens;
+}
+
+function resolveTokenMetrics(token) {
+  const style = cloneRichStyle(token?.style);
+  let fontSize = style.size || 9.2;
+  let baselineOffset = 0;
+
+  if (style.script === 'sub') {
+    fontSize = Math.max(6.2, fontSize * 0.78);
+    baselineOffset = fontSize * 0.13;
+  } else if (style.script === 'super') {
+    fontSize = Math.max(6.2, fontSize * 0.78);
+    baselineOffset = -fontSize * 0.18;
+  }
+
+  return {
+    style,
+    fontSize,
+    fontStyle: resolveRichFontStyle(style),
+    baselineOffset,
+  };
+}
+
+function measureRichTokenWidth(doc, token, cache) {
+  const metrics = resolveTokenMetrics(token);
+  const key = `${metrics.fontStyle}|${metrics.fontSize}|${token.text}`;
+  if (cache.has(key)) {
+    return cache.get(key);
+  }
+
+  doc.setFont('helvetica', metrics.fontStyle);
+  doc.setFontSize(metrics.fontSize);
+  const width = doc.getTextWidth(token.text);
+  cache.set(key, width);
+  return width;
+}
+
+function wrapRichTokens(doc, tokens, maxWidth) {
+  const cache = new Map();
+  const lines = [];
+  let currentLine = [];
+  let currentWidth = 0;
+
+  const pushLine = () => {
+    lines.push(currentLine);
+    currentLine = [];
+    currentWidth = 0;
+  };
+
+  const pushToken = (token) => {
+    const width = measureRichTokenWidth(doc, token, cache);
+    currentLine.push({ ...token, width });
+    currentWidth += width;
+  };
+
+  const breakLongToken = (token) => {
+    const chunks = doc.splitTextToSize(String(token.text || ''), maxWidth);
+
+    chunks.forEach((chunk) => {
+      const chunkToken = { ...token, text: chunk };
+      const chunkWidth = measureRichTokenWidth(doc, chunkToken, cache);
+
+      if (currentLine.length > 0 && currentWidth + chunkWidth > maxWidth) {
+        pushLine();
+      }
+
+      pushToken(chunkToken);
+    });
+  };
+
+  tokens.forEach((token) => {
+    if (token.newline) {
+      pushLine();
+      return;
+    }
+
+    if (token.space) {
+      if (currentLine.length > 0) {
+        pushToken(token);
+      }
+      return;
+    }
+
+    const width = measureRichTokenWidth(doc, token, cache);
+    if (currentLine.length > 0 && currentWidth + width > maxWidth) {
+      pushLine();
+    }
+
+    if (width > maxWidth) {
+      breakLongToken(token);
+      return;
+    }
+
+    pushToken(token);
+  });
+
+  if (currentLine.length > 0 || !lines.length) {
+    lines.push(currentLine);
+  }
+
+  return lines;
+}
+
+function measureRichContentHeight(doc, value, maxWidth, baseSize = 9.2, lineFactor = 1.25) {
+  const blocks = parseRichBlocks(value);
+  if (!blocks.length) {
+    return 0;
+  }
+
+  let height = 0;
+  const blockGap = 1.2;
+
+  blocks.forEach((block, blockIndex) => {
+    const indent = block.indent || 0;
+    const blockWidth = Math.max(10, maxWidth - indent);
+    const tokens = tokenizeRichRuns(block.runs);
+    const lines = wrapRichTokens(doc, tokens, blockWidth);
+
+    const lineHeights = lines.map((line) => {
+      const lineSize = Math.max(
+        baseSize,
+        block.baseSize || baseSize,
+        ...line.map((segment) => resolveTokenMetrics(segment).fontSize),
+      );
+      return lineSize * 0.3528 * lineFactor;
+    });
+
+    if (lineHeights.length > 0) {
+      height += lineHeights.reduce((sum, value) => sum + value, 0);
+    } else {
+      height += baseSize * 0.3528 * lineFactor;
+    }
+
+    if (blockIndex < blocks.length - 1) {
+      height += blockGap;
+    }
+  });
+
+  return height;
+}
+
+function drawRichContent(doc, x, y, maxWidth, value, baseSize = 9.2, lineFactor = 1.25) {
+  const blocks = parseRichBlocks(value);
+  if (!blocks.length) {
+    return 0;
+  }
+
+  const blockGap = 1.2;
+  const cache = new Map();
+  let cursorY = y;
+
+  blocks.forEach((block, blockIndex) => {
+    const indent = block.indent || 0;
+    const blockWidth = Math.max(10, maxWidth - indent);
+    const textX = x + indent;
+    const markerX = x;
+    const tokens = tokenizeRichRuns(block.runs);
+    const lines = wrapRichTokens(doc, tokens, blockWidth);
+    const markerWidth = block.marker ? doc.getTextWidth(block.marker) : 0;
+
+    if (block.marker) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(baseSize);
+      doc.setTextColor(...THEME.muted);
+      doc.text(block.marker, markerX, cursorY);
+    }
+
+    lines.forEach((line, lineIndex) => {
+      const lineSize = Math.max(
+        baseSize,
+        block.baseSize || baseSize,
+        ...line.map((segment) => resolveTokenMetrics(segment).fontSize),
+      );
+      const lineHeight = lineSize * 0.3528 * lineFactor;
+      let cursorX = textX + (block.marker && lineIndex === 0 ? markerWidth + 1.8 : 0);
+      let lineMaxSize = lineSize;
+
+      line.forEach((segment) => {
+        const metrics = resolveTokenMetrics(segment);
+        const segmentWidth = measureRichTokenWidth(doc, segment, cache);
+        lineMaxSize = Math.max(lineMaxSize, metrics.fontSize);
+
+        doc.setFont('helvetica', metrics.fontStyle);
+        doc.setFontSize(metrics.fontSize);
+        doc.setTextColor(...THEME.text);
+        doc.text(segment.text, cursorX, cursorY + metrics.baselineOffset);
+
+        if (metrics.style.underline) {
+          doc.setLineWidth(0.25);
+          doc.line(cursorX, cursorY + metrics.baselineOffset + 0.55, cursorX + segmentWidth, cursorY + metrics.baselineOffset + 0.55);
+        }
+
+        if (metrics.style.strike) {
+          doc.setLineWidth(0.25);
+          doc.line(cursorX, cursorY + metrics.baselineOffset - 1.35, cursorX + segmentWidth, cursorY + metrics.baselineOffset - 1.35);
+        }
+
+        cursorX += segmentWidth;
+      });
+
+      cursorY += lineHeight;
+      if (lineIndex < lines.length - 1) {
+        cursorY += 0.2;
+      }
+    });
+
+    if (blockIndex < blocks.length - 1) {
+      cursorY += blockGap;
+    }
+  });
+
+  return cursorY - y;
 }
 
 function measureHeight(doc, text, maxWidth, fontSize = 10, lineFactor = 1.25) {
@@ -70,7 +787,7 @@ function addPageChrome(doc, pageNumber, totalPages) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(...THEME.accent);
-  doc.text('SoftSave Portfolio', marginX, 7.5);
+  doc.text('DevStack', marginX, 7.5);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
@@ -89,7 +806,6 @@ function ensureSpace(doc, state, neededHeight) {
   doc.addPage();
   state.page += 1;
   state.y = PAGE.marginTop + 3;
-  addPageChrome(doc, state.page, state.totalPages);
 }
 
 function drawSectionHeader(doc, state, title, subtitle = '') {
@@ -122,9 +838,16 @@ function drawChip(doc, x, y, label, variant = 'default') {
   const paddingX = 2.8;
   const paddingY = 1.8;
   const fontSize = 8.3;
+  const maxChipWidth = PAGE.width - PAGE.marginX * 2;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(fontSize);
-  const width = doc.getTextWidth(text) + paddingX * 2;
+
+  let displayText = text;
+  while (displayText.length > 1 && doc.getTextWidth(displayText) + paddingX * 2 > maxChipWidth) {
+    displayText = displayText.slice(0, -1);
+  }
+
+  const width = Math.min(doc.getTextWidth(displayText) + paddingX * 2, maxChipWidth);
   const height = fontSize * 0.3528 + paddingY * 2;
 
   let fill = THEME.chip;
@@ -141,7 +864,7 @@ function drawChip(doc, x, y, label, variant = 'default') {
   doc.setDrawColor(...borderColor);
   doc.roundedRect(x, y, width, height, 3.2, 3.2, 'FD');
   doc.setTextColor(...textColor);
-  doc.text(text, x + paddingX, y + height - paddingY - 0.2);
+  doc.text(displayText, x + paddingX, y + height - paddingY - 0.2);
 
   return { width, height };
 }
@@ -157,25 +880,72 @@ function drawChipRow(doc, state, labels, variant = 'default') {
   let x = PAGE.marginX;
   let rowHeight = 0;
 
-  chips.forEach((label, index) => {
-    const chip = drawChip(doc, x, state.y, label, variant);
-    if (index === 0) {
-      rowHeight = chip.height;
-    } else {
-      rowHeight = Math.max(rowHeight, chip.height);
-    }
+  chips.forEach((label) => {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.3);
+    const estimatedWidth = doc.getTextWidth(cleanText(label)) + 2.8 * 2;
 
-    x += chip.width + gap;
-    if (x + chip.width > PAGE.marginX + maxWidth) {
+    if (x > PAGE.marginX && x + estimatedWidth > PAGE.marginX + maxWidth) {
       state.y += rowHeight + 2.2;
       x = PAGE.marginX;
-      const nextChip = drawChip(doc, x, state.y, label, variant);
-      rowHeight = nextChip.height;
-      x += nextChip.width + gap;
+      rowHeight = 0;
     }
+
+    const chip = drawChip(doc, x, state.y, label, variant);
+    rowHeight = Math.max(rowHeight, chip.height);
+    x += chip.width + gap;
   });
 
   state.y += rowHeight + 2.6;
+}
+
+function measureChipRowsHeight(doc, labels, availableWidth) {
+  const chips = labels.filter(Boolean);
+  if (!chips.length) {
+    return 0;
+  }
+
+  const gap = 2.4;
+  const rowGap = 2.2;
+  const chipHeight = 8.3 * 0.3528 + 1.8 * 2;
+  let rows = 1;
+  let usedWidth = 0;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.3);
+
+  chips.forEach((label) => {
+    const chipWidth = doc.getTextWidth(cleanText(label)) + 2.8 * 2;
+    if (usedWidth > 0 && usedWidth + chipWidth > availableWidth) {
+      rows += 1;
+      usedWidth = 0;
+    }
+
+    usedWidth += chipWidth + gap;
+  });
+
+  return rows * chipHeight + (rows - 1) * rowGap;
+}
+
+function fitImageIntoBox(doc, image, maxWidth, maxHeight) {
+  let width = maxWidth;
+  let height = maxHeight;
+
+  try {
+    const properties = doc.getImageProperties(image);
+    const imageWidth = Number(properties?.width || 0);
+    const imageHeight = Number(properties?.height || 0);
+
+    if (imageWidth > 0 && imageHeight > 0) {
+      const scale = Math.min(maxWidth / imageWidth, maxHeight / imageHeight);
+      width = imageWidth * scale;
+      height = imageHeight * scale;
+    }
+  } catch {
+    // Si jsPDF no puede leer proporciones, usamos el contenedor máximo.
+  }
+
+  return { width, height };
 }
 
 function drawCard(doc, state, options = {}) {
@@ -186,6 +956,8 @@ function drawCard(doc, state, options = {}) {
     meta = [],
     chips = [],
     accent = false,
+    image = '',
+    imageHeight = 24,
     width = PAGE.width - PAGE.marginX * 2,
     minHeight = 24,
     links = [],
@@ -194,16 +966,20 @@ function drawCard(doc, state, options = {}) {
   const innerX = PAGE.marginX + 5;
   const innerWidth = width - 10;
   const cardPadding = 5;
+  const bodyInsetX = 0;
+  const bodyContentX = innerX + bodyInsetX;
+  const bodyContentWidth = innerWidth - bodyInsetX * 2;
+  const imageBox = image ? fitImageIntoBox(doc, image, innerWidth, imageHeight) : null;
+  const imageBlockHeight = imageBox ? imageBox.height + 5 : 0;
 
-  const bodyHeight = body ? measureHeight(doc, body, innerWidth - 2 * cardPadding, 9.4, 1.3) : 0;
+  const richBodyHeight = body ? measureRichContentHeight(doc, body, bodyContentWidth, 9.2, 1.25) : 0;
   const subtitleHeight = subtitle ? measureHeight(doc, subtitle, innerWidth - 2 * cardPadding, 8.8, 1.2) : 0;
   const metaHeight = meta.length ? 5.5 : 0;
-  const chipsRows = chips.length ? Math.ceil(chips.length / 4) : 0;
-  const chipsHeight = chipsRows ? chipsRows * 7.8 + (chipsRows - 1) * 2.2 : 0;
+  const chipsHeight = chips.length ? measureChipRowsHeight(doc, chips, innerWidth - 10) : 0;
   const linksHeight = links.length ? links.length * 4.6 : 0;
   const totalHeight = Math.max(
     minHeight,
-    (title ? 11 : 0) + subtitleHeight + metaHeight + bodyHeight + chipsHeight + linksHeight + 14,
+    imageBlockHeight + (title ? 11 : 0) + subtitleHeight + metaHeight + richBodyHeight + chipsHeight + linksHeight + 14,
   );
 
   ensureSpace(doc, state, totalHeight + 2);
@@ -213,6 +989,14 @@ function drawCard(doc, state, options = {}) {
   doc.roundedRect(PAGE.marginX, state.y, width, totalHeight, 3.2, 3.2, 'FD');
 
   let cursorY = state.y + 9.5;
+
+  if (image) {
+    const imageFormat = String(image).split(';')[0].split('/')[1]?.toUpperCase() || 'JPEG';
+    const normalizedFormat = imageFormat === 'JPG' ? 'JPEG' : imageFormat;
+    const imageX = innerX + Math.max(0, (innerWidth - imageBox.width) / 2);
+    doc.addImage(image, normalizedFormat, imageX, cursorY, imageBox.width, imageBox.height, undefined, 'FAST');
+    cursorY += imageBox.height + 5;
+  }
 
   if (title) {
     doc.setFont('helvetica', 'bold');
@@ -243,8 +1027,8 @@ function drawCard(doc, state, options = {}) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.2);
     doc.setTextColor(...THEME.text);
-    doc.text(splitLines(doc, stripHtml(body), innerWidth - 2 * cardPadding), innerX, cursorY);
-    cursorY += bodyHeight + 1.6;
+    cursorY += drawRichContent(doc, bodyContentX, cursorY, bodyContentWidth, body, 9.2, 1.25);
+    cursorY += 1.6;
   }
 
   if (chips.length) {
@@ -404,10 +1188,8 @@ function drawSkillRow(doc, state, skill) {
   const evidenceUrl = cleanText(skill?.evidence_url || skill?.link || skill?.url || '');
   const rowWidth = PAGE.width - PAGE.marginX * 2;
   const paddingX = 5;
-  const paddingY = 3.2;
   const badgeLabel = level || 'Sin nivel';
   const badgeWidth = measureChipBoxWidth(doc, badgeLabel);
-  const badgeHeight = 7.4;
   const badgeX = PAGE.marginX + rowWidth - badgeWidth - paddingX;
   const nameMaxWidth = Math.max(42, badgeX - (PAGE.marginX + paddingX) - 4);
   const nameHeight = measureHeight(doc, name, nameMaxWidth, 9.2, 1.15) || 3.8;
@@ -457,7 +1239,18 @@ function drawSkillSectionTitle(doc, state, title, subtitle = '') {
   }
 }
 
-async function resolvePhotoDataUrl(photoUrl) {
+async function blobToDataUrl(blob) {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function resolvePhotoDataUrl(profile) {
+  const photoUrl = profile?.photoUrl || '';
+
   if (!photoUrl) {
     return '';
   }
@@ -469,19 +1262,31 @@ async function resolvePhotoDataUrl(photoUrl) {
   try {
     const response = await fetch(photoUrl, { mode: 'cors' });
     if (!response.ok) {
-      return '';
+      throw new Error('No se pudo leer la imagen directamente.');
     }
 
     const blob = await response.blob();
-    return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ''));
-      reader.onerror = () => reject(new Error('No se pudo leer la imagen.'));
-      reader.readAsDataURL(blob);
-    });
+    return await blobToDataUrl(blob);
   } catch {
-    return '';
+    if (!profile?.id) {
+      return '';
+    }
+
+    try {
+      const response = await api.get(`/users/${profile.id}/profile-photo`, {
+        responseType: 'blob',
+      });
+
+      const blob = response?.data;
+      if (blob instanceof Blob && blob.size > 0) {
+        return await blobToDataUrl(blob);
+      }
+    } catch {
+      return '';
+    }
   }
+
+  return '';
 }
 
 export async function exportarPerfilPDF(profile, nombreArchivo = 'perfil.pdf') {
@@ -502,8 +1307,6 @@ export async function exportarPerfilPDF(profile, nombreArchivo = 'perfil.pdf') {
   const totalExp = Array.isArray(profile.jobs) ? profile.jobs.length : 0;
   const totalStudies = Array.isArray(profile.studies) ? profile.studies.length : 0;
 
-  addPageChrome(doc, 1, 1);
-
   const headerWidth = PAGE.width - PAGE.marginX * 2;
   const headerHeight = 62;
   doc.setFillColor(...THEME.background);
@@ -513,10 +1316,16 @@ export async function exportarPerfilPDF(profile, nombreArchivo = 'perfil.pdf') {
   const photoX = PAGE.marginX + 6;
   const photoY = state.y + 6;
   const photoSize = 42;
-  const photoUrl = await resolvePhotoDataUrl(profile.photoUrl);
+  const photoUrl = await resolvePhotoDataUrl(profile);
 
   if (photoUrl) {
-    doc.addImage(photoUrl, undefined, photoX, photoY, photoSize, photoSize, undefined, 'FAST');
+    const inferredFormat = photoUrl.split(';')[0].split('/')[1]?.toUpperCase();
+    const format = inferredFormat && ['PNG', 'WEBP', 'JPEG', 'JPG'].includes(inferredFormat)
+      ? inferredFormat === 'JPG'
+        ? 'JPEG'
+        : inferredFormat
+      : 'JPEG';
+    doc.addImage(photoUrl, format, photoX, photoY, photoSize, photoSize, undefined, 'FAST');
   } else {
     doc.setFillColor(...THEME.accent);
     doc.roundedRect(photoX, photoY, photoSize, photoSize, 4, 4, 'F');
@@ -610,7 +1419,7 @@ export async function exportarPerfilPDF(profile, nombreArchivo = 'perfil.pdf') {
       const title = cleanText(job?.position || job?.job_title || job?.role || job?.title || job?.cargo || 'Experiencia');
       const company = cleanText(job?.company_name || 'Empresa no especificada');
       const range = cleanText(job?.start_date || job?.end_date || job?.date || '');
-      const body = stripHtml(job?.description || job?.achievements || job?.achievement || job?.achivements || job?.logros || '');
+      const body = job?.description || job?.achievements || job?.achievement || job?.achivements || job?.logros || '';
       drawCard(doc, state, {
         title,
         subtitle: company,
@@ -628,7 +1437,7 @@ export async function exportarPerfilPDF(profile, nombreArchivo = 'perfil.pdf') {
     profile.studies.forEach((study) => {
       const title = cleanText(study?.degree || study?.title || 'Estudio');
       const institution = cleanText(study?.academic_institution || study?.institution || 'Institución no especificada');
-      const achievements = stripHtml(study?.achievements || '');
+      const achievements = study?.achievements || '';
       drawCard(doc, state, {
         title,
         subtitle: institution,
@@ -701,9 +1510,9 @@ export async function exportarPerfilPDF(profile, nombreArchivo = 'perfil.pdf') {
     drawSectionHeader(doc, state, 'Proyectos y repositorios', 'Listado formal por secciones.');
   }
 
-  projects.forEach((project) => {
+  for (const project of projects) {
     const title = cleanText(project?.title || project?.name || 'Proyecto');
-    const description = stripHtml(project?.description || 'Sin descripción disponible.');
+    const description = project?.description || 'Sin descripción disponible.';
     const technologies = Array.isArray(project?.technologies)
       ? project.technologies
           .map((technology) => cleanText(technology?.name || technology?.label || technology?.title || technology?.value || technology))
@@ -713,6 +1522,7 @@ export async function exportarPerfilPDF(profile, nombreArchivo = 'perfil.pdf') {
       project?.demo_url ? { label: 'Demo', href: project.demo_url } : null,
       project?.repo_url ? { label: 'Repositorio', href: project.repo_url } : null,
     ].filter(Boolean);
+    const image = await resolveProjectImageDataUrl(project);
 
     drawCard(doc, state, {
       title,
@@ -720,9 +1530,11 @@ export async function exportarPerfilPDF(profile, nombreArchivo = 'perfil.pdf') {
       chips: technologies.slice(0, 6),
       links,
       accent: true,
+      image,
+      imageHeight: 42,
       minHeight: 30,
     });
-  });
+  }
 
   repositories.forEach((repo) => {
     const title = cleanText(repo?.title || 'Repositorio');

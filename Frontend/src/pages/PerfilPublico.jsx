@@ -695,6 +695,7 @@ function PerfilPublico() {
     };
 
     return {
+      id: profile?.id ?? null,
       name: profile?.name || 'Usuario',
       role: profile?.profession || '',
       biography: profile?.biography || '',

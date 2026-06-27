@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use App\Http\Requests\UpdateContactRequest;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -307,6 +309,59 @@ class UserController extends Controller
 
         // 3. Devolvemos la respuesta
         return response()->json($profile, 200);
+    }
+
+    public function showPublicProfilePhoto(User $user)
+    {
+        if (! $user->show_profile_photo || empty($user->profile_photo)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'La foto de perfil no está disponible.',
+            ], 404);
+        }
+
+        $source = $user->profile_photo;
+
+        try {
+            if (preg_match('/^https?:\\/\\//i', $source)) {
+                $response = Http::timeout(15)->get($source);
+
+                if (! $response->successful()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'No se pudo obtener la foto de perfil.',
+                    ], 404);
+                }
+
+                $mimeType = $response->header('Content-Type') ?: 'image/jpeg';
+
+                return response($response->body(), 200)
+                    ->header('Content-Type', $mimeType)
+                    ->header('Cache-Control', 'public, max-age=86400');
+            }
+
+            $disk = Storage::disk('public');
+            $path = ltrim($source, '/');
+
+            if (! $disk->exists($path)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No se pudo obtener la foto de perfil.',
+                ], 404);
+            }
+
+            $absolutePath = storage_path('app/public/' . $path);
+            $mimeType = mime_content_type($absolutePath) ?: 'image/jpeg';
+
+            return response($disk->get($path), 200)
+                ->header('Content-Type', $mimeType)
+                ->header('Cache-Control', 'public, max-age=86400');
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No se pudo obtener la foto de perfil.',
+            ], 500);
+        }
     }
     private function filterProfilePrivacy(User $user): array
     {

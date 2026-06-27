@@ -141,6 +141,25 @@ class ProjectController extends Controller
         return response()->json($projects, 200);
     }
 
+    public function showPublicImage(Project $project)
+    {
+        if (!$project->is_public) {
+            abort(404);
+        }
+
+        if (!$project->image_path || !Storage::disk('public')->exists($project->image_path)) {
+            abort(404);
+        }
+
+        $absolutePath = Storage::disk('public')->path($project->image_path);
+        $mimeType = mime_content_type($absolutePath) ?: 'image/jpeg';
+
+        return response()->file($absolutePath, [
+            'Content-Type' => $mimeType,
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
     public function store(Request $request)
     {
         // 1. Validaciones estrictas según Criterios de Aceptación (HU-15)
