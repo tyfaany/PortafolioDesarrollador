@@ -26,6 +26,126 @@ function cleanText(value) {
     .trim();
 }
 
+const MONTH_LABELS = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+
+function parseDateValue(value) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(`${String(value).slice(0, 10)}T00:00:00Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatDateLabel(value) {
+  const date = parseDateValue(value);
+  if (!date) {
+    return '';
+  }
+
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const month = MONTH_LABELS[date.getUTCMonth()] || '';
+  const year = date.getUTCFullYear();
+
+  return month ? `${day} ${month} ${year}` : `${day} ${year}`;
+}
+
+function getMonthLabel(value) {
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  const numericMonth = Number.parseInt(String(value), 10);
+  if (!Number.isNaN(numericMonth) && numericMonth >= 1 && numericMonth <= 12) {
+    return MONTH_LABELS[numericMonth - 1];
+  }
+
+  const normalized = String(value).trim().toLowerCase();
+  const monthNames = {
+    enero: 'ENE',
+    february: 'FEB',
+    febrero: 'FEB',
+    march: 'MAR',
+    marzo: 'MAR',
+    april: 'ABR',
+    abril: 'ABR',
+    may: 'MAY',
+    mayo: 'MAY',
+    june: 'JUN',
+    junio: 'JUN',
+    july: 'JUL',
+    julio: 'JUL',
+    august: 'AGO',
+    agosto: 'AGO',
+    september: 'SEP',
+    septiembre: 'SEP',
+    setiembre: 'SEP',
+    october: 'OCT',
+    octubre: 'OCT',
+    november: 'NOV',
+    noviembre: 'NOV',
+    december: 'DIC',
+    diciembre: 'DIC',
+  };
+
+  return monthNames[normalized] || '';
+}
+
+function formatMonthYear(valueMonth, valueYear) {
+  const monthLabel = getMonthLabel(valueMonth);
+  const year = String(valueYear || '').trim();
+
+  if (monthLabel && year) {
+    return `${monthLabel} ${year}`;
+  }
+
+  if (year) {
+    return year;
+  }
+
+  return monthLabel;
+}
+
+function formatDateRange(startValue, endValue, presentLabel = 'PRESENTE') {
+  const start = formatDateLabel(startValue);
+  const end = endValue ? formatDateLabel(endValue) : presentLabel;
+
+  if (!start && !end) {
+    return '';
+  }
+
+  if (!start) {
+    return end;
+  }
+
+  if (!end) {
+    return start;
+  }
+
+  return `${start} - ${end}`;
+}
+
+function formatJobRange(job) {
+  const start = formatMonthYear(job?.start_month, job?.start_year);
+  const end = job?.is_current_job
+    ? 'PRESENTE'
+    : formatMonthYear(job?.end_month, job?.end_year);
+
+  if (!start && !end) {
+    return '';
+  }
+
+  if (!start) {
+    return end;
+  }
+
+  if (!end) {
+    return start;
+  }
+
+  return `${start} - ${end}`;
+}
+
 function resolveProjectImageUrl(rawUrl) {
   if (!rawUrl) {
     return '';
@@ -778,7 +898,6 @@ function measureHeight(doc, text, maxWidth, fontSize = 10, lineFactor = 1.25) {
 
 function addPageChrome(doc, pageNumber, totalPages) {
   const { marginX } = PAGE;
-  const usableWidth = PAGE.width - marginX * 2;
 
   doc.setDrawColor(...THEME.border);
   doc.setLineWidth(0.3);
@@ -793,9 +912,6 @@ function addPageChrome(doc, pageNumber, totalPages) {
   doc.setFontSize(8);
   doc.setTextColor(...THEME.muted);
   doc.text(`${pageNumber} / ${totalPages}`, PAGE.width - marginX, 7.5, { align: 'right' });
-
-  doc.setFillColor(...THEME.primarySoft);
-  doc.roundedRect(marginX, PAGE.height - 9, usableWidth, 5.2, 1.6, 1.6, 'F');
 }
 
 function ensureSpace(doc, state, neededHeight) {
@@ -970,16 +1086,64 @@ function drawCard(doc, state, options = {}) {
   const bodyContentX = innerX + bodyInsetX;
   const bodyContentWidth = innerWidth - bodyInsetX * 2;
   const imageBox = image ? fitImageIntoBox(doc, image, innerWidth, imageHeight) : null;
-  const imageBlockHeight = imageBox ? imageBox.height + 5 : 0;
-
+  const titleHeight = title ? measureHeight(doc, title, innerWidth - 20, 11.5, 1.2) : 0;
   const richBodyHeight = body ? measureRichContentHeight(doc, body, bodyContentWidth, 9.2, 1.25) : 0;
   const subtitleHeight = subtitle ? measureHeight(doc, subtitle, innerWidth - 2 * cardPadding, 8.8, 1.2) : 0;
-  const metaHeight = meta.length ? 5.5 : 0;
+  const metaText = meta.filter(Boolean).join(' · ');
+  const metaHeight = metaText ? measureHeight(doc, metaText, innerWidth - 2 * cardPadding, 8.5, 1.2) : 0;
   const chipsHeight = chips.length ? measureChipRowsHeight(doc, chips, innerWidth - 10) : 0;
-  const linksHeight = links.length ? links.length * 4.6 : 0;
+  const linksHeight = links.length ? links.length * 4.0 : 0;
+  const topPadding = 9.5;
+  const bottomPadding = 3.5;
+  const sectionGap = 0.8;
+  let contentHeight = topPadding;
+
+  if (imageBox) {
+    contentHeight += imageBox.height + 3;
+  }
+
+  if (titleHeight) {
+    contentHeight += titleHeight;
+    if (subtitleHeight || metaHeight || richBodyHeight || chipsHeight || linksHeight) {
+      contentHeight += sectionGap;
+    }
+  }
+
+  if (subtitleHeight) {
+    contentHeight += subtitleHeight;
+    if (metaHeight || richBodyHeight || chipsHeight || linksHeight) {
+      contentHeight += sectionGap;
+    }
+  }
+
+  if (metaHeight) {
+    contentHeight += metaHeight;
+    if (richBodyHeight || chipsHeight || linksHeight) {
+      contentHeight += sectionGap;
+    }
+  }
+
+  if (richBodyHeight) {
+    contentHeight += richBodyHeight;
+    if (chipsHeight || linksHeight) {
+      contentHeight += 1.2;
+    }
+  }
+
+  if (chipsHeight) {
+    contentHeight += chipsHeight;
+    if (linksHeight) {
+      contentHeight += 0.2;
+    }
+  }
+
+  if (linksHeight) {
+    contentHeight += linksHeight;
+  }
+
   const totalHeight = Math.max(
     minHeight,
-    imageBlockHeight + (title ? 11 : 0) + subtitleHeight + metaHeight + richBodyHeight + chipsHeight + linksHeight + 14,
+    contentHeight + bottomPadding,
   );
 
   ensureSpace(doc, state, totalHeight + 2);
@@ -988,14 +1152,14 @@ function drawCard(doc, state, options = {}) {
   doc.setDrawColor(...THEME.border);
   doc.roundedRect(PAGE.marginX, state.y, width, totalHeight, 3.2, 3.2, 'FD');
 
-  let cursorY = state.y + 9.5;
+  let cursorY = state.y + topPadding;
 
   if (image) {
     const imageFormat = String(image).split(';')[0].split('/')[1]?.toUpperCase() || 'JPEG';
     const normalizedFormat = imageFormat === 'JPG' ? 'JPEG' : imageFormat;
     const imageX = innerX + Math.max(0, (innerWidth - imageBox.width) / 2);
     doc.addImage(image, normalizedFormat, imageX, cursorY, imageBox.width, imageBox.height, undefined, 'FAST');
-    cursorY += imageBox.height + 5;
+    cursorY += imageBox.height + 3;
   }
 
   if (title) {
@@ -1003,7 +1167,7 @@ function drawCard(doc, state, options = {}) {
     doc.setFontSize(11.5);
     doc.setTextColor(...THEME.text);
     doc.text(splitLines(doc, title, innerWidth - 20), innerX, cursorY);
-    cursorY += 6.4;
+    cursorY += titleHeight + (subtitleHeight || metaHeight || richBodyHeight || chipsHeight || linksHeight ? sectionGap : 0);
   }
 
   if (subtitle) {
@@ -1011,16 +1175,15 @@ function drawCard(doc, state, options = {}) {
     doc.setFontSize(8.8);
     doc.setTextColor(...THEME.muted);
     doc.text(splitLines(doc, subtitle, innerWidth - 2 * cardPadding), innerX, cursorY);
-    cursorY += subtitleHeight + 1.6;
+    cursorY += subtitleHeight + (metaHeight || richBodyHeight || chipsHeight || linksHeight ? sectionGap : 0);
   }
 
-  if (meta.length) {
-    const metaText = meta.filter(Boolean).join(' · ');
+  if (metaText) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.5);
     doc.setTextColor(...THEME.primary);
     doc.text(splitLines(doc, metaText, innerWidth - 2 * cardPadding), innerX, cursorY);
-    cursorY += metaHeight + 1.2;
+    cursorY += metaHeight + (richBodyHeight || chipsHeight || linksHeight ? sectionGap : 0);
   }
 
   if (body) {
@@ -1028,7 +1191,7 @@ function drawCard(doc, state, options = {}) {
     doc.setFontSize(9.2);
     doc.setTextColor(...THEME.text);
     cursorY += drawRichContent(doc, bodyContentX, cursorY, bodyContentWidth, body, 9.2, 1.25);
-    cursorY += 1.6;
+    cursorY += chipsHeight || linksHeight ? 1.2 : 0;
   }
 
   if (chips.length) {
@@ -1046,7 +1209,7 @@ function drawCard(doc, state, options = {}) {
         rowHeight = 0;
       }
     });
-    cursorY = rowY;
+    cursorY = rowY + (linksHeight ? 0.2 : 0);
   }
 
   if (links.length) {
@@ -1055,7 +1218,7 @@ function drawCard(doc, state, options = {}) {
       doc.setFontSize(8.8);
       doc.setTextColor(...THEME.primary);
       doc.textWithLink(cleanText(link.label), innerX, cursorY + 2.5, { url: cleanText(link.href) });
-      cursorY += 4.4;
+      cursorY += 4.0;
     });
   }
 
@@ -1418,7 +1581,7 @@ export async function exportarPerfilPDF(profile, nombreArchivo = 'perfil.pdf') {
     profile.jobs.forEach((job) => {
       const title = cleanText(job?.position || job?.job_title || job?.role || job?.title || job?.cargo || 'Experiencia');
       const company = cleanText(job?.company_name || 'Empresa no especificada');
-      const range = cleanText(job?.start_date || job?.end_date || job?.date || '');
+      const range = cleanText(formatJobRange(job));
       const body = job?.description || job?.achievements || job?.achievement || job?.achivements || job?.logros || '';
       drawCard(doc, state, {
         title,
@@ -1437,10 +1600,12 @@ export async function exportarPerfilPDF(profile, nombreArchivo = 'perfil.pdf') {
     profile.studies.forEach((study) => {
       const title = cleanText(study?.degree || study?.title || 'Estudio');
       const institution = cleanText(study?.academic_institution || study?.institution || 'Institución no especificada');
+      const range = cleanText(formatDateRange(study?.start_date, study?.end_date, 'PRESENTE'));
       const achievements = study?.achievements || '';
       drawCard(doc, state, {
         title,
         subtitle: institution,
+        meta: [range].filter(Boolean),
         body: achievements,
         minHeight: 24,
       });
@@ -1513,6 +1678,7 @@ export async function exportarPerfilPDF(profile, nombreArchivo = 'perfil.pdf') {
   for (const project of projects) {
     const title = cleanText(project?.title || project?.name || 'Proyecto');
     const description = project?.description || 'Sin descripción disponible.';
+    const range = cleanText(formatDateRange(project?.start_date, project?.end_date, project?.is_in_progress ? 'EN PROGRESO' : 'PRESENTE'));
     const technologies = Array.isArray(project?.technologies)
       ? project.technologies
           .map((technology) => cleanText(technology?.name || technology?.label || technology?.title || technology?.value || technology))
@@ -1526,6 +1692,7 @@ export async function exportarPerfilPDF(profile, nombreArchivo = 'perfil.pdf') {
 
     drawCard(doc, state, {
       title,
+      meta: [range].filter(Boolean),
       body: description,
       chips: technologies.slice(0, 6),
       links,
