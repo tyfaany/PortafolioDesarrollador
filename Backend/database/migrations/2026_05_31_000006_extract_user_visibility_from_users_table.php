@@ -20,10 +20,10 @@ return new class extends Migration
             $table->boolean('show_skills')->default(true);
             $table->boolean('show_social_links')->default(true);
             $table->boolean('show_profile_photo')->default(true);
-            $table->boolean('show_phone')->default(false);
-            $table->boolean('show_mobile')->default(false);
-            $table->boolean('show_contact_email')->default(false);
-            $table->boolean('show_address')->default(false);
+            $table->boolean('show_phone')->default(true);
+            $table->boolean('show_mobile')->default(true);
+            $table->boolean('show_contact_email')->default(true);
+            $table->boolean('show_address')->default(true);
             $table->timestamps();
         });
 
@@ -113,8 +113,9 @@ return new class extends Migration
                 foreach ($columnsToAdd as $column) {
                     match ($column) {
                         'linkedin_id' => $table->string('linkedin_id')->nullable()->unique(),
-                        'show_bio', 'show_studies', 'show_jobs', 'show_skills', 'show_social_links', 'show_profile_photo' => $table->boolean($column)->default(true),
-                        default => $table->boolean($column)->default(false),
+                        'show_bio', 'show_studies', 'show_jobs', 'show_skills', 'show_social_links', 'show_profile_photo',
+                        'show_phone', 'show_mobile', 'show_contact_email', 'show_address' => $table->boolean($column)->default(true),
+                        default => $table->boolean($column)->default(true),
                     };
                 }
             });

@@ -60,12 +60,12 @@ class UserVisibility extends Model
             'show_skills' => true,
             'show_social_links' => true,
             'show_profile_photo' => true,
-            'show_phone' => false,
-            'show_mobile' => false,
-            'show_contact_email' => false,
-            'show_address' => false,
-            'show_instagram' => false,
-            'show_facebook' => false,
+            'show_phone' => true,
+            'show_mobile' => true,
+            'show_contact_email' => true,
+            'show_address' => true,
+            'show_instagram' => true,
+            'show_facebook' => true,
         ];
     }
 

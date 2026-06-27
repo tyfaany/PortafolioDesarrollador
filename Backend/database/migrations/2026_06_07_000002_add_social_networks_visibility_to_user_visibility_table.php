@@ -13,13 +13,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('user_visibility', function (Blueprint $table) {
-            $table->boolean('show_instagram')->default(false)->after('show_address');
-            $table->boolean('show_facebook')->default(false)->after('show_instagram');
+            $table->boolean('show_instagram')->default(true)->after('show_address');
+            $table->boolean('show_facebook')->default(true)->after('show_instagram');
         });
 
         DB::table('user_visibility')->update([
-            'show_instagram' => false,
-            'show_facebook' => false,
+            'show_instagram' => true,
+            'show_facebook' => true,
         ]);
     }
 

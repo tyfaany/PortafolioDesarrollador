@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
 {
     Schema::table('users', function (Blueprint $table) {
-        $table->boolean('show_phone')->default(false);
-        $table->boolean('show_mobile')->default(false);
-        $table->boolean('show_contact_email')->default(false);
-        $table->boolean('show_address')->default(false);
+        $table->boolean('show_phone')->default(true);
+        $table->boolean('show_mobile')->default(true);
+        $table->boolean('show_contact_email')->default(true);
+        $table->boolean('show_address')->default(true);
     });
 }
 

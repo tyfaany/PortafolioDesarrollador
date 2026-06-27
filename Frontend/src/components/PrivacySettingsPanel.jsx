@@ -81,9 +81,11 @@ const DEFAULT_PRIVACY = {
   show_mobile: true,
   show_contact_email: true,
   show_address: true,
-  show_instagram: false,
-  show_facebook: false,
+  show_instagram: true,
+  show_facebook: true,
 };
+
+const PRIVACY_FIELDS = Object.keys(DEFAULT_PRIVACY);
 
 function isSectionVisible(section, privacyConfig) {
   if (!Array.isArray(section.fields) || section.fields.length === 0) {
@@ -153,10 +155,21 @@ function PrivacySettingsPanel() {
     };
   }, []);
 
-  const visibleSummary = useMemo(() => {
-    const visibleCount = sections.filter((section) => section.visible).length;
-    return `${visibleCount} de ${sections.length} secciones configurables visibles`;
-  }, [sections]);
+  const visibleCount = useMemo(
+    () => sections.filter((section) => section.visible).length,
+    [sections],
+  );
+
+  const visibleSummary = useMemo(
+    () => `${visibleCount} de ${sections.length} secciones configurables visibles`,
+    [sections.length, visibleCount],
+  );
+
+  const showAllLabel = visibleCount === 0 ? 'Mostrar todo' : 'Ocultar todo';
+  const showAllLoadingLabel = visibleCount === 0 ? 'Mostrando' : 'Ocultando';
+  const showAllIcon = visibleCount === 0 ? mdiLockOpenVariantOutline : mdiLockOutline;
+  const showAllButtonClassName =
+    visibleCount === 0 ? 'softsave-button' : 'softsave-button softsave-button--danger';
 
   const toggleSection = async (sectionId) => {
     if (isUpdating) {
@@ -196,37 +209,39 @@ function PrivacySettingsPanel() {
     }
   };
 
-  const hideAll = async () => {
+  const toggleAllVisibility = async () => {
     if (isHidingAll || isLoading) {
       return;
     }
 
-    const hiddenConfig = {
-      show_in_search: false,
-      show_bio: false,
-      show_studies: false,
-      show_jobs: false,
-      show_skills: false,
-      show_social_links: false,
-      show_profile_photo: false,
-      show_phone: false,
-      show_mobile: false,
-      show_contact_email: false,
-      show_address: false,
-      show_instagram: false,
-      show_facebook: false,
-    };
+    const shouldShowAll = visibleCount === 0;
+    const nextConfig = PRIVACY_FIELDS.reduce(
+      (accumulator, field) => ({
+        ...accumulator,
+        [field]: shouldShowAll,
+      }),
+      {},
+    );
 
     setIsHidingAll(true);
     try {
-      await actualizarPrivacidad(hiddenConfig);
+      await actualizarPrivacidad(nextConfig);
       setPrivacyConfig((current) => ({
         ...current,
-        ...hiddenConfig,
+        ...nextConfig,
       }));
-      showFeedback('Se ocultaron todas las secciones configurables del perfil.');
+      showFeedback(
+        shouldShowAll
+          ? 'Se mostraron todas las secciones configurables del perfil.'
+          : 'Se ocultaron todas las secciones configurables del perfil.',
+      );
     } catch {
-      showFeedback('No se pudo ocultar todo. Intenta nuevamente.', 'error');
+      showFeedback(
+        shouldShowAll
+          ? 'No se pudo mostrar todo. Intenta nuevamente.'
+          : 'No se pudo ocultar todo. Intenta nuevamente.',
+        'error',
+      );
     } finally {
       setIsHidingAll(false);
     }
@@ -310,12 +325,14 @@ function PrivacySettingsPanel() {
           <div className="softsave-privacy__general-actions">
             <button
               type="button"
-              className="softsave-button softsave-button--danger"
-              onClick={hideAll}
+              className={showAllButtonClassName}
+              onClick={toggleAllVisibility}
               disabled={isHidingAll || isLoading}
+              data-loading={isHidingAll ? 'true' : 'false'}
+              aria-busy={isHidingAll}
             >
-              <Icon path={mdiLockOutline} size={0.82} />
-              {isHidingAll ? 'Ocultando...' : 'Ocultar todo'}
+              <Icon path={showAllIcon} size={0.82} />
+              {isHidingAll ? showAllLoadingLabel : showAllLabel}
             </button>
           </div>
         </div>
