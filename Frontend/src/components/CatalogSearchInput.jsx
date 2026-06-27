@@ -49,6 +49,8 @@ function CatalogSearchInput({
   getOptionKey = getDefaultOptionKey,
   emptyText = 'No hay coincidencias en el catalogo.',
   clearLabel = 'Limpiar busqueda',
+  hideExactMatch = true,
+  hideLabel = false,
   onFocus = undefined,
   onBlur = undefined,
 }) {
@@ -94,7 +96,7 @@ function CatalogSearchInput({
 
     return normalizedOptions
       .filter((option) => option.labelLower.includes(query))
-      .filter((option) => option.labelLower !== query)
+      .filter((option) => !hideExactMatch || option.labelLower !== query)
       .sort((optionA, optionB) => {
         const aStarts = optionA.labelLower.startsWith(query);
         const bStarts = optionB.labelLower.startsWith(query);
@@ -106,7 +108,7 @@ function CatalogSearchInput({
         return optionA.label.localeCompare(optionB.label, 'es', { sensitivity: 'base' });
       })
       .slice(0, Math.max(1, maxResults));
-  }, [maxResults, normalizedOptions, value]);
+  }, [hideExactMatch, maxResults, normalizedOptions, value]);
 
   const hasExactMatch = useMemo(() => {
     const query = normalizeQuery(value);
@@ -126,7 +128,7 @@ function CatalogSearchInput({
       return;
     }
 
-    if (!normalizeQuery(value) || hasExactMatch) {
+    if (!normalizeQuery(value) || (hideExactMatch && hasExactMatch)) {
       setIsOpen(false);
       setActiveIndex(-1);
       return;
@@ -134,7 +136,7 @@ function CatalogSearchInput({
 
     setIsOpen(filteredOptions.length > 0);
     setActiveIndex(filteredOptions.length > 0 ? 0 : -1);
-  }, [filteredOptions.length, hasExactMatch, value]);
+  }, [filteredOptions.length, hasExactMatch, hideExactMatch, value]);
 
   useEffect(() => {
     const handlePointerDown = (event) => {
@@ -216,7 +218,10 @@ function CatalogSearchInput({
 
   return (
     <div className="softsave-catalog-search" ref={wrapperRef}>
-      <label className="softsave-catalog-search__label" htmlFor={inputId}>
+      <label
+        className={`softsave-catalog-search__label ${hideLabel ? 'softsave-catalog-search__label--sr-only' : ''}`}
+        htmlFor={inputId}
+      >
         {label}
         {required ? (
           <span
@@ -249,7 +254,7 @@ function CatalogSearchInput({
               return;
             }
 
-            if (normalizeQuery(value) && filteredOptions.length > 0 && !hasExactMatch) {
+            if (normalizeQuery(value) && filteredOptions.length > 0 && !(hideExactMatch && hasExactMatch)) {
               setIsOpen(true);
             }
             onFocus?.(event);
@@ -286,7 +291,7 @@ function CatalogSearchInput({
           </button>
         ) : null}
 
-        {showDropdown || (normalizeQuery(value) && !filteredOptions.length && !hasExactMatch) ? (
+        {showDropdown || (normalizeQuery(value) && !filteredOptions.length && !(hideExactMatch && hasExactMatch)) ? (
           <CatalogSuggestionDropdown
             listId={listId}
             options={filteredOptions}
@@ -295,7 +300,7 @@ function CatalogSearchInput({
             onOptionHover={setActiveIndex}
             emptyText={emptyText}
             showEmpty={Boolean(
-              normalizeQuery(value) && !filteredOptions.length && !hasExactMatch,
+              normalizeQuery(value) && !filteredOptions.length && !(hideExactMatch && hasExactMatch),
             )}
             optionActionText=""
           />
@@ -333,6 +338,8 @@ CatalogSearchInput.propTypes = {
   getOptionKey: PropTypes.func,
   emptyText: PropTypes.string,
   clearLabel: PropTypes.string,
+  hideExactMatch: PropTypes.bool,
+  hideLabel: PropTypes.bool,
   onFocus: PropTypes.func,
   onBlur: PropTypes.func,
 };

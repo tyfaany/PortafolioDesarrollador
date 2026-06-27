@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
-use App\Models\ProjectTechnology;
 use App\Models\User;
 use App\QueryFilters\TechFilter;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,57 +16,15 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class ProjectController extends Controller
 {
-    private function normalizeTechnologyName(string $technology): string
-    {
-        return trim(preg_replace('/\s+/u', ' ', $technology) ?? '');
-    }
-
-    private function resolveProjectTechnology(string $technology): ?ProjectTechnology
-    {
-        $normalizedTechnology = $this->normalizeTechnologyName($technology);
-
-        if ($normalizedTechnology === '') {
-            return null;
-        }
-
-        if (ctype_digit($normalizedTechnology)) {
-            $existingTechnology = ProjectTechnology::find((int) $normalizedTechnology);
-
-            if ($existingTechnology) {
-                return $existingTechnology;
-            }
-        }
-
-        $lowerTechnology = mb_strtolower($normalizedTechnology, 'UTF-8');
-        $existingTechnology = ProjectTechnology::query()
-            ->whereRaw('LOWER(TRIM(name)) = ?', [$lowerTechnology])
-            ->first();
-
-        if ($existingTechnology) {
-            return $existingTechnology;
-        }
-
-        return ProjectTechnology::create([
-            'name' => $normalizedTechnology,
-        ]);
-    }
-
     /**
      * @return array<int>
      */
     private function syncProjectTechnologies(array $technologies): array
     {
-        $technologyIds = [];
-
-        foreach ($technologies as $technology) {
-            $resolvedTechnology = $this->resolveProjectTechnology((string) $technology);
-
-            if ($resolvedTechnology) {
-                $technologyIds[] = $resolvedTechnology->id;
-            }
-        }
-
-        return array_values(array_unique($technologyIds));
+        return array_values(array_unique(array_map(
+            static fn ($technology) => (int) $technology,
+            $technologies,
+        )));
     }
 
     private function getPlainTextDescriptionLength(string $description): int
@@ -167,7 +124,7 @@ class ProjectController extends Controller
             'title' => 'required|string|min:5|max:100', // Mínimo 5, máximo 100 caracteres[cite: 2]
             'description' => 'required|string', // Validamos el texto visible por separado
             'technologies' => 'required|array|min:1|max:15', // Selector múltiple, mín 1, máx 15[cite: 2]
-            'technologies.*' => 'required|string|max:100', // Acepta IDs del catálogo o nuevas tecnologías escritas por el usuario
+            'technologies.*' => 'required|integer|exists:project_technologies,id', // Solo IDs válidos del catálogo[cite: 2]
             'image' => 'nullable|image|mimes:jpeg,png|max:10240', // Formato JPEG/PNG, máx 10MB[cite: 2]
             'start_date' => 'required|date',
             'end_date' => 'required_unless:is_in_progress,1|date',
@@ -262,7 +219,7 @@ class ProjectController extends Controller
             'title' => 'required|string|min:5|max:100',
             'description' => 'required|string',
             'technologies' => 'required|array|min:1|max:15',
-            'technologies.*' => 'required|string|max:100',
+            'technologies.*' => 'required|integer|exists:project_technologies,id',
             'image' => 'nullable|image|mimes:jpeg,png|max:10240',
             'start_date' => 'required|date',
             'end_date' => 'required_unless:is_in_progress,1|date',

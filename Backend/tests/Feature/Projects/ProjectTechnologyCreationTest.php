@@ -3,7 +3,6 @@
 namespace Tests\Feature\Projects;
 
 use App\Models\Project;
-use App\Models\ProjectTechnology;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -13,7 +12,7 @@ class ProjectTechnologyCreationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_it_creates_a_new_project_technology_when_the_user_types_a_custom_value(): void
+    public function test_it_rejects_custom_project_technology_values_and_requires_catalog_ids(): void
     {
         $user = User::factory()->create([
             'role' => 'owner',
@@ -31,22 +30,14 @@ class ProjectTechnologyCreationTest extends TestCase
             'is_public' => true,
         ]);
 
-        $response->assertCreated()
-            ->assertJsonPath('project.technologies.0.name', 'Bash');
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['technologies.0']);
 
-        $projectId = $response->json('project.id');
-        $technologyId = ProjectTechnology::where('name', 'Bash')->value('id');
-
-        $this->assertDatabaseHas('project_technologies', [
+        $this->assertDatabaseMissing('project_technologies', [
             'name' => 'Bash',
         ]);
 
-        $this->assertDatabaseHas('project_technology', [
-            'project_id' => $projectId,
-            'technology_id' => $technologyId,
-        ]);
-
-        $this->assertDatabaseHas('projects', [
+        $this->assertDatabaseMissing('projects', [
             'name' => 'Proyecto con Bash',
         ]);
     }

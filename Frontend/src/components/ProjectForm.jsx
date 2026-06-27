@@ -3,6 +3,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import Icon from '@mdi/react';
 import PropTypes from 'prop-types';
+import CatalogSearchInput from './CatalogSearchInput';
 import {
   mdiCheckCircleOutline,
   mdiClose,
@@ -251,6 +252,7 @@ function ProjectForm({
   );
   const [imageRemoved, setImageRemoved] = useState(false);
   const [technologySuggestions, setTechnologySuggestions] = useState([]);
+  const [technologySearch, setTechnologySearch] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const editorToolbarId = useId().replace(/:/g, '');
   const quillModules = useMemo(() => ({
@@ -313,6 +315,7 @@ function ProjectForm({
     setImagePreview(nextState.currentImagePreview || '');
     setImageRemoved(false);
     setIsDirty(false);
+    setTechnologySearch('');
   }, [initialData, mode, project]);
 
   useEffect(() => {
@@ -361,6 +364,11 @@ function ProjectForm({
 
   const cardTitle = mode === 'create' ? 'Nuevo proyecto' : formData.title || 'Proyecto personal';
   const selectedTechs = formData.technologies;
+  const availableTechnologySuggestions = useMemo(() => (
+    technologySuggestions.filter((technology) => (
+      !selectedTechs.some((selected) => Number(selected.id) === Number(technology.id))
+    ))
+  ), [selectedTechs, technologySuggestions]);
 
   const visiblePreview = useMemo(() => {
     if (imageRemoved) {
@@ -413,6 +421,11 @@ function ProjectForm({
     if (selectedTechs.some((item) => (
       Number(item.id) === Number(normalizedTechnology.id)
     ))) {
+      setErrors((current) => ({
+        ...current,
+        technologies: 'Esa tecnologia ya fue agregada.',
+      }));
+      setTechnologySearch('');
       return;
     }
 
@@ -421,10 +434,12 @@ function ProjectForm({
         ...current,
         technologies: 'Puedes seleccionar un maximo de 15 tecnologias.',
       }));
+      setTechnologySearch('');
       return;
     }
 
     updateField('technologies', [...selectedTechs, normalizedTechnology]);
+    setTechnologySearch('');
   };
 
   const handleRemoveTechnology = (technologyToRemove) => {
@@ -560,6 +575,7 @@ function ProjectForm({
 
         setSubmitMessage('Proyecto guardado exitosamente.');
         showFeedback('Proyecto guardado exitosamente.');
+        setTechnologySearch('');
         onProjectSaved(createdProject);
         setIsDirty(false);
       } else {
@@ -573,6 +589,7 @@ function ProjectForm({
 
         setSubmitMessage('Cambios guardados exitosamente');
         showFeedback('Cambios guardados exitosamente');
+        setTechnologySearch('');
         onProjectSaved(updatedProject);
         setIsDirty(false);
       }
@@ -640,6 +657,7 @@ function ProjectForm({
     setImagePreview(resetState.currentImagePreview || '');
     setImageRemoved(false);
     setIsDirty(false);
+    setTechnologySearch('');
   };
 
   const openConfirmModal = ({ title, message, confirmText, onConfirm }) => {
@@ -792,6 +810,18 @@ function ProjectForm({
 
         <div className="softsave-project-form__field">
           <span className="softsave-project-form__label">Tecnologias utilizadas *</span>
+          <CatalogSearchInput
+            label="Buscar tecnología"
+            catalog={availableTechnologySuggestions}
+            value={technologySearch}
+            onChange={setTechnologySearch}
+            onSelect={(technology) => handleAddTechnology(technology)}
+            placeholder="Escribe para buscar en el catálogo..."
+            helperText="Solo puedes seleccionar tecnologías del catálogo."
+            emptyText="No hay coincidencias en el catálogo de tecnologías."
+            hideExactMatch={false}
+            hideLabel
+          />
           <div className="softsave-project-form__chips">
             {selectedTechs.map((technology) => (
               <span
@@ -809,25 +839,10 @@ function ProjectForm({
                 </button>
               </span>
             ))}
-
-            {technologySuggestions.filter((technology) => {
-              return !selectedTechs.some((selected) => Number(selected.id) === Number(technology.id));
-            })
-              .slice(0, 5)
-              .map((technology) => (
-                <button
-                  key={technology.id}
-                  type="button"
-                  className="softsave-project-form__chip"
-                  onClick={() => handleAddTechnology(technology)}
-                >
-                  {technology.name}
-                </button>
-              ))}
           </div>
 
           <span className="softsave-project-form__hint">
-            Seleccionadas {selectedTechs.length} de 15 tecnologias permitidas. El nombre se toma del catalogo por ID.
+            Seleccionadas {selectedTechs.length} de 15 tecnologias permitidas.
           </span>
           {errors.technologies ? <span className="error-text">{errors.technologies}</span> : null}
         </div>

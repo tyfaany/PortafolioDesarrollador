@@ -1163,6 +1163,11 @@
   font-size: 0.9rem;
 }
 
+.softsave-projects-card--modal .softsave-catalog-search__input {
+  padding-left: 3.85rem;
+  padding-right: 3rem;
+}
+
 .softsave-projects-card--modal .softsave-project-form__toolbar {
   border: 1px solid rgba(var(--color-texto-rgb), 0.16);
   border-bottom: none;

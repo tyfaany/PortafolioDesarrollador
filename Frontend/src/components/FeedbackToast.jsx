@@ -11,7 +11,7 @@ function FeedbackToast({ toastId = 0, message = '', type = 'success', onClose })
 
     const temporizador = window.setTimeout(() => {
       onClose();
-    }, 3000);
+    }, 5000);
 
     return () => {
       window.clearTimeout(temporizador);

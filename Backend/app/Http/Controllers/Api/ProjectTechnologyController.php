@@ -9,7 +9,9 @@ class ProjectTechnologyController extends Controller
 {
     public function index()
     {
-        $technologies = ProjectTechnology::all();
+        $technologies = ProjectTechnology::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return response()->json($technologies, 200);
     }
