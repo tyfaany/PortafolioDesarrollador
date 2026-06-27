@@ -1,0 +1,123 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class SoftSkillSeeder extends Seeder
+{
+    public function run(): void
+    {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::table('soft_skills')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        
+        $skills = [
+            'Negociacion de plazos',
+            'Seguridad psicologica en equipos',
+            'Negociacion',
+            'Autoaprendizaje',
+            'Motivacion de equipos',
+            'Sinceridad radical (Radical Candor)',
+            'Tolerancia a la frustracion',
+            'Design Thinking',
+            'Analisis FODA personal',
+            'Storytelling tecnico',
+            'Metodologia Scrum',
+            'Humildad intelectual',
+            'Pensamiento estrategico',
+            'Delegacion de tareas',
+            'Aceptacion de la critica',
+            'Facilitacion de reuniones',
+            'Inteligencia emocional',
+            'Resolucion de problemas',
+            'Atencion al cliente',
+            'Mentalidad Agile',
+            'Orientacion a resultados',
+            'Mapas de empatia',
+            'Comunicacion asertiva',
+            'Negociacion de requerimientos',
+            'Manejo de crisis',
+            'Construccion de relaciones (Networking)',
+            'Gestion del estres',
+            'Gestion de la diversidad',
+            'Resiliencia',
+            'Pensamiento sistemico',
+            'Resolucion de problemas con 5 Porques',
+            'Liderazgo',
+            'Orientacion al detalle',
+            'Capacidad analitica',
+            'Dinamicas de Team Building',
+            'Comunicacion intercultural',
+            'Gestion de expectativas',
+            'Coaching',
+            'Organizacion',
+            'Mentoria (Mentoring)',
+            'Curiosidad intelectual',
+            'Toma de requerimientos interactiva',
+            'Innovacion',
+            'Evitacion del Burnout',
+            'Trabajo en equipo',
+            'Responsabilidad',
+            'Transparencia radical',
+            'Flexibilidad',
+            'Inclusion',
+            'Productividad personal',
+            'Vision de producto',
+            'Pensamiento lateral',
+            'Alineacion de objetivos',
+            'Pensamiento critico',
+            'Marcos de trabajo Lean',
+            'Gestion del cambio (Change Management)',
+            'Cultura DevOps',
+            'Resolucion de impasses',
+            'Manejo de la ambiguedad',
+            'Gestion de la energia',
+            'Persuasion',
+            'Etica profesional',
+            'Puntualidad',
+            'Redaccion tecnica',
+            'Toma de decisiones',
+            'Influencia positiva',
+            'Creatividad',
+            'Priorizacion MoSCoW',
+            'Escucha activa',
+            'Colaboracion remota',
+            'Celebracion de logros (Reconocimiento)',
+            'Empatia',
+            'Iniciativa',
+            'Establecimiento de objetivos SMART',
+            'Gestion del tiempo',
+            'Pair Programming (Colaboracion)',
+            'Proactividad',
+            'Gestion del tiempo Pomodoro',
+            'Capacidad de aprendizaje rapido',
+            'Responsabilidad compartida (Accountability)',
+            'Presentaciones efectivas',
+            'Sinergia de equipo',
+            'Diagramas de Ishikawa',
+            'Uso de asincronia en comunicacion',
+            'Mob Programming (Dinamica)',
+            'Oratoria',
+            'Planificacion Scrum Poker',
+            'Soporte empatico',
+            'Filosofia Kanban',
+            'Comunicacion no verbal',
+            'Autodisciplina',
+            'Feedback constructivo',
+            'Adaptabilidad al cambio',
+            'Foco en el usuario (User-centric)',
+            'Paciencia',
+            'Revisiones de codigo empaticas (Code Reviews)',
+            'Resolucion de conflictos',
+            'Capacidad de sintesis',
+            'Grooming de backlog cooperativo',
+            'Planificacion de proyectos',
+        ];
+
+        foreach ($skills as $skill) {
+            DB::table('soft_skills')->updateOrInsert(['name' => $skill]);
+        }
+    }
+}
