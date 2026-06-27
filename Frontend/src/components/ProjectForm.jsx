@@ -17,31 +17,8 @@ import {
 import { actualizarProyecto, crearProyecto, obtenerTecnologias } from '../services/authService';
 import useFeedback from '../hooks/useFeedback';
 
-const TECHNOLOGY_SUGGESTIONS = [
-  'JavaScript',
-  'React',
-  'Python',
-  'Java',
-  'Node.js',
-  'MongoDB',
-  'Docker',
-  'TypeScript',
-  'Tailwind CSS',
-  'Laravel',
-];
-
 const DESCRIPTION_MIN_LENGTH = 20;
 const DESCRIPTION_MAX_LENGTH = 500;
-
-function toTechnologyOption(technology) {
-  if (technology && typeof technology === 'object') {
-    const id = technology.id ?? null;
-    const name = technology.name ?? '';
-    return id && name ? { id, name } : null;
-  }
-
-  return null;
-}
 
 function normalizeTechnologyName(technology) {
   if (technology && typeof technology === 'object') {
@@ -51,34 +28,34 @@ function normalizeTechnologyName(technology) {
   return typeof technology === 'string' ? technology.trim() : '';
 }
 
-function resolveTechnologyOption(technology, suggestions) {
-  const directOption = toTechnologyOption(technology);
-  if (directOption) {
-    return directOption;
+function normalizeTechnologyId(technology) {
+  if (technology && typeof technology === 'object') {
+    const numericId = Number(technology.id ?? null);
+    return Number.isInteger(numericId) && numericId > 0 ? numericId : null;
   }
 
-  const name = normalizeTechnologyName(technology);
-  if (!name) {
-    return null;
-  }
-
-  const source = Array.isArray(suggestions) ? suggestions : [];
-  const match = source.find((item) => {
-    const option = toTechnologyOption(item);
-    return option ? option.name.trim().toLowerCase() === name.toLowerCase() : false;
-  });
-
-  if (match) {
-    return toTechnologyOption(match);
-  }
-
-  return {
-    id: null,
-    name,
-  };
+  const numericId = Number(technology);
+  return Number.isInteger(numericId) && numericId > 0 ? numericId : null;
 }
 
-function getTechnologyName(technology) {
+function toTechnologyOption(technology) {
+  const id = normalizeTechnologyId(technology);
+  const name = normalizeTechnologyName(technology);
+
+  return id && name ? { id, name } : null;
+}
+
+function getTechnologyName(technology, suggestions = []) {
+  const id = normalizeTechnologyId(technology);
+  const source = Array.isArray(suggestions) ? suggestions : [];
+
+  if (id) {
+    const match = source.find((item) => normalizeTechnologyId(item) === id);
+    if (match) {
+      return normalizeTechnologyName(match);
+    }
+  }
+
   return normalizeTechnologyName(technology);
 }
 
@@ -89,18 +66,15 @@ function normalizeSelectedTechnologies(technologies) {
 
   return technologies
     .map((technology) => {
-      if (technology && typeof technology === 'object' && technology.id && technology.name) {
-        return {
-          id: technology.id,
-          name: technology.name,
-        };
-      }
-
-      if (typeof technology === 'string' && technology.trim()) {
+      const id = normalizeTechnologyId(technology);
+      if (!id) {
         return null;
       }
 
-      return null;
+      return {
+        id,
+        name: normalizeTechnologyName(technology),
+      };
     })
     .filter(Boolean);
 }
@@ -173,20 +147,10 @@ function normalizeTechnologyValues(technologies) {
 
   return technologies
     .map((technology) => {
-      if (technology && typeof technology === 'object') {
-        const rawId = technology.id ?? null;
-        const numericId = Number(rawId);
-
-        if (Number.isInteger(numericId) && numericId > 0) {
-          return String(numericId);
-        }
-
-        return normalizeTechnologyName(technology);
-      }
-
-      return normalizeTechnologyName(technology);
+      const id = normalizeTechnologyId(technology);
+      return id ? String(id) : null;
     })
-    .filter((technology) => technology !== null && technology !== undefined && technology !== '');
+    .filter(Boolean);
 }
 
 function resolveProjectImageUrl(rawUrl) {
@@ -281,14 +245,12 @@ function ProjectForm({
   const [errors, setErrors] = useState({});
   const [submitMessage, setSubmitMessage] = useState('');
   const [imageError, setImageError] = useState('');
-  const [techInput, setTechInput] = useState('');
-  const [showTechInput, setShowTechInput] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(
     mode === 'edit' && project ? resolveProjectImageUrl(project.image_url || project.image_path || '') : (initialData?.currentImagePreview || ''),
   );
   const [imageRemoved, setImageRemoved] = useState(false);
-  const [technologySuggestions, setTechnologySuggestions] = useState(TECHNOLOGY_SUGGESTIONS);
+  const [technologySuggestions, setTechnologySuggestions] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const editorToolbarId = useId().replace(/:/g, '');
   const quillModules = useMemo(() => ({
@@ -347,8 +309,6 @@ function ProjectForm({
     setErrors({});
     setSubmitMessage('');
     setImageError('');
-    setTechInput('');
-    setShowTechInput(false);
     setImageFile(null);
     setImagePreview(nextState.currentImagePreview || '');
     setImageRemoved(false);
@@ -377,8 +337,8 @@ function ProjectForm({
         const technologies = Array.isArray(response?.data) ? response.data : [];
         const normalizedSuggestions = technologies
           .map((technology) => ({
-            id: technology?.id,
-            name: technology?.name,
+            id: normalizeTechnologyId(technology),
+            name: normalizeTechnologyName(technology),
           }))
           .filter((technology) => technology.id && technology.name);
 
@@ -387,7 +347,7 @@ function ProjectForm({
         }
       } catch {
         if (isMounted) {
-          setTechnologySuggestions(TECHNOLOGY_SUGGESTIONS);
+          setTechnologySuggestions([]);
         }
       }
     };
@@ -440,24 +400,19 @@ function ProjectForm({
   };
 
   const handleAddTechnology = (technology) => {
-    const normalizedTechnology = resolveTechnologyOption(technology, technologySuggestions);
-    const normalizedTechnologyName = getTechnologyName(normalizedTechnology);
-    const normalizedTechnologyNameLower = normalizedTechnologyName.toLowerCase();
+    const normalizedTechnology = toTechnologyOption(technology);
 
     if (!normalizedTechnology) {
       setErrors((current) => ({
         ...current,
-        technologies: 'Escribe una tecnologia valida o selecciona una del catalogo.',
+        technologies: 'Selecciona una tecnologia valida del catalogo.',
       }));
       return;
     }
 
     if (selectedTechs.some((item) => (
-      (normalizedTechnology.id && item.id === normalizedTechnology.id)
-      || getTechnologyName(item).toLowerCase() === normalizedTechnologyNameLower
+      Number(item.id) === Number(normalizedTechnology.id)
     ))) {
-      setShowTechInput(false);
-      setTechInput('');
       return;
     }
 
@@ -470,19 +425,13 @@ function ProjectForm({
     }
 
     updateField('technologies', [...selectedTechs, normalizedTechnology]);
-    setShowTechInput(false);
-    setTechInput('');
   };
 
   const handleRemoveTechnology = (technologyToRemove) => {
     updateField(
       'technologies',
       selectedTechs.filter((technology) => {
-        if (technology.id && technologyToRemove.id) {
-          return technology.id !== technologyToRemove.id;
-        }
-
-        return getTechnologyName(technology).toLowerCase() !== getTechnologyName(technologyToRemove).toLowerCase();
+        return Number(technology.id) !== Number(technologyToRemove.id);
       }),
     );
   };
@@ -687,8 +636,6 @@ function ProjectForm({
     setErrors({});
     setSubmitMessage('');
     setImageError('');
-    setTechInput('');
-    setShowTechInput(false);
     setImageFile(null);
     setImagePreview(resetState.currentImagePreview || '');
     setImageRemoved(false);
@@ -848,14 +795,14 @@ function ProjectForm({
           <div className="softsave-project-form__chips">
             {selectedTechs.map((technology) => (
               <span
-                key={technology.id ?? getTechnologyName(technology).toLowerCase()}
+                key={technology.id}
                 className="softsave-project-form__chip softsave-project-form__chip--selected"
               >
-                {getTechnologyName(technology)}
+                {getTechnologyName(technology, technologySuggestions)}
                 <button
                   type="button"
                   className="softsave-project-form__chip-remove"
-                  aria-label={`Eliminar ${getTechnologyName(technology)}`}
+                  aria-label={`Eliminar ${getTechnologyName(technology, technologySuggestions)}`}
                   onClick={() => handleRemoveTechnology(technology)}
                 >
                   <Icon path={mdiClose} size={0.7} />
@@ -864,63 +811,23 @@ function ProjectForm({
             ))}
 
             {technologySuggestions.filter((technology) => {
-              const option = toTechnologyOption(technology);
-              if (option) {
-                return !selectedTechs.some((selected) => (
-                  selected.id === option.id
-                  || getTechnologyName(selected).toLowerCase() === option.name.toLowerCase()
-                ));
-              }
-
-              if (typeof technology === 'string') {
-                return !selectedTechs.some((selected) => getTechnologyName(selected).toLowerCase() === technology.toLowerCase());
-              }
-
-              return false;
+              return !selectedTechs.some((selected) => Number(selected.id) === Number(technology.id));
             })
               .slice(0, 5)
               .map((technology) => (
                 <button
-                  key={typeof technology === 'object' ? technology.id : technology}
+                  key={technology.id}
                   type="button"
                   className="softsave-project-form__chip"
                   onClick={() => handleAddTechnology(technology)}
                 >
-                  {typeof technology === 'object' ? technology.name : technology}
+                  {technology.name}
                 </button>
               ))}
-
-            <button
-              type="button"
-              className="softsave-project-form__chip softsave-project-form__chip--add"
-              onClick={() => setShowTechInput((current) => !current)}
-            >
-              + Agregar
-            </button>
           </div>
 
-          {showTechInput ? (
-            <div className="softsave-project-form__tech-editor">
-              <input
-                type="text"
-                className="softsave-input"
-                value={techInput}
-                maxLength={30}
-                placeholder="Ej: Vue, PostgreSQL, Figma"
-                onChange={(event) => setTechInput(event.target.value)}
-              />
-              <button
-                type="button"
-                className="softsave-button softsave-button--compact"
-                onClick={() => handleAddTechnology(techInput)}
-              >
-                Agregar tecnologia
-              </button>
-            </div>
-          ) : null}
-
           <span className="softsave-project-form__hint">
-            Seleccionadas {selectedTechs.length} de 15 tecnologias permitidas. Puedes escribir una tecnologia nueva si no aparece en el catalogo.
+            Seleccionadas {selectedTechs.length} de 15 tecnologias permitidas. El nombre se toma del catalogo por ID.
           </span>
           {errors.technologies ? <span className="error-text">{errors.technologies}</span> : null}
         </div>
