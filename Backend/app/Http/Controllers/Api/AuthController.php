@@ -17,6 +17,7 @@ use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\SocialAccount;
 use Laravel\Sanctum\PersonalAccessToken;
+use Throwable;
 
 
 class AuthController extends Controller
@@ -299,9 +300,7 @@ class AuthController extends Controller
                 $disk->makeDirectory('profile_photos');
             }
 
-            if ($user->profile_photo) {
-                $disk->delete($user->profile_photo);
-            }
+            $fotoAnterior = $user->profile_photo;
 
             $path = $request->file('photo')->store('profile_photos', 'public');
 
@@ -318,6 +317,10 @@ class AuthController extends Controller
 
             $user->profile_photo = $path;
             $user->save();
+
+            if ($fotoAnterior && $fotoAnterior !== $path) {
+                $this->eliminarFotoPerfilLocal($fotoAnterior);
+            }
 
             return response()->json([
                 'status' => 'success',
@@ -406,6 +409,99 @@ class AuthController extends Controller
     }
 
     /**
+     * Elimina una foto de perfil local si corresponde.
+     */
+    private function eliminarFotoPerfilLocal(?string $photoValue): void
+    {
+        $path = $this->obtenerRutaFotoPerfilLocal($photoValue);
+
+        if (! $path) {
+            return;
+        }
+
+        Storage::disk('public')->delete($path);
+    }
+
+    /**
+     * Obtiene la ruta relativa del disco public cuando la referencia apunta a una foto local.
+     */
+    private function obtenerRutaFotoPerfilLocal(?string $photoValue): ?string
+    {
+        if (! $photoValue) {
+            return null;
+        }
+
+        $normalizada = trim($photoValue);
+
+        if ($normalizada === '') {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//i', $normalizada)) {
+            $path = parse_url($normalizada, PHP_URL_PATH);
+
+            if (! is_string($path) || $path === '') {
+                return null;
+            }
+
+            $path = ltrim($path, '/');
+
+            if (str_starts_with($path, 'storage/')) {
+                return substr($path, strlen('storage/'));
+            }
+
+            return null;
+        }
+
+        $path = ltrim($normalizada, '/');
+
+        if (str_starts_with($path, 'storage/')) {
+            return substr($path, strlen('storage/'));
+        }
+
+        return $path;
+    }
+
+    /**
+     * Intenta refrescar los datos públicos almacenados de LinkedIn desde el proveedor.
+     */
+    private function refrescarPerfilLinkedInDesdeProveedor(SocialAccount $socialAccount): bool
+    {
+        if (! $socialAccount->access_token) {
+            return false;
+        }
+
+        try {
+            /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
+            $driver = Socialite::driver('linkedin-openid');
+            $linkedinUser = $driver->userFromToken($socialAccount->access_token);
+
+            $avatarActualizado = $linkedinUser->getAvatar();
+            $nombreActualizado = $linkedinUser->getName();
+
+            $cambio = false;
+
+            if (!empty($avatarActualizado) && $socialAccount->avatar !== $avatarActualizado) {
+                $socialAccount->avatar = $avatarActualizado;
+                $cambio = true;
+            }
+
+            if (!empty($nombreActualizado) && $socialAccount->full_name !== $nombreActualizado) {
+                $socialAccount->full_name = $nombreActualizado;
+                $cambio = true;
+            }
+
+            if ($cambio) {
+                $socialAccount->save();
+            }
+
+            return true;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
      * Obtener datos de perfil importables desde una cuenta LinkedIn vinculada.
      */
     public function getLinkedInProfile(Request $request)
@@ -435,6 +531,8 @@ class AuthController extends Controller
             $user->linkedin_linked = true;
             $user->save();
         }
+
+        $this->refrescarPerfilLinkedInDesdeProveedor($socialAccount);
 
         $fotografia = $this->resolverUrlFotoPerfil($socialAccount->avatar)
             ?: $user->profile_photo_url;
@@ -497,6 +595,8 @@ class AuthController extends Controller
             ], 404, [], JSON_INVALID_UTF8_SUBSTITUTE);
         }
 
+        $this->refrescarPerfilLinkedInDesdeProveedor($socialAccount);
+
         $cambiosAplicados = [];
         $debeGuardar = false;
 
@@ -507,6 +607,7 @@ class AuthController extends Controller
         }
 
         if ($payload['import_photo'] && !empty($socialAccount->avatar)) {
+            $fotoAnterior = $user->profile_photo;
             $fotoLocal = $socialAccount->avatar;
 
             if (preg_match('/^https?:\/\//i', $fotoLocal)) {
@@ -523,6 +624,9 @@ class AuthController extends Controller
                 $cambiosAplicados[] = 'foto';
                 $debeGuardar = true;
                 $socialAccount->save();
+                if ($fotoAnterior && $fotoAnterior !== $fotoLocal) {
+                    $this->eliminarFotoPerfilLocal($fotoAnterior);
+                }
             }
         }
 
@@ -610,6 +714,9 @@ class AuthController extends Controller
 
             $user = $linkedSessionUser ?: $socialAccount->user;
             $avatarActualizado = $linkedinUser->getAvatar();
+            $accessToken = $linkedinUser->token ?? null;
+            $refreshToken = $linkedinUser->refreshToken ?? null;
+            $expiresIn = $linkedinUser->expiresIn ?? null;
 
             if (!empty($avatarActualizado)) {
                 $socialAccount->avatar = $avatarActualizado;
@@ -617,6 +724,15 @@ class AuthController extends Controller
             $nombreActualizado = $linkedinUser->getName();
             if (!empty($nombreActualizado)) {
                 $socialAccount->full_name = $nombreActualizado;
+            }
+            if (!empty($accessToken)) {
+                $socialAccount->access_token = $accessToken;
+            }
+            if (!empty($refreshToken)) {
+                $socialAccount->refresh_token = $refreshToken;
+            }
+            if (!empty($expiresIn)) {
+                $socialAccount->token_expires_at = now()->addSeconds((int) $expiresIn);
             }
             $socialAccount->save();
             $user->linkedin_linked = true;
@@ -646,6 +762,9 @@ class AuthController extends Controller
 
             // 5️⃣ Crear registro en social_accounts
             $avatarLinkedin = $linkedinUser->getAvatar();
+            $accessToken = $linkedinUser->token ?? null;
+            $refreshToken = $linkedinUser->refreshToken ?? null;
+            $expiresIn = $linkedinUser->expiresIn ?? null;
 
             SocialAccount::create([
                 'user_id' => $user->id,
@@ -653,6 +772,9 @@ class AuthController extends Controller
                 'provider_id' => $linkedinUser->getId(),
                 'avatar' => $avatarLinkedin,
                 'full_name' => $linkedinUser->getName(),
+                'access_token' => $accessToken,
+                'refresh_token' => $refreshToken,
+                'token_expires_at' => !empty($expiresIn) ? now()->addSeconds((int) $expiresIn) : null,
             ]);
             $user->linkedin_linked = true;
             $user->save();

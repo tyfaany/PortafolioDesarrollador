@@ -1412,7 +1412,7 @@ async function blobToDataUrl(blob) {
 }
 
 async function resolvePhotoDataUrl(profile) {
-  const photoUrl = profile?.photoUrl || '';
+  const photoUrl = profile?.photoUrl || profile?.profile_photo_url || profile?.profilePhotoUrl || '';
 
   if (!photoUrl) {
     return '';
@@ -1423,7 +1423,17 @@ async function resolvePhotoDataUrl(profile) {
   }
 
   try {
-    const response = await fetch(photoUrl, { mode: 'cors' });
+    const cacheBustedUrl = (() => {
+      try {
+        const url = new URL(photoUrl, window.location.origin);
+        url.searchParams.set('pdf', String(Date.now()));
+        return url.toString();
+      } catch {
+        return `${photoUrl}${photoUrl.includes('?') ? '&' : '?'}pdf=${Date.now()}`;
+      }
+    })();
+
+    const response = await fetch(cacheBustedUrl, { mode: 'cors', cache: 'no-store' });
     if (!response.ok) {
       throw new Error('No se pudo leer la imagen directamente.');
     }
@@ -1438,6 +1448,7 @@ async function resolvePhotoDataUrl(profile) {
     try {
       const response = await api.get(`/users/${profile.id}/profile-photo`, {
         responseType: 'blob',
+        params: { pdf: Date.now() },
       });
 
       const blob = response?.data;
