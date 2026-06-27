@@ -18,6 +18,18 @@ class TechnicalSkillController extends Controller
     }
 
     /**
+     * Catálogo de habilidades técnicas disponibles en la base de datos.
+     */
+    public function catalog()
+    {
+        $skills = TechnicalSkill::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return response()->json($skills, 200);
+    }
+
+    /**
      * HU-13: Asignar o actualizar el nivel de las habilidades (VERSIÓN DINÁMICA)
      */
     public function sync(Request $request)

@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
 import { mdiMagnify, mdiClose } from '@mdi/js';
+import CatalogSuggestionDropdown from './CatalogSuggestionDropdown';
 import '../styles/CatalogSearchInput.css';
 
 function getDefaultOptionLabel(option) {
@@ -197,7 +198,15 @@ function CatalogSearchInput({
     <div className="softsave-catalog-search" ref={wrapperRef}>
       <label className="softsave-catalog-search__label" htmlFor={inputId}>
         {label}
-        {required ? <span className="softsave-catalog-search__required" aria-hidden="true"> *</span> : null}
+        {required ? (
+          <span
+            className="softsave-catalog-search__required"
+            aria-hidden="true"
+          >
+            {" "}
+            *
+          </span>
+        ) : null}
       </label>
 
       <div className="softsave-catalog-search__control">
@@ -230,7 +239,9 @@ function CatalogSearchInput({
           aria-expanded={showDropdown}
           aria-controls={listId}
           aria-activedescendant={
-            showDropdown && activeIndex >= 0 ? `${listId}-option-${activeIndex}` : undefined
+            showDropdown && activeIndex >= 0
+              ? `${listId}-option-${activeIndex}`
+              : undefined
           }
         />
 
@@ -239,7 +250,7 @@ function CatalogSearchInput({
             type="button"
             className="softsave-catalog-search__clear"
             onClick={() => {
-              onChange('');
+              onChange("");
               setIsOpen(false);
               setActiveIndex(-1);
               inputRef.current?.focus();
@@ -250,41 +261,30 @@ function CatalogSearchInput({
           </button>
         ) : null}
 
-        {showDropdown ? (
-          <div className="softsave-catalog-search__panel">
-            <ul className="softsave-catalog-search__list custom-scrollbar" id={listId} role="listbox">
-              {filteredOptions.map((option, index) => (
-                <li key={option.key} role="presentation">
-                  <button
-                    id={`${listId}-option-${index}`}
-                    type="button"
-                    className={`softsave-catalog-search__option ${index === activeIndex ? 'is-active' : ''}`}
-                    onMouseEnter={() => setActiveIndex(index)}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => selectOption(option)}
-                    role="option"
-                    aria-selected={index === activeIndex}
-                  >
-                    <span className="softsave-catalog-search__option-label">{option.label}</span>
-                    <span className="softsave-catalog-search__option-action">Seleccionar</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-
-        {normalizeQuery(value) && !filteredOptions.length ? (
-          <div className="softsave-catalog-search__panel">
-            <div className="softsave-catalog-search__empty" role="status" aria-live="polite">
-              {emptyText}
-            </div>
-          </div>
+        {showDropdown || (normalizeQuery(value) && !filteredOptions.length) ? (
+          <CatalogSuggestionDropdown
+            listId={listId}
+            options={filteredOptions}
+            activeIndex={activeIndex}
+            onSelect={selectOption}
+            onOptionHover={setActiveIndex}
+            emptyText={emptyText}
+            showEmpty={Boolean(
+              normalizeQuery(value) && !filteredOptions.length,
+            )}
+            optionActionText=""
+          />
         ) : null}
       </div>
 
-      {helperText ? <p className="softsave-catalog-search__helper">{helperText}</p> : null}
-      {error ? <span className="error-text" role="alert">{error}</span> : null}
+      {helperText ? (
+        <p className="softsave-catalog-search__helper">{helperText}</p>
+      ) : null}
+      {error ? (
+        <span className="error-text" role="alert">
+          {error}
+        </span>
+      ) : null}
     </div>
   );
 }

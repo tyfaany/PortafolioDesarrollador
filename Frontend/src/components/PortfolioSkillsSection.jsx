@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Icon from '@mdi/react';
 import { mdiClose, mdiContentSaveOutline, mdiDeleteOutline, mdiOpenInNew, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
+import CatalogSearchInput from './CatalogSearchInput';
 import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import {
+  obtenerCatalogoSkillsTecnicas,
   obtenerSkillsTecnicas,
   obtenerSoftSkills,
   sincronizarSkillsTecnicas,
@@ -90,6 +92,42 @@ function normalizarSkillsTecnicas(skills) {
     .filter((skill) => skill?.name);
 }
 
+function normalizarCatalogoSkillsTecnicas(skills) {
+  if (!Array.isArray(skills)) {
+    return [];
+  }
+
+  return skills
+    .map((skill, indice) => {
+      if (typeof skill === 'string') {
+        const name = sanitizarTexto(skill);
+        if (!name) {
+          return null;
+        }
+
+        return {
+          id: `catalog-tech-${indice}-${name}`,
+          name,
+        };
+      }
+
+      if (skill && typeof skill === 'object') {
+        const name = sanitizarTexto(skill.name || skill.label || skill.title || skill.value || '');
+        if (!name) {
+          return null;
+        }
+
+        return {
+          id: skill.id || `catalog-tech-${indice}-${name}`,
+          name,
+        };
+      }
+
+      return null;
+    })
+    .filter(Boolean);
+}
+
 function normalizarHabilidadesBlandas(skills) {
   if (!Array.isArray(skills)) {
     return [];
@@ -165,7 +203,6 @@ function obtenerClaseNivel(nivel) {
 function PortfolioSkillsSection() {
   const { user } = useAuth();
   const { showFeedback } = useFeedback();
-  const skillInputRef = useRef(null);
   const softSkillsUsuario = useMemo(
     () => user?.softSkills ?? user?.soft_skills ?? [],
     [user?.softSkills, user?.soft_skills],
@@ -184,6 +221,7 @@ function PortfolioSkillsSection() {
   );
   const [tecnicas, setTecnicas] = useState(() => tecnicasDesdeContexto);
   const [blandas, setBlandas] = useState(() => blandasDesdeContexto);
+  const [catalogoTecnico, setCatalogoTecnico] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [mostrandoAgregarBlanda, setMostrandoAgregarBlanda] = useState(false);
@@ -254,6 +292,28 @@ function PortfolioSkillsSection() {
       sigueMontado = false;
     };
   }, [actualizarCacheSkills, blandasDesdeContexto, skillsCacheKey, softSkillsUsuario, tecnicasDesdeContexto, user?.skills]);
+
+  useEffect(() => {
+    let sigueMontado = true;
+
+    obtenerCatalogoSkillsTecnicas()
+      .then((respuesta) => {
+        if (!sigueMontado) {
+          return;
+        }
+
+        setCatalogoTecnico(normalizarCatalogoSkillsTecnicas(respuesta?.data));
+      })
+      .catch(() => {
+        if (sigueMontado) {
+          setCatalogoTecnico([]);
+        }
+      });
+
+    return () => {
+      sigueMontado = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!mensajeExito) {
@@ -357,9 +417,15 @@ function PortfolioSkillsSection() {
 
   const agregarHabilidadTecnica = async () => {
     const nombre = sanitizarTexto(skillTecnicaNueva);
+    const tecnicaCatalogo = catalogoTecnico.find((skill) => skill.name.toLowerCase() === nombre.toLowerCase());
 
     if (!nombre) {
       setErrores({ tecnica: 'Ingresa una habilidad técnica.' });
+      return;
+    }
+
+    if (!tecnicaCatalogo) {
+      setErrores({ tecnica: 'Selecciona una habilidad del catálogo técnico.' });
       return;
     }
 
@@ -373,7 +439,7 @@ function PortfolioSkillsSection() {
       return;
     }
 
-    if (tecnicas.some((skill) => skill.name.toLowerCase() === nombre.toLowerCase())) {
+    if (tecnicas.some((skill) => skill.name.toLowerCase() === tecnicaCatalogo.name.toLowerCase())) {
       setErrores({ tecnica: 'Esa habilidad técnica ya existe.' });
       return;
     }
@@ -381,8 +447,8 @@ function PortfolioSkillsSection() {
     const nuevasTecnicas = [
       ...tecnicas,
       {
-        id: `tech-${Date.now()}-${nombre}`,
-        name: nombre,
+        id: `tech-${Date.now()}-${tecnicaCatalogo.name}`,
+        name: tecnicaCatalogo.name,
         level: nivelNuevo,
         evidence_url: sanitizarUrl(evidenciaTecnicaNueva),
       },
@@ -680,368 +746,443 @@ function PortfolioSkillsSection() {
   return (
     <>
       <section className="softsave-portafolio-module-card">
-      <div className="softsave-portafolio-module-card__header">
-        <div className="softsave-portafolio-module-card__title-wrap">
-          <Icon path={mdiViewGridOutline} size={ICON_SIZES.section} className="softsave-portafolio-module-card__icon" />
-          <h2 className="softsave-portafolio-module-card__title">Habilidades</h2>
+        <div className="softsave-portafolio-module-card__header">
+          <div className="softsave-portafolio-module-card__title-wrap">
+            <Icon
+              path={mdiViewGridOutline}
+              size={ICON_SIZES.section}
+              className="softsave-portafolio-module-card__icon"
+            />
+            <h2 className="softsave-portafolio-module-card__title">
+              Habilidades
+            </h2>
+          </div>
+
+          <div className="softsave-portafolio-module-card__actions">
+            <button
+              type="button"
+              className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--primary"
+              aria-label="Agregar habilidad"
+              onClick={abrirAgregarRapido}
+            >
+              <Icon path={mdiPlus} size={ICON_SIZES.action} />
+            </button>
+            <button
+              type="button"
+              className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary"
+              aria-label="Editar habilidades"
+              onClick={alternarEdicion}
+            >
+              <Icon path={mdiPencilOutline} size={ICON_SIZES.action} />
+            </button>
+          </div>
         </div>
 
-        <div className="softsave-portafolio-module-card__actions">
-          <button
-            type="button"
-            className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--primary"
-            aria-label="Agregar habilidad"
-            onClick={abrirAgregarRapido}
-          >
-            <Icon path={mdiPlus} size={ICON_SIZES.action} />
-          </button>
-          <button
-            type="button"
-            className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary"
-            aria-label="Editar habilidades"
-            onClick={alternarEdicion}
-          >
-            <Icon path={mdiPencilOutline} size={ICON_SIZES.action} />
-          </button>
-        </div>
-      </div>
+        {!tieneSkills ? (
+          <p className="softsave-portafolio-module-card__empty">
+            Añade aquí tus habilidades técnicas y blandas
+          </p>
+        ) : null}
 
-      {!tieneSkills ? (
-        <p className="softsave-portafolio-module-card__empty">
-          Añade aquí tus habilidades técnicas y blandas
-        </p>
-      ) : null}
+        <div className="softsave-portafolio-skills">
+          <section className="softsave-portafolio-skills__block">
+            <h3 className="softsave-portafolio-skills__heading">
+              Habilidades técnicas
+            </h3>
 
-      <div className="softsave-portafolio-skills">
-        <section className="softsave-portafolio-skills__block">
-          <h3 className="softsave-portafolio-skills__heading">Habilidades técnicas</h3>
-
-          {tecnicas.length > 0 ? (
-            <div className="softsave-portafolio-skills__table">
-              <div className="softsave-portafolio-skills__table-head">
-                <span>Habilidad</span>
-                <span>Nivel</span>
-              </div>
-
-              {tecnicas.map((skill) => (
-                <div key={skill.id} className="softsave-portafolio-skills__row">
-                  {isEditing ? (
-                    <div className="softsave-portafolio-skills__name-edit-wrap">
-                      <input
-                        type="text"
-                        value={nombresTecnicosEditando[skill.id] ?? skill.name}
-                        onChange={(evento) => {
-                          setNombresTecnicosEditando((actual) => ({
-                            ...actual,
-                            [skill.id]: evento.target.value,
-                          }));
-                          setErrores((actual) => ({ ...actual, tecnica: '' }));
-                          setMensajeExito('');
-                        }}
-                        onBlur={() => confirmarEdicionNombreTecnico(skill.id)}
-                        onKeyDown={(evento) => {
-                          if (evento.key === 'Enter') {
-                            evento.preventDefault();
-                            evento.currentTarget.blur();
-                          }
-                        }}
-                        className="softsave-input softsave-profile__input softsave-portafolio-skills__name-input"
-                        aria-label={`Nombre de la habilidad técnica ${skill.name}`}
-                      />
-                      <input
-                        type="url"
-                        value={evidenciasTecnicasEditando[skill.id] ?? (skill.evidence_url || '')}
-                        onChange={(evento) => {
-                          setEvidenciasTecnicasEditando((actual) => ({
-                            ...actual,
-                            [skill.id]: evento.target.value,
-                          }));
-                          setErrores((actual) => ({ ...actual, tecnica: '' }));
-                          setMensajeExito('');
-                        }}
-                        onBlur={() => confirmarEdicionNombreTecnico(skill.id)}
-                        className="softsave-input softsave-profile__input softsave-portafolio-skills__evidence-input"
-                        placeholder="URL de evidencia (opcional)"
-                        aria-label={`Enlace de evidencia para ${skill.name}`}
-                      />
-                    </div>
-                  ) : (
-                    <div className="softsave-portafolio-skills__name-wrap">
-                      <span className="softsave-portafolio-skills__name">{skill.name}</span>
-                      {skill.evidence_url ? (
-                        <a
-                          href={skill.evidence_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="softsave-portafolio-skills__evidence-link"
-                          aria-label={`Ver evidencia de ${skill.name}`}
-                        >
-                          <Icon path={mdiOpenInNew} size={0.72} />
-                        </a>
-                      ) : null}
-                    </div>
-                  )}
-                  <div className="softsave-portafolio-skills__level-wrap">
-                    {isEditing ? (
-                      <>
-                        <select
-                          value={skill.level}
-                          onChange={(evento) => cambiarNivel(skill.id, evento.target.value)}
-                          className="softsave-input softsave-portafolio-skills__select"
-                        >
-                          {NIVELES_TECNICOS.map((nivel) => (
-                            <option key={nivel} value={nivel}>{nivel}</option>
-                          ))}
-                        </select>
-                        <button
-                          type="button"
-                          className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary softsave-portafolio-skills__tech-remove"
-                          aria-label={`Guardar habilidad técnica ${skill.name}`}
-                          onClick={() => confirmarEdicionNombreTecnico(skill.id)}
-                        >
-                          <Icon path={mdiContentSaveOutline} size={ICON_SIZES.action} />
-                        </button>
-                        <button
-                          type="button"
-                          className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary softsave-portafolio-skills__tech-remove"
-                          aria-label={`Eliminar habilidad técnica ${skill.name}`}
-                          onClick={() => solicitarEliminarHabilidadTecnica(skill)}
-                        >
-                          <Icon path={mdiDeleteOutline} size={ICON_SIZES.action} />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <span className={`softsave-portafolio-skills__badge ${obtenerClaseNivel(skill.level)}`}>
-                          {skill.level}
-                        </span>
-                        <span className="softsave-portafolio-skills__bar">
-                          <span
-                            className={`softsave-portafolio-skills__bar-fill ${obtenerClaseNivel(skill.level)}`}
-                            style={{ width: obtenerAnchoNivel(skill.level) }}
-                          />
-                        </span>
-                      </>
-                    )}
-                  </div>
+            {tecnicas.length > 0 ? (
+              <div className="softsave-portafolio-skills__table">
+                <div className="softsave-portafolio-skills__table-head">
+                  <span>Habilidad</span>
+                  <span>Nivel</span>
                 </div>
-              ))}
-            </div>
-          ) : null}
 
-          {isAdding ? (
-            <div className="softsave-portafolio-skills__add-box">
-              <h4 className="softsave-portafolio-skills__subheading">Agregar nueva habilidad</h4>
-              <div className="softsave-portafolio-skills__form-grid">
-                <label className="softsave-profile__field">
-                  <span className="softsave-portafolio-job-form__sub-label">Habilidad</span>
-                  <input
-                    ref={skillInputRef}
-                    type="text"
-                    value={skillTecnicaNueva}
-                    onChange={(evento) => {
-                      setSkillTecnicaNueva(evento.target.value);
-                      setErrores((actual) => ({ ...actual, tecnica: '' }));
-                      setMensajeExito('');
-                    }}
-                    className="softsave-input softsave-profile__input"
-                    placeholder="Buscar o escribir..."
-                  />
-                </label>
-
-                <label className="softsave-profile__field">
-                  <span className="softsave-portafolio-job-form__sub-label">Nivel</span>
-                  <select
-                    value={nivelNuevo}
-                    onChange={(evento) => {
-                      setNivelNuevo(evento.target.value);
-                      setMensajeExito('');
-                    }}
-                    className="softsave-input softsave-profile__input"
+                {tecnicas.map((skill) => (
+                  <div
+                    key={skill.id}
+                    className="softsave-portafolio-skills__row"
                   >
-                    {NIVELES_TECNICOS.map((nivel) => (
-                      <option key={nivel} value={nivel}>{nivel}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="softsave-profile__field softsave-portafolio-skills__evidence-field">
-                  <span className="softsave-portafolio-job-form__sub-label">Enlace de evidencia (opcional)</span>
-                  <input
-                    type="url"
-                    value={evidenciaTecnicaNueva}
-                    onChange={(evento) => {
-                      setEvidenciaTecnicaNueva(evento.target.value);
-                      setErrores((actual) => ({ ...actual, tecnica: '' }));
-                    }}
-                    className="softsave-input softsave-profile__input"
-                    placeholder="https://ejemplo.com/certificado"
-                  />
-                </label>
+                    {isEditing ? (
+                      <div className="softsave-portafolio-skills__name-edit-wrap">
+                        <input
+                          type="text"
+                          value={
+                            nombresTecnicosEditando[skill.id] ?? skill.name
+                          }
+                          onChange={(evento) => {
+                            setNombresTecnicosEditando((actual) => ({
+                              ...actual,
+                              [skill.id]: evento.target.value,
+                            }));
+                            setErrores((actual) => ({
+                              ...actual,
+                              tecnica: "",
+                            }));
+                            setMensajeExito("");
+                          }}
+                          onBlur={() => confirmarEdicionNombreTecnico(skill.id)}
+                          onKeyDown={(evento) => {
+                            if (evento.key === "Enter") {
+                              evento.preventDefault();
+                              evento.currentTarget.blur();
+                            }
+                          }}
+                          className="softsave-input softsave-profile__input softsave-portafolio-skills__name-input"
+                          aria-label={`Nombre de la habilidad técnica ${skill.name}`}
+                        />
+                        <input
+                          type="url"
+                          value={
+                            evidenciasTecnicasEditando[skill.id] ??
+                            (skill.evidence_url || "")
+                          }
+                          onChange={(evento) => {
+                            setEvidenciasTecnicasEditando((actual) => ({
+                              ...actual,
+                              [skill.id]: evento.target.value,
+                            }));
+                            setErrores((actual) => ({
+                              ...actual,
+                              tecnica: "",
+                            }));
+                            setMensajeExito("");
+                          }}
+                          onBlur={() => confirmarEdicionNombreTecnico(skill.id)}
+                          className="softsave-input softsave-profile__input softsave-portafolio-skills__evidence-input"
+                          placeholder="URL de evidencia (opcional)"
+                          aria-label={`Enlace de evidencia para ${skill.name}`}
+                        />
+                      </div>
+                    ) : (
+                      <div className="softsave-portafolio-skills__name-wrap">
+                        <span className="softsave-portafolio-skills__name">
+                          {skill.name}
+                        </span>
+                        {skill.evidence_url ? (
+                          <a
+                            href={skill.evidence_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="softsave-portafolio-skills__evidence-link"
+                            aria-label={`Ver evidencia de ${skill.name}`}
+                          >
+                            <Icon path={mdiOpenInNew} size={0.72} />
+                          </a>
+                        ) : null}
+                      </div>
+                    )}
+                    <div className="softsave-portafolio-skills__level-wrap">
+                      {isEditing ? (
+                        <>
+                          <select
+                            value={skill.level}
+                            onChange={(evento) =>
+                              cambiarNivel(skill.id, evento.target.value)
+                            }
+                            className="softsave-input softsave-portafolio-skills__select"
+                          >
+                            {NIVELES_TECNICOS.map((nivel) => (
+                              <option key={nivel} value={nivel}>
+                                {nivel}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary softsave-portafolio-skills__tech-remove"
+                            aria-label={`Guardar habilidad técnica ${skill.name}`}
+                            onClick={() =>
+                              confirmarEdicionNombreTecnico(skill.id)
+                            }
+                          >
+                            <Icon
+                              path={mdiContentSaveOutline}
+                              size={ICON_SIZES.action}
+                            />
+                          </button>
+                          <button
+                            type="button"
+                            className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary softsave-portafolio-skills__tech-remove"
+                            aria-label={`Eliminar habilidad técnica ${skill.name}`}
+                            onClick={() =>
+                              solicitarEliminarHabilidadTecnica(skill)
+                            }
+                          >
+                            <Icon
+                              path={mdiDeleteOutline}
+                              size={ICON_SIZES.action}
+                            />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span
+                            className={`softsave-portafolio-skills__badge ${obtenerClaseNivel(skill.level)}`}
+                          >
+                            {skill.level}
+                          </span>
+                          <span className="softsave-portafolio-skills__bar">
+                            <span
+                              className={`softsave-portafolio-skills__bar-fill ${obtenerClaseNivel(skill.level)}`}
+                              style={{ width: obtenerAnchoNivel(skill.level) }}
+                            />
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
+            ) : null}
 
-              {errores.tecnica ? (
-                <span className="error-text softsave-profile__error-text" role="alert">
-                  {errores.tecnica}
-                </span>
-              ) : null}
+            {isAdding ? (
+              <div className="softsave-portafolio-skills__add-box">
+                <h4 className="softsave-portafolio-skills__subheading">
+                  Agregar nueva habilidad
+                </h4>
+                <div className="softsave-portafolio-skills__form-grid">
+                  <CatalogSearchInput
+                    label="Habilidad"
+                    catalog={catalogoTecnico}
+                    value={skillTecnicaNueva}
+                    onChange={(valor) => {
+                      setSkillTecnicaNueva(valor);
+                      setErrores((actual) => ({ ...actual, tecnica: "" }));
+                      setMensajeExito("");
+                    }}
+                    onSelect={(skillCatalogo) => {
+                      setSkillTecnicaNueva(skillCatalogo?.name || "");
+                      setErrores((actual) => ({ ...actual, tecnica: "" }));
+                      setMensajeExito("");
+                    }}
+                    placeholder="Buscar una habilidad técnica..."
+                    emptyText="No hay coincidencias en el catálogo de habilidades técnicas."
+                    helperText="Selecciona una habilidad del catálogo técnico."
+                    error={errores.tecnica}
+                    required
+                  />
 
-              <div className="softsave-portafolio-skills__footer">
+                  <label className="softsave-profile__field">
+                    <span className="softsave-portafolio-job-form__sub-label">
+                      Nivel
+                    </span>
+                    <select
+                      value={nivelNuevo}
+                      onChange={(evento) => {
+                        setNivelNuevo(evento.target.value);
+                        setMensajeExito("");
+                      }}
+                      className="softsave-input softsave-profile__input"
+                    >
+                      {NIVELES_TECNICOS.map((nivel) => (
+                        <option key={nivel} value={nivel}>
+                          {nivel}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="softsave-profile__field softsave-portafolio-skills__evidence-field">
+                    <span className="softsave-portafolio-job-form__sub-label">
+                      Enlace de evidencia (opcional)
+                    </span>
+                    <input
+                      type="url"
+                      value={evidenciaTecnicaNueva}
+                      onChange={(evento) => {
+                        setEvidenciaTecnicaNueva(evento.target.value);
+                        setErrores((actual) => ({ ...actual, tecnica: "" }));
+                      }}
+                      className="softsave-input softsave-profile__input"
+                      placeholder="https://ejemplo.com/certificado"
+                    />
+                  </label>
+                </div>
+
+                <div className="softsave-portafolio-skills__footer">
+                  <button
+                    type="button"
+                    className="softsave-button softsave-button--compact"
+                    onClick={agregarHabilidadTecnica}
+                  >
+                    + Agregar
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </section>
+
+          <section className="softsave-portafolio-skills__block">
+            <h3 className="softsave-portafolio-skills__heading">
+              Habilidades blandas
+            </h3>
+
+            <div className="softsave-portafolio-skills__chips">
+              {blandas.map((skill, indice) => (
+                <button
+                  key={`${skill.name}-${indice}`}
+                  type="button"
+                  className={`softsave-portafolio-skills__chip ${isEditing ? "is-editing" : ""}`}
+                  onClick={() =>
+                    isEditing ? editarBlanda(skill, indice) : undefined
+                  }
+                >
+                  <span>{skill.name}</span>
+                  {!isEditing && skill.evidence_url ? (
+                    <a
+                      href={skill.evidence_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="softsave-portafolio-skills__chip-link"
+                      aria-label={`Ver evidencia de ${skill.name}`}
+                      onClick={(evento) => evento.stopPropagation()}
+                    >
+                      <Icon path={mdiOpenInNew} size={ICON_SIZES.chipRemove} />
+                    </a>
+                  ) : null}
+                  {isEditing ? (
+                    <button
+                      type="button"
+                      className="softsave-portafolio-skills__chip-remove"
+                      aria-label={`Eliminar habilidad blanda ${skill.name}`}
+                      onClick={(evento) => {
+                        evento.stopPropagation();
+                        eliminarBlanda(indice);
+                      }}
+                    >
+                      <Icon path={mdiClose} size={ICON_SIZES.chipRemove} />
+                    </button>
+                  ) : null}
+                </button>
+              ))}
+
+              {isAdding ? (
                 <button
                   type="button"
-                  className="softsave-button softsave-button--compact"
-                  onClick={agregarHabilidadTecnica}
+                  className="softsave-portafolio-skills__chip softsave-portafolio-skills__chip--add"
+                  onClick={() => {
+                    setMostrandoAgregarBlanda(true);
+                    setIndiceBlandaEditando(null);
+                    setSkillBlandaNueva("");
+                    setEvidenciaBlandaNueva("");
+                    setErrores((actual) => ({ ...actual, blanda: "" }));
+                    setMensajeExito("");
+                  }}
                 >
                   + Agregar
                 </button>
-              </div>
+              ) : null}
             </div>
-          ) : null}
-        </section>
 
-        <section className="softsave-portafolio-skills__block">
-          <h3 className="softsave-portafolio-skills__heading">Habilidades blandas</h3>
-
-          <div className="softsave-portafolio-skills__chips">
-            {blandas.map((skill, indice) => (
-              <button
-                key={`${skill.name}-${indice}`}
-                type="button"
-                className={`softsave-portafolio-skills__chip ${isEditing ? 'is-editing' : ''}`}
-                onClick={() => (isEditing ? editarBlanda(skill, indice) : undefined)}
-              >
-                <span>{skill.name}</span>
-                {!isEditing && skill.evidence_url ? (
-                  <a
-                    href={skill.evidence_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="softsave-portafolio-skills__chip-link"
-                    aria-label={`Ver evidencia de ${skill.name}`}
-                    onClick={(evento) => evento.stopPropagation()}
-                  >
-                    <Icon path={mdiOpenInNew} size={ICON_SIZES.chipRemove} />
-                  </a>
-                ) : null}
-                {isEditing ? (
+            {(isAdding || isEditing) && mostrandoAgregarBlanda ? (
+              <div className="softsave-portafolio-skills__soft-form">
+                <input
+                  type="text"
+                  value={skillBlandaNueva}
+                  onChange={(evento) => {
+                    setSkillBlandaNueva(evento.target.value);
+                    setErrores((actual) => ({ ...actual, blanda: "" }));
+                    setMensajeExito("");
+                  }}
+                  className="softsave-input softsave-profile__input"
+                  placeholder="Escribe una habilidad blanda"
+                />
+                <input
+                  type="url"
+                  value={evidenciaBlandaNueva}
+                  onChange={(evento) => {
+                    setEvidenciaBlandaNueva(evento.target.value);
+                    setErrores((actual) => ({ ...actual, blanda: "" }));
+                    setMensajeExito("");
+                  }}
+                  className="softsave-input softsave-profile__input"
+                  placeholder="URL de evidencia (opcional)"
+                />
+                <div className="softsave-profile__modal-actions">
                   <button
                     type="button"
-                    className="softsave-portafolio-skills__chip-remove"
-                    aria-label={`Eliminar habilidad blanda ${skill.name}`}
-                    onClick={(evento) => {
-                      evento.stopPropagation();
-                      eliminarBlanda(indice);
+                    className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
+                    onClick={() => {
+                      setMostrandoAgregarBlanda(false);
+                      setSkillBlandaNueva("");
+                      setEvidenciaBlandaNueva("");
+                      setIndiceBlandaEditando(null);
+                      setErrores((actual) => ({ ...actual, blanda: "" }));
                     }}
                   >
-                    <Icon path={mdiClose} size={ICON_SIZES.chipRemove} />
+                    Cancelar
                   </button>
-                ) : null}
-              </button>
-            ))}
+                  <button
+                    type="button"
+                    className="softsave-button softsave-button--compact"
+                    onClick={guardarBlanda}
+                  >
+                    Guardar
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {errores.blanda ? (
+              <span
+                className="error-text softsave-profile__error-text"
+                role="alert"
+              >
+                {errores.blanda}
+              </span>
+            ) : null}
 
             {isAdding ? (
-              <button
-                type="button"
-                className="softsave-portafolio-skills__chip softsave-portafolio-skills__chip--add"
-                onClick={() => {
-                  setMostrandoAgregarBlanda(true);
-                  setIndiceBlandaEditando(null);
-                  setSkillBlandaNueva('');
-                  setEvidenciaBlandaNueva('');
-                  setErrores((actual) => ({ ...actual, blanda: '' }));
-                  setMensajeExito('');
-                }}
-              >
-                + Agregar
-              </button>
-            ) : null}
-          </div>
+              <>
+                <div className="softsave-portafolio-skills__suggestions-head">
+                  <span className="softsave-portafolio-skills__suggestions-title">
+                    Habilidades sugeridas
+                  </span>
+                </div>
 
-          {(isAdding || isEditing) && mostrandoAgregarBlanda ? (
-            <div className="softsave-portafolio-skills__soft-form">
-              <input
-                type="text"
-                value={skillBlandaNueva}
-                onChange={(evento) => {
-                  setSkillBlandaNueva(evento.target.value);
-                  setErrores((actual) => ({ ...actual, blanda: '' }));
-                  setMensajeExito('');
-                }}
-                className="softsave-input softsave-profile__input"
-                placeholder="Escribe una habilidad blanda"
-              />
-              <input
-                type="url"
-                value={evidenciaBlandaNueva}
-                onChange={(evento) => {
-                  setEvidenciaBlandaNueva(evento.target.value);
-                  setErrores((actual) => ({ ...actual, blanda: '' }));
-                  setMensajeExito('');
-                }}
-                className="softsave-input softsave-profile__input"
-                placeholder="URL de evidencia (opcional)"
-              />
-              <div className="softsave-profile__modal-actions">
-                <button
-                  type="button"
-                  className="softsave-profile__secondary-button softsave-profile__secondary-button--modal"
-                  onClick={() => {
-                    setMostrandoAgregarBlanda(false);
-                    setSkillBlandaNueva('');
-                    setEvidenciaBlandaNueva('');
-                    setIndiceBlandaEditando(null);
-                    setErrores((actual) => ({ ...actual, blanda: '' }));
-                  }}
-                >
-                  Cancelar
-                </button>
-                <button type="button" className="softsave-button softsave-button--compact" onClick={guardarBlanda}>
-                  Guardar
-                </button>
-              </div>
-            </div>
-          ) : null}
-
-          {errores.blanda ? (
-            <span className="error-text softsave-profile__error-text" role="alert">
-              {errores.blanda}
-            </span>
-          ) : null}
-
-          {isAdding ? (
-            <>
-              <div className="softsave-portafolio-skills__suggestions-head">
-                <span className="softsave-portafolio-skills__suggestions-title">Habilidades sugeridas</span>
-              </div>
-
-              <div className="softsave-portafolio-skills__suggestions">
-                {SUGERENCIAS_BLANDAS
-                  .filter((skill) => !blandas.some((actual) => actual.name.toLowerCase() === skill.toLowerCase()))
-                  .map((skill) => (
-                  <button
-                    key={skill}
-                    type="button"
-                    className="softsave-portafolio-skills__suggestion"
-                    onClick={() => agregarDesdeSugerencia(skill)}
-                  >
-                    {skill}
-                  </button>
+                <div className="softsave-portafolio-skills__suggestions">
+                  {SUGERENCIAS_BLANDAS.filter(
+                    (skill) =>
+                      !blandas.some(
+                        (actual) =>
+                          actual.name.toLowerCase() === skill.toLowerCase(),
+                      ),
+                  ).map((skill) => (
+                    <button
+                      key={skill}
+                      type="button"
+                      className="softsave-portafolio-skills__suggestion"
+                      onClick={() => agregarDesdeSugerencia(skill)}
+                    >
+                      {skill}
+                    </button>
                   ))}
-              </div>
-            </>
-          ) : null}
-        </section>
-      </div>
+                </div>
+              </>
+            ) : null}
+          </section>
+        </div>
       </section>
 
       {tecnicaPendienteEliminar ? (
-        <div className="softsave-profile__modal-overlay softsave-profile__modal-overlay--centered" role="dialog" aria-modal="true" onClick={cerrarModalEliminarTecnica}>
-          <div className="softsave-profile__modal softsave-profile__modal--confirm" onClick={(evento) => evento.stopPropagation()}>
+        <div
+          className="softsave-profile__modal-overlay softsave-profile__modal-overlay--centered"
+          role="dialog"
+          aria-modal="true"
+          onClick={cerrarModalEliminarTecnica}
+        >
+          <div
+            className="softsave-profile__modal softsave-profile__modal--confirm"
+            onClick={(evento) => evento.stopPropagation()}
+          >
             <header className="softsave-profile__modal-header">
               <div className="softsave-profile__modal-content">
-                <h3 className="softsave-profile__modal-title">Eliminar habilidad técnica</h3>
+                <h3 className="softsave-profile__modal-title">
+                  Eliminar habilidad técnica
+                </h3>
                 <p className="softsave-profile__modal-text">
-                  Esta acción eliminará &quot;{tecnicaPendienteEliminar.name}&quot; de tu portafolio.
+                  Esta acción eliminará &quot;{tecnicaPendienteEliminar.name}
+                  &quot; de tu portafolio.
                 </p>
               </div>
             </header>
@@ -1061,13 +1202,12 @@ function PortfolioSkillsSection() {
                 onClick={confirmarEliminarHabilidadTecnica}
                 disabled={eliminandoTecnica}
               >
-                {eliminandoTecnica ? 'Eliminando...' : 'Eliminar'}
+                {eliminandoTecnica ? "Eliminando..." : "Eliminar"}
               </button>
             </div>
           </div>
         </div>
       ) : null}
-
     </>
   );
 }

@@ -60,6 +60,22 @@
   box-shadow: none;
 }
 
+.softsave-catalog-search__input::-webkit-search-cancel-button,
+.softsave-catalog-search__input::-webkit-search-decoration,
+.softsave-catalog-search__input::-webkit-search-results-button,
+.softsave-catalog-search__input::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.softsave-catalog-search__input::-ms-clear,
+.softsave-catalog-search__input::-ms-reveal {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .softsave-catalog-search__clear {
   position: absolute;
   right: 10px;
@@ -85,98 +101,8 @@
   outline: none;
 }
 
-.softsave-catalog-search__panel {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  left: 0;
-  right: 0;
-  z-index: 20;
-  overflow: hidden;
-  border: 1px solid rgba(var(--color-texto-rgb), 0.1);
-  border-radius: 16px;
-  background: var(--color-blanco);
-  box-shadow: 0 18px 38px rgba(var(--color-texto-rgb), 0.12);
-}
-
-.softsave-catalog-search__list {
-  margin: 0;
-  padding: 0.35rem;
-  list-style: none;
-  max-height: 16rem;
-  overflow-y: auto;
-}
-
-.softsave-catalog-search__option {
-  width: 100%;
-  min-height: 46px;
-  padding: 0.75rem 0.9rem;
-  border: 0;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  background: transparent;
-  color: var(--color-texto);
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
-}
-
-.softsave-catalog-search__option:hover,
-.softsave-catalog-search__option:focus-visible,
-.softsave-catalog-search__option.is-active {
-  background: rgba(var(--color-primario-rgb), 0.08);
-  color: #b94606;
-  outline: none;
-}
-
-.softsave-catalog-search__option-label {
-  min-width: 0;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.softsave-catalog-search__option-action {
-  flex: 0 0 auto;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--color-texto-suave);
-}
-
-.softsave-catalog-search__empty {
-  padding: 0.95rem 1rem;
-  color: var(--color-texto-suave);
-  font-size: 0.92rem;
-}
-
 .softsave-catalog-search__helper {
   margin: 0;
   color: var(--color-texto-suave);
   font-size: 0.82rem;
-}
-
-.softsave-catalog-search__list.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.softsave-catalog-search__list.custom-scrollbar::-webkit-scrollbar-track {
-  background: #f4f4f4;
-}
-
-.softsave-catalog-search__list.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #d0d0d0;
-  border-radius: 999px;
-}
-
-@media (max-width: 640px) {
-  .softsave-catalog-search__input {
-    min-height: 52px;
-  }
-
-  .softsave-catalog-search__option {
-    min-height: 44px;
-  }
 }

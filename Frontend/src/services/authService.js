@@ -71,6 +71,7 @@ export const actualizarJob = (id, datos) => api.put(`/user/jobs/${id}`, datos);
 export const eliminarJob = (id) => api.delete(`/user/jobs/${id}`);
 
 export const obtenerSkillsTecnicas = () => api.get('/user/technical-skills');
+export const obtenerCatalogoSkillsTecnicas = () => api.get('/user/technical-skills/catalog');
 
 export const sincronizarSkillsTecnicas = (skills) =>
   api.post('/user/technical-skills/sync', { skills });

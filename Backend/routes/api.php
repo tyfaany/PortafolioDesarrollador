@@ -47,6 +47,7 @@ Route::middleware(['auth:sanctum', 'role:owner,admin'])->group(function () {
     Route::put('/user/jobs/{id}', [JobController::class, 'update']);
     Route::delete('/user/jobs/{id}', [JobController::class, 'destroy']);
     Route::get('/user/technical-skills', [TechnicalSkillController::class, 'index']);
+    Route::get('/user/technical-skills/catalog', [TechnicalSkillController::class, 'catalog']);
     Route::post('/user/technical-skills/sync', [TechnicalSkillController::class, 'sync']);
     Route::get('/user/soft-skills', [SoftSkillController::class, 'index']);
     Route::post('/user/soft-skills/sync', [SoftSkillController::class, 'sync']);
