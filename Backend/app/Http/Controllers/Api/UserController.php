@@ -36,6 +36,11 @@ class UserController extends Controller
     {
         $user = $request->user();
 
+        $request->merge([
+            'github_url' => $this->normalizarUrlExterna($request->input('github_url')),
+            'linkedin_url' => $this->normalizarUrlExterna($request->input('linkedin_url')),
+        ]);
+
         $validated = $request->validate([
             'name'         => "required|string|max:255|regex:/^\pL+(?: \pL+)*$/u",
             'profession'   => 'nullable|string|max:100|regex:/^(?=.*\pL)[\pL\pN]+(?:[ .,&()\/-][\pL\pN]+)*$/u',
@@ -72,6 +77,25 @@ class UserController extends Controller
             'message' => 'Información actualizada.',
             'user' => $user->fresh(),
         ], 200);
+    }
+
+    private function normalizarUrlExterna(mixed $value): mixed
+    {
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $limpio = trim($value);
+
+        if ($limpio === '') {
+            return $limpio;
+        }
+
+        if (preg_match('/^[a-z][a-z0-9+.-]*:\/\//i', $limpio) === 1) {
+            return $limpio;
+        }
+
+        return 'https://' . ltrim($limpio, '/');
     }
 
     private function checkIfProfileIsComplete(User $user, array $newData): bool

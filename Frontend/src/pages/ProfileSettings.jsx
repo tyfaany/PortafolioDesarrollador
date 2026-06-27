@@ -117,6 +117,20 @@ function esEmailValido(valor) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor);
 }
 
+function normalizarUrlExterna(valor) {
+  const limpio = sanitizarTexto(valor);
+
+  if (!limpio) {
+    return "";
+  }
+
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(limpio)) {
+    return limpio;
+  }
+
+  return `https://${limpio.replace(/^\/+/, "")}`;
+}
+
 function normalizarEnlacesProfesionales(user) {
   const enlaces = [];
 
@@ -160,7 +174,7 @@ function normalizarEnlacesProfesionales(user) {
 }
 
 function validarUrlProfesional(valor, plataforma) {
-  const limpio = sanitizarTexto(valor);
+  const limpio = normalizarUrlExterna(valor);
 
   if (!limpio) {
     return "";
@@ -178,7 +192,7 @@ function validarUrlProfesional(valor, plataforma) {
 }
 
 function validarUrlGeneral(valor, etiqueta) {
-  const limpio = sanitizarTexto(valor);
+  const limpio = normalizarUrlExterna(valor);
 
   if (!limpio) {
     return "";
@@ -272,6 +286,7 @@ function ProfileSettings() {
   const navigate = useNavigate();
   const { pathname } = location;
   const inputImagenRef = useRef(null);
+  const githubUrlInputRef = useRef(null);
   const modalAvatarRef = useRef(null);
   const arrastreImagenRef = useRef({
     activo: false,
@@ -535,6 +550,15 @@ function ProfileSettings() {
     cargarRepositoriosGithub();
   }, [seccionActiva, estaGithubConectado]);
 
+  useEffect(() => {
+    if (!estaModalEnlacesAbierto) {
+      return;
+    }
+
+    githubUrlInputRef.current?.focus();
+    githubUrlInputRef.current?.select?.();
+  }, [estaModalEnlacesAbierto]);
+
   const manejarCambioFormulario = (evento) => {
     const { name, value } = evento.target;
     const valorProcesado = name === "profesion" ? normalizarProfesion(value) : value;
@@ -628,16 +652,16 @@ function ProfileSettings() {
       name: sanitizarTexto(formularioPerfil.nombreCompleto),
       profession: sanitizarTexto(formularioPerfil.profesion),
       biography: sanitizarTexto(formularioPerfil.biografia),
-      github_url: sanitizarTexto(formularioPerfil.githubUrl) || null,
-      linkedin_url: sanitizarTexto(formularioPerfil.linkedinUrl) || null,
+      github_url: normalizarUrlExterna(formularioPerfil.githubUrl) || null,
+      linkedin_url: normalizarUrlExterna(formularioPerfil.linkedinUrl) || null,
     };
     const payloadContacto = {
       phone: sanitizarTexto(formularioPerfil.telefono) || null,
       mobile: sanitizarTexto(formularioPerfil.movil) || null,
       contact_email: sanitizarTexto(formularioPerfil.correoContacto) || null,
       address: sanitizarTexto(formularioPerfil.direccion) || null,
-      instagram_url: sanitizarTexto(formularioPerfil.instagramUrl) || null,
-      facebook_url: sanitizarTexto(formularioPerfil.facebookUrl) || null,
+      instagram_url: normalizarUrlExterna(formularioPerfil.instagramUrl) || null,
+      facebook_url: normalizarUrlExterna(formularioPerfil.facebookUrl) || null,
     };
 
     setGuardandoPerfil(true);
@@ -881,8 +905,8 @@ function ProfileSettings() {
       name: user?.name || "",
       profession: user?.profession || "",
       biography: user?.biography || "",
-      github_url: sanitizarTexto(formularioEnlaces.githubUrl) || null,
-      linkedin_url: sanitizarTexto(formularioEnlaces.linkedinUrl) || null,
+      github_url: normalizarUrlExterna(formularioEnlaces.githubUrl) || null,
+      linkedin_url: normalizarUrlExterna(formularioEnlaces.linkedinUrl) || null,
     };
 
     setGuardandoEnlaces(true);
@@ -1041,7 +1065,7 @@ function ProfileSettings() {
   const conectarGithub = async () => {
     const githubUsername = extraerUsernameGithub(user?.github_url);
     if (!githubUsername) {
-      setMensajeGithubError("Primero agrega una URL de GitHub válida en Enlaces profesionales.");
+      abrirModalEnlaces();
       return;
     }
 
@@ -1332,10 +1356,12 @@ function ProfileSettings() {
           <button
             type="button"
             className="softsave-button softsave-button--compact"
+            data-loading={cargandoReposGithub ? "true" : "false"}
+            disabled={cargandoReposGithub}
             onClick={conectarGithub}
           >
-            Conectar con GitHub
-            <span aria-hidden="true">→</span>
+            {cargandoReposGithub ? "Conectando con GitHub" : "Conectar con GitHub"}
+            {!cargandoReposGithub ? <span aria-hidden="true">→</span> : null}
           </button>
         </div>
       ) : (
@@ -1690,12 +1716,12 @@ function ProfileSettings() {
                 {erroresFormulario.facebookUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.facebookUrl}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">URL de GitHub</span>
+                <span className="softsave-profile__label">GitHub</span>
                 <input type="url" name="githubUrl" value={formularioPerfil.githubUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://github.com/tu-usuario" />
                 {erroresFormulario.githubUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.githubUrl}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">URL de LinkedIn</span>
+                <span className="softsave-profile__label">LinkedIn</span>
                 <input type="url" name="linkedinUrl" value={formularioPerfil.linkedinUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://www.linkedin.com/in/tu-perfil" />
                 {erroresFormulario.linkedinUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.linkedinUrl}</span> : null}
               </label>
@@ -2035,7 +2061,7 @@ function ProfileSettings() {
 
             <form className="softsave-profile__mini-form" onSubmit={guardarEnlaces}>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">URL de GitHub</span>
+                <span className="softsave-profile__label">GitHub</span>
                 <input
                   type="url"
                   name="githubUrl"
@@ -2043,6 +2069,7 @@ function ProfileSettings() {
                   onChange={manejarCambioEnlaces}
                   placeholder="https://github.com/tu-usuario"
                   className="softsave-input softsave-profile__input"
+                  ref={githubUrlInputRef}
                 />
                 {erroresEnlaces.githubUrl ? (
                   <span className="error-text softsave-profile__error-text" role="alert">
@@ -2052,7 +2079,7 @@ function ProfileSettings() {
               </label>
 
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">URL de LinkedIn</span>
+                <span className="softsave-profile__label">LinkedIn</span>
                 <input
                   type="url"
                   name="linkedinUrl"

@@ -14,6 +14,14 @@ class UpdateContactRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'instagram_url' => $this->normalizarUrlExterna($this->input('instagram_url')),
+            'facebook_url' => $this->normalizarUrlExterna($this->input('facebook_url')),
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -33,5 +41,24 @@ class UpdateContactRequest extends FormRequest
             'show_contact_email' => 'boolean',
             'show_address' => 'boolean',
         ];
+    }
+
+    private function normalizarUrlExterna(mixed $value): mixed
+    {
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $limpio = trim($value);
+
+        if ($limpio === '') {
+            return $limpio;
+        }
+
+        if (preg_match('/^[a-z][a-z0-9+.-]*:\/\//i', $limpio) === 1) {
+            return $limpio;
+        }
+
+        return 'https://' . ltrim($limpio, '/');
     }
 }
