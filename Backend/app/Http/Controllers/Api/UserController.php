@@ -12,6 +12,8 @@ use Illuminate\Support\Arr;
 use App\Http\Requests\UpdateContactRequest;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
+use App\QueryFilters\JobExperienceFilter;
+use App\QueryFilters\SkillLevelFilter;
 
 class UserController extends Controller
 {
@@ -203,91 +205,88 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
     
 }
 
-    public function indexPublicProfilesFull(Request $request)
-    {
-        $perPage = min($request->integer('per_page', 10), 100);
-
-        $users = QueryBuilder::for(
-            User::query()->with([
-                'projects.technologies',
-                'studies',
-                'jobs',
-                'skills',
-                'softSkills',
-                'visibility',
-            ])->where('profile_completed', true)
-                ->where(function (Builder $query): void {
-                    $query->whereDoesntHave('visibility')
-                        ->orWhereHas('visibility', function (Builder $visibilityQuery): void {
-                            $visibilityQuery->where('show_in_search', true);
-                        });
-                })
-        )
-            ->allowedFilters([
-                AllowedFilter::callback('search', function (Builder $query, $value): void {
-                    $value = trim((string) $value);
-
-                    if ($value === '') {
-                        return;
-                    }
-
-                    $query->where(function (Builder $subQuery) use ($value): void {
-                        $subQuery->where('name', 'LIKE', "%{$value}%")
-                            ->orWhere('profession', 'LIKE', "%{$value}%")
-                            ->orWhere('biography', 'LIKE', "%{$value}%")
-                            ->orWhereHas('jobs', function (Builder $jobQuery) use ($value): void {
-                                $jobQuery->where('achievements', 'LIKE', "%{$value}%");
-                            });
-                    });
-                }),
-                AllowedFilter::custom('habilidades', new SkillFilter()),
-            ])
-            ->allowedSorts(['name', 'created_at', 'profession'])
-            ->defaultSort('-created_at')
-            ->paginate($perPage)
-            ->appends($request->query());
-
-        $users->getCollection()->transform(function ($user) {
-            return $this->filterProfilePrivacy($user);
-        });
-
-        if ($users->total() === 0) {
-            return response()->json(array_merge($users->toArray(), [
-                'message' => 'Búsqueda no encontrada.',
-            ]), 200);
-        }
-
-        return response()->json($users, 200);
-    }
-   public function showPublicProfile(User $user)
+ public function indexPublicProfilesFull(Request $request)
 {
-  // 1. Cargamos todas las relaciones de este usuario de forma eficiente
-    $user->load([
+    $perPage = min($request->integer('per_page', 10), 100);
+
+    $filtroExperiencia = $request->input('filter.experiencia_cargo') ?? $request->input('experiencia_cargo') ?? $request->query('experiencia_cargo');
+    $filtroNivelSkill = $request->input('filter.habilidadTecnica_nivel') ?? $request->input('habilidadTecnica_nivel') ?? $request->query('habilidadTecnica_nivel');
+
+    // 2. Consulta base
+    $baseQuery = User::query()
+        ->with([
             'projects.technologies',
             'studies',
             'jobs',
             'skills',
             'softSkills',
             'visibility',
-            'githubRepositories',
-        ]);
+        ])
+        ->where('profile_completed', true)
+        ->where(function (\Illuminate\Database\Eloquent\Builder $visibilityGroup): void {
+            $visibilityGroup->whereDoesntHave('visibility')
+                ->orWhereHas('visibility', function (\Illuminate\Database\Eloquent\Builder $visibilityQuery): void {
+                    $visibilityQuery->where('show_in_search', true);
+                });
+        });
 
-        // 2. Pasamos el usuario por el filtro de privacidad común
-        $profile = $this->filterProfilePrivacy($user);
+    if ($filtroExperiencia) {
+        $filtroJob = new \App\QueryFilters\JobExperienceFilter();
+        $baseQuery = $filtroJob->__invoke($baseQuery, $filtroExperiencia, 'experiencia_cargo');
+    }
 
-        // 3. Devolvemos la respuesta
-        return response()->json($profile, 200);
+    
+    if ($filtroNivelSkill) {
+        $filtroSkill = new \App\QueryFilters\SkillLevelFilter();
+        $baseQuery = $filtroSkill->__invoke($baseQuery, $filtroNivelSkill, 'habilidadTecnica_nivel');
+    }
+    $users = \Spatie\QueryBuilder\QueryBuilder::for($baseQuery)
+        ->allowedFilters([
+           
+            \Spatie\QueryBuilder\AllowedFilter::callback('experiencia_cargo', function (\Illuminate\Database\Eloquent\Builder $query): void {}),
+            \Spatie\QueryBuilder\AllowedFilter::callback('habilidadTecnica_nivel', function (\Illuminate\Database\Eloquent\Builder $query): void {}),
+            
+            \Spatie\QueryBuilder\AllowedFilter::callback('search', function (\Illuminate\Database\Eloquent\Builder $query, $value): void {
+                $value = trim((string) $value);
+                if ($value === '') return;
+                $query->where(function (\Illuminate\Database\Eloquent\Builder $subQuery) use ($value): void {
+                    $subQuery->where('name', 'LIKE', "%{$value}%")
+                        ->orWhere('profession', 'LIKE', "%{$value}%")
+                        ->orWhere('biography', 'LIKE', "%{$value}%");
+                });
+            }),
+            \Spatie\QueryBuilder\AllowedFilter::custom('habilidades', new \App\QueryFilters\SkillFilter()),
+        ])
+        ->allowedSorts(['name', 'created_at', 'profession'])
+        ->defaultSort('-created_at')
+        ->paginate($perPage)
+        ->appends($request->query());
+
+    if ($users->getCollection()->isEmpty() || $users->total() === 0) {
+        return response()->json([
+            'current_page' => $users->currentPage(),
+            'data' => [],
+            'total' => 0,
+            'message' => 'Búsqueda no encontrada.',
+        ], 200);
+    }
+
+    $transformedData = $users->getCollection()->map(function ($user) {
+        return $this->filterProfilePrivacy($user);
+    });
+
+    $users->setCollection($transformedData);
+
+    return response()->json($users, 200);
 }
 private function filterProfilePrivacy(User $user): array
     {
-        // Datos básicos que siempre son visibles
         $profile = [
             'id'         => $user->id,
             'name'       => $user->name,
             'profession' => $user->profession,
         ];
 
-        // Filtros de privacidad condicionales basados en tu modelo
         if ($user->show_bio) {
             $profile['biography'] = $user->biography;
         }
@@ -338,7 +337,6 @@ private function filterProfilePrivacy(User $user): array
             $profile['soft_skills'] = $user->softSkills;
         }
 
-        // Filtrado individual de proyectos públicos
         $profile['projects'] = $user->projects
             ->where('is_public', true)
             ->values();
