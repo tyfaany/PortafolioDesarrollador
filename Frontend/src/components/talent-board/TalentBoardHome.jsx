@@ -19,15 +19,12 @@ const QUERY_KEYS = {
   currentPage: 'page',
   searchTerm: 'q',
   selectedSkills: 'skills',
-  selectedSkillLevelSkillId: 'skillLevelSkillId',
-  selectedSkillLevelOptions: 'skillLevels',
-  selectedTechnologyId: 'technology',
-  profession: 'profession',
-  degree: 'degree',
-  institution: 'institution',
+  skillLevelFilters: 'skillLevelFilters',
+  selectedTechnologies: 'technologies',
+  professions: 'professions',
+  degrees: 'degrees',
+  institutions: 'institutions',
   experienceRole: 'experienceRole',
-  experienceMinYears: 'experienceMinYears',
-  experienceMaxYears: 'experienceMaxYears',
   sortValue: 'sort',
 };
 
@@ -136,20 +133,29 @@ function mapPublicProfile(profile) {
   };
 }
 
-function buildExperienceFilterValue(role, minYears, maxYears) {
-  const position = String(role || '').trim();
-  if (!position) {
+function buildExperienceFilterValue(experienceRoles) {
+  if (!Array.isArray(experienceRoles) || experienceRoles.length === 0) {
     return '';
   }
 
-  const min = String(minYears || '').trim();
-  const max = String(maxYears || '').trim();
+  return experienceRoles
+    .map((item) => {
+      const role = String(item.role || '').trim();
+      if (!role) {
+        return '';
+      }
 
-  if (!min && !max) {
-    return position;
-  }
+      const minYears = String(item.minYears || '').trim();
+      const maxYears = String(item.maxYears || '').trim();
 
-  return [position, min, max].join(',');
+      if (!minYears && !maxYears) {
+        return role;
+      }
+
+      return [role, minYears, maxYears].join(',');
+    })
+    .filter(Boolean)
+    .join('|');
 }
 
 function getOptionNameById(options, id) {
@@ -163,6 +169,70 @@ function parseListParam(value) {
     .filter(Boolean);
 }
 
+function buildSkillLevelFilterValue(skillLevelFilters) {
+  if (!Array.isArray(skillLevelFilters) || skillLevelFilters.length === 0) {
+    return '';
+  }
+
+  return skillLevelFilters
+    .map((item) => {
+      const skillName = String(item?.skillName || '').trim();
+      const levels = Array.isArray(item?.levels)
+        ? item.levels.map((level) => String(level || '').trim()).filter(Boolean)
+        : [];
+
+      if (!skillName) {
+        return '';
+      }
+
+      return levels.length > 0 ? [skillName, ...levels].join(',') : skillName;
+    })
+    .filter(Boolean)
+    .join('|');
+}
+
+function parseSkillLevelFiltersParam(value) {
+  const rawValue = String(value || '').trim();
+  if (!rawValue) {
+    return [];
+  }
+
+  return rawValue
+    .split('|')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => {
+      const [skillName, ...levels] = item.split(',').map((part) => String(part || '').trim());
+      return {
+        skillId: '',
+        skillName: String(skillName || '').trim(),
+        levels: levels.filter(Boolean),
+      };
+    })
+    .filter((item) => item.skillName && item.skillName.length >= 2);
+}
+
+function parseExperienceRolesParam(value) {
+  const rawValue = String(value || '').trim();
+  if (!rawValue) {
+    return [];
+  }
+
+  return rawValue
+    .split('|')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => {
+      const [role, minYears = '', maxYears = ''] = item.split(',').map((part) => String(part || '').trim());
+      return {
+        role: String(role || '').trim(),
+        minYears: String(minYears || '').trim(),
+        maxYears: String(maxYears || '').trim(),
+      };
+    })
+    .filter((item) => item.role && item.role.length >= 2);
+}
+
 function parsePageParam(value) {
   const page = Number.parseInt(String(value || ''), 10);
   return Number.isFinite(page) && page > 0 ? page : 1;
@@ -172,15 +242,12 @@ function normalizeFiltersFromSearchParams(searchParams) {
   return {
     searchTerm: searchParams.get(QUERY_KEYS.searchTerm) || '',
     selectedSkills: parseListParam(searchParams.get(QUERY_KEYS.selectedSkills)),
-    selectedSkillLevelSkillId: searchParams.get(QUERY_KEYS.selectedSkillLevelSkillId) || '',
-    selectedSkillLevelOptions: parseListParam(searchParams.get(QUERY_KEYS.selectedSkillLevelOptions)),
-    selectedTechnologyId: searchParams.get(QUERY_KEYS.selectedTechnologyId) || '',
-    profession: searchParams.get(QUERY_KEYS.profession) || '',
-    degree: searchParams.get(QUERY_KEYS.degree) || '',
-    institution: searchParams.get(QUERY_KEYS.institution) || '',
-    experienceRole: searchParams.get(QUERY_KEYS.experienceRole) || '',
-    experienceMinYears: searchParams.get(QUERY_KEYS.experienceMinYears) || '',
-    experienceMaxYears: searchParams.get(QUERY_KEYS.experienceMaxYears) || '',
+    skillLevelFilters: parseSkillLevelFiltersParam(searchParams.get(QUERY_KEYS.skillLevelFilters)),
+    selectedTechnologies: parseListParam(searchParams.get(QUERY_KEYS.selectedTechnologies)),
+    professions: parseListParam(searchParams.get(QUERY_KEYS.professions)),
+    degrees: parseListParam(searchParams.get(QUERY_KEYS.degrees)),
+    institutions: parseListParam(searchParams.get(QUERY_KEYS.institutions)),
+    experienceRoles: parseExperienceRolesParam(searchParams.get(QUERY_KEYS.experienceRole)),
     sortValue: searchParams.get(QUERY_KEYS.sortValue) || DEFAULT_SORT,
     currentPage: parsePageParam(searchParams.get(QUERY_KEYS.currentPage)),
   };
@@ -197,40 +264,31 @@ function serializeFiltersToSearchParams(filters) {
     params.set(QUERY_KEYS.selectedSkills, filters.selectedSkills.join(','));
   }
 
-  if (filters.selectedSkillLevelSkillId) {
-    params.set(QUERY_KEYS.selectedSkillLevelSkillId, filters.selectedSkillLevelSkillId);
+  if (Array.isArray(filters.skillLevelFilters) && filters.skillLevelFilters.length > 0) {
+    const skillLevelValue = buildSkillLevelFilterValue(filters.skillLevelFilters);
+    if (skillLevelValue) {
+      params.set(QUERY_KEYS.skillLevelFilters, skillLevelValue);
+    }
   }
 
-  if (filters.selectedSkillLevelOptions.length > 0) {
-    params.set(QUERY_KEYS.selectedSkillLevelOptions, filters.selectedSkillLevelOptions.join(','));
+  if (filters.selectedTechnologies.length > 0) {
+    params.set(QUERY_KEYS.selectedTechnologies, filters.selectedTechnologies.join(','));
   }
 
-  if (filters.selectedTechnologyId) {
-    params.set(QUERY_KEYS.selectedTechnologyId, filters.selectedTechnologyId);
+  if (filters.professions.length > 0) {
+    params.set(QUERY_KEYS.professions, filters.professions.join(','));
   }
 
-  if (filters.profession.trim()) {
-    params.set(QUERY_KEYS.profession, filters.profession.trim());
+  if (filters.degrees.length > 0) {
+    params.set(QUERY_KEYS.degrees, filters.degrees.join(','));
   }
 
-  if (filters.degree.trim()) {
-    params.set(QUERY_KEYS.degree, filters.degree.trim());
+  if (filters.institutions.length > 0) {
+    params.set(QUERY_KEYS.institutions, filters.institutions.join(','));
   }
 
-  if (filters.institution.trim()) {
-    params.set(QUERY_KEYS.institution, filters.institution.trim());
-  }
-
-  if (filters.experienceRole.trim()) {
-    params.set(QUERY_KEYS.experienceRole, filters.experienceRole.trim());
-  }
-
-  if (filters.experienceMinYears.trim()) {
-    params.set(QUERY_KEYS.experienceMinYears, filters.experienceMinYears.trim());
-  }
-
-  if (filters.experienceMaxYears.trim()) {
-    params.set(QUERY_KEYS.experienceMaxYears, filters.experienceMaxYears.trim());
+  if (Array.isArray(filters.experienceRoles) && filters.experienceRoles.length > 0) {
+    params.set(QUERY_KEYS.experienceRole, buildExperienceFilterValue(filters.experienceRoles));
   }
 
   if (filters.sortValue && filters.sortValue !== DEFAULT_SORT) {
@@ -249,15 +307,12 @@ function TalentBoardHome() {
   const urlFilters = useMemo(() => normalizeFiltersFromSearchParams(searchParams), [searchParams]);
   const [searchTerm, setSearchTerm] = useState(() => urlFilters.searchTerm);
   const [selectedSkills, setSelectedSkills] = useState(() => urlFilters.selectedSkills);
-  const [selectedSkillLevelSkillId, setSelectedSkillLevelSkillId] = useState(() => urlFilters.selectedSkillLevelSkillId);
-  const [selectedSkillLevelOptions, setSelectedSkillLevelOptions] = useState(() => urlFilters.selectedSkillLevelOptions);
-  const [selectedTechnologyId, setSelectedTechnologyId] = useState(() => urlFilters.selectedTechnologyId);
-  const [profession, setProfession] = useState(() => urlFilters.profession);
-  const [degree, setDegree] = useState(() => urlFilters.degree);
-  const [institution, setInstitution] = useState(() => urlFilters.institution);
-  const [experienceRole, setExperienceRole] = useState(() => urlFilters.experienceRole);
-  const [experienceMinYears, setExperienceMinYears] = useState(() => urlFilters.experienceMinYears);
-  const [experienceMaxYears, setExperienceMaxYears] = useState(() => urlFilters.experienceMaxYears);
+  const [skillLevelFilters, setSkillLevelFilters] = useState(() => urlFilters.skillLevelFilters);
+  const [selectedTechnologies, setSelectedTechnologies] = useState(() => urlFilters.selectedTechnologies);
+  const [professions, setProfessions] = useState(() => urlFilters.professions);
+  const [degrees, setDegrees] = useState(() => urlFilters.degrees);
+  const [institutions, setInstitutions] = useState(() => urlFilters.institutions);
+  const [experienceRoles, setExperienceRoles] = useState(() => urlFilters.experienceRoles);
   const [sortValue, setSortValue] = useState(() => urlFilters.sortValue);
   const [currentPage, setCurrentPage] = useState(() => urlFilters.currentPage);
   const [refreshTick, setRefreshTick] = useState(0);
@@ -287,15 +342,12 @@ function TalentBoardHome() {
 
     setSearchTerm(nextFilters.searchTerm);
     setSelectedSkills(nextFilters.selectedSkills);
-    setSelectedSkillLevelSkillId(nextFilters.selectedSkillLevelSkillId);
-    setSelectedSkillLevelOptions(nextFilters.selectedSkillLevelOptions);
-    setSelectedTechnologyId(nextFilters.selectedTechnologyId);
-    setProfession(nextFilters.profession);
-    setDegree(nextFilters.degree);
-    setInstitution(nextFilters.institution);
-    setExperienceRole(nextFilters.experienceRole);
-    setExperienceMinYears(nextFilters.experienceMinYears);
-    setExperienceMaxYears(nextFilters.experienceMaxYears);
+    setSkillLevelFilters(nextFilters.skillLevelFilters);
+    setSelectedTechnologies(nextFilters.selectedTechnologies);
+    setProfessions(nextFilters.professions);
+    setDegrees(nextFilters.degrees);
+    setInstitutions(nextFilters.institutions);
+    setExperienceRoles(nextFilters.experienceRoles);
     setSortValue(nextFilters.sortValue);
     setCurrentPage(nextFilters.currentPage);
     lastWrittenSearchParamsRef.current = searchParamsString;
@@ -305,15 +357,12 @@ function TalentBoardHome() {
     const nextParams = serializeFiltersToSearchParams({
       searchTerm,
       selectedSkills,
-      selectedSkillLevelSkillId,
-      selectedSkillLevelOptions,
-      selectedTechnologyId,
-      profession,
-      degree,
-      institution,
-      experienceRole,
-      experienceMinYears,
-      experienceMaxYears,
+      skillLevelFilters,
+      selectedTechnologies,
+      professions,
+      degrees,
+      institutions,
+      experienceRoles,
       sortValue,
       currentPage,
     });
@@ -326,17 +375,14 @@ function TalentBoardHome() {
     setSearchParams(nextParams, { replace: true });
   }, [
     currentPage,
-    degree,
-    experienceMaxYears,
-    experienceMinYears,
-    experienceRole,
-    institution,
-    profession,
+    degrees,
+    experienceRoles,
+    institutions,
+    professions,
     searchTerm,
-    selectedSkillLevelOptions,
-    selectedSkillLevelSkillId,
+    skillLevelFilters,
     selectedSkills,
-    selectedTechnologyId,
+    selectedTechnologies,
     setSearchParams,
     sortValue,
     searchParamsString,
@@ -387,15 +433,12 @@ function TalentBoardHome() {
   }, [
     searchTerm,
     selectedSkills,
-    selectedSkillLevelSkillId,
-    selectedSkillLevelOptions,
-    selectedTechnologyId,
-    profession,
-    degree,
-    institution,
-    experienceRole,
-    experienceMinYears,
-    experienceMaxYears,
+    skillLevelFilters,
+    selectedTechnologies,
+    professions,
+    degrees,
+    institutions,
+    experienceRoles,
     sortValue,
   ]);
 
@@ -427,39 +470,37 @@ function TalentBoardHome() {
           }
         }
 
-        if (selectedSkillLevelSkillId || selectedSkillLevelOptions.length > 0) {
-          const catalog = Array.isArray(availableSkills) ? availableSkills : [];
-          const skillName = getOptionNameById(catalog, selectedSkillLevelSkillId);
-
-          if (skillName) {
-            params['filter[habilidadTecnica_nivel]'] = [skillName, ...selectedSkillLevelOptions].join(',');
-          } else if (selectedSkillLevelOptions.length > 0) {
-            params['filter[habilidadTecnica_nivel]'] = selectedSkillLevelOptions.join(',');
+        if (skillLevelFilters.length > 0) {
+          const skillLevelValue = buildSkillLevelFilterValue(skillLevelFilters);
+          if (skillLevelValue) {
+            params['filter[habilidadTecnica_nivel]'] = skillLevelValue;
           }
         }
 
-        if (selectedTechnologyId) {
+        if (selectedTechnologies.length > 0) {
           const catalog = Array.isArray(availableTechnologies) ? availableTechnologies : [];
-          const technologyName = getOptionNameById(catalog, selectedTechnologyId);
+          const technologyNames = selectedTechnologies
+            .map((techId) => getOptionNameById(catalog, techId))
+            .filter(Boolean);
 
-          if (technologyName) {
-            params['filter[technology]'] = technologyName;
+          if (technologyNames.length > 0) {
+            params['filter[technology]'] = technologyNames.join(',');
           }
         }
 
-        if (profession.trim()) {
-          params['filter[profession]'] = profession.trim();
+        if (professions.length > 0) {
+          params['filter[profession]'] = professions.join(',');
         }
 
-        if (degree.trim()) {
-          params['filter[degree]'] = degree.trim();
+        if (degrees.length > 0) {
+          params['filter[degree]'] = degrees.join(',');
         }
 
-        if (institution.trim()) {
-          params['filter[academic_institution]'] = institution.trim();
+        if (institutions.length > 0) {
+          params['filter[academic_institution]'] = institutions.join(',');
         }
 
-        const experienceValue = buildExperienceFilterValue(experienceRole, experienceMinYears, experienceMaxYears);
+        const experienceValue = buildExperienceFilterValue(experienceRoles);
         if (experienceValue) {
           params['filter[experiencia_cargo]'] = experienceValue;
         }
@@ -508,31 +549,25 @@ function TalentBoardHome() {
     refreshTick,
     searchTerm,
     selectedSkills,
-    selectedSkillLevelSkillId,
-    selectedSkillLevelOptions,
-    selectedTechnologyId,
-    profession,
-    degree,
-    institution,
-    experienceRole,
-    experienceMinYears,
-    experienceMaxYears,
+    skillLevelFilters,
+    selectedTechnologies,
+    professions,
+    degrees,
+    institutions,
+    experienceRoles,
     sortValue,
   ]);
 
   const safePage = Math.min(apiCurrentPage, totalPages);
   const selectedSkillsCount = selectedSkills.length;
-  const selectedLevelCount = selectedSkillLevelOptions.length;
   const activeFiltersCount = [
     selectedSkillsCount > 0,
-    selectedSkillLevelSkillId || selectedLevelCount > 0,
-    selectedTechnologyId,
-    profession.trim(),
-    degree.trim(),
-    institution.trim(),
-    experienceRole.trim(),
-    experienceMinYears.trim(),
-    experienceMaxYears.trim(),
+    skillLevelFilters.length > 0,
+    selectedTechnologies.length > 0,
+    professions.length > 0,
+    degrees.length > 0,
+    institutions.length > 0,
+    experienceRoles.length > 0,
   ].filter(Boolean).length;
 
   const toggleSkill = (skill) => {
@@ -550,33 +585,58 @@ function TalentBoardHome() {
 
   const removeSkill = (skillId) => {
     setSelectedSkills((currentSkills) => currentSkills.filter((currentSkill) => currentSkill !== skillId));
+    setSkillLevelFilters((currentEntries) => currentEntries.filter((entry) => String(entry.skillId) !== String(skillId)));
   };
 
-  const toggleSkillLevel = (level) => {
-    if (level === '__clear__') {
-      setSelectedSkillLevelOptions([]);
-      return;
+  const addProfession = (profession) => {
+    if (profession && !professions.includes(profession)) {
+      setProfessions((prev) => [...prev, profession]);
     }
+  };
 
-    setSelectedSkillLevelOptions((currentLevels) => (
-      currentLevels.includes(level)
-        ? currentLevels.filter((currentLevel) => currentLevel !== level)
-        : [...currentLevels, level]
-    ));
+  const removeProfession = (profession) => {
+    setProfessions((prev) => prev.filter((p) => p !== profession));
+  };
+
+  const addTechnology = (techId) => {
+    if (techId && !selectedTechnologies.includes(techId)) {
+      setSelectedTechnologies((prev) => [...prev, techId]);
+    }
+  };
+
+  const removeTechnology = (techId) => {
+    setSelectedTechnologies((prev) => prev.filter((t) => t !== techId));
+  };
+
+  const addDegree = (degree) => {
+    if (degree && !degrees.includes(degree)) {
+      setDegrees((prev) => [...prev, degree]);
+    }
+  };
+
+  const removeDegree = (degree) => {
+    setDegrees((prev) => prev.filter((d) => d !== degree));
+  };
+
+  const addInstitution = (institution) => {
+    if (institution && !institutions.includes(institution)) {
+      setInstitutions((prev) => [...prev, institution]);
+    }
+  };
+
+  const removeInstitution = (institution) => {
+    setInstitutions((prev) => prev.filter((i) => i !== institution));
   };
 
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedSkills([]);
-    setSelectedSkillLevelSkillId('');
-    setSelectedSkillLevelOptions([]);
-    setSelectedTechnologyId('');
-    setProfession('');
-    setDegree('');
-    setInstitution('');
-    setExperienceRole('');
-    setExperienceMinYears('');
-    setExperienceMaxYears('');
+    setSkillLevelFilters([]);
+    setSelectedTechnologies([]);
+    setProfessions([]);
+    setDegrees([]);
+    setInstitutions([]);
+    setExperienceRoles([]);
     setSortValue(DEFAULT_SORT);
   };
 
@@ -632,27 +692,25 @@ function TalentBoardHome() {
           selectedSkills={selectedSkills}
           onToggleSkill={toggleSkill}
           onRemoveSkill={removeSkill}
-          selectedSkillLevelSkillId={selectedSkillLevelSkillId}
-          onSelectedSkillLevelSkillChange={setSelectedSkillLevelSkillId}
-          selectedSkillLevelOptions={selectedSkillLevelOptions}
-          onToggleSkillLevel={toggleSkillLevel}
-          selectedTechnologyId={selectedTechnologyId}
-          onTechnologyChange={setSelectedTechnologyId}
+          skillLevelFilters={skillLevelFilters}
+          onSkillLevelFiltersChange={setSkillLevelFilters}
+          selectedTechnologies={selectedTechnologies}
+          onAddTechnology={addTechnology}
+          onRemoveTechnology={removeTechnology}
           roleOptions={roleOptions}
-          profession={profession}
-          onProfessionChange={setProfession}
+          professions={professions}
+          onAddProfession={addProfession}
+          onRemoveProfession={removeProfession}
           degreeOptions={degreeOptions}
-          degree={degree}
-          onDegreeChange={setDegree}
+          degrees={degrees}
+          onAddDegree={addDegree}
+          onRemoveDegree={removeDegree}
           institutionOptions={institutionOptions}
-          institution={institution}
-          onInstitutionChange={setInstitution}
-          experienceRole={experienceRole}
-          onExperienceRoleChange={setExperienceRole}
-          experienceMinYears={experienceMinYears}
-          onExperienceMinYearsChange={setExperienceMinYears}
-          experienceMaxYears={experienceMaxYears}
-          onExperienceMaxYearsChange={setExperienceMaxYears}
+          institutions={institutions}
+          onAddInstitution={addInstitution}
+          onRemoveInstitution={removeInstitution}
+          experienceRoles={experienceRoles}
+          onExperienceRolesChange={setExperienceRoles}
           onClearFilters={clearFilters}
         />
 

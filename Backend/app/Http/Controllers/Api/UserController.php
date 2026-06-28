@@ -121,6 +121,40 @@ class UserController extends Controller
 
         return true;
     }
+
+    private function normalizeFilterValues(mixed $value): array
+    {
+        if (is_array($value)) {
+            $items = Arr::flatten($value);
+        } else {
+            $items = [$value];
+        }
+
+        $normalized = [];
+
+        foreach ($items as $item) {
+            if ($item === null || $item === false) {
+                continue;
+            }
+
+            $text = trim((string) $item);
+
+            if ($text === '') {
+                continue;
+            }
+
+            foreach (preg_split('/\s*,\s*/', $text, -1, PREG_SPLIT_NO_EMPTY) as $part) {
+                $part = trim($part);
+
+                if ($part !== '') {
+                    $normalized[] = $part;
+                }
+            }
+        }
+
+        return array_values($normalized);
+    }
+
     public function showContact(Request $request)
     {
         $user = $request->user();
@@ -312,34 +346,60 @@ class UserController extends Controller
                     });
                 }),
                 AllowedFilter::callback('profession', function (Builder $query, $value): void {
-                    $profession = trim((string) $value);
+                    $professions = $this->normalizeFilterValues($value);
 
-                    if ($profession === '') {
+                    if (empty($professions)) {
                         return;
                     }
 
-                    $query->whereRaw('LOWER(profession) = ?', [mb_strtolower($profession, 'UTF-8')]);
+                    $query->where(function (Builder $q) use ($professions): void {
+                        $first = true;
+                        foreach ($professions as $profession) {
+                            if ($first) {
+                                $q->whereRaw('LOWER(profession) = ?', [mb_strtolower($profession, 'UTF-8')]);
+                                $first = false;
+                            } else {
+                                $q->orWhereRaw('LOWER(profession) = ?', [mb_strtolower($profession, 'UTF-8')]);
+                            }
+                        }
+                    });
                 }),
                 AllowedFilter::callback('degree', function (Builder $query, $value): void {
-                    $degree = trim((string) $value);
+                    $degrees = $this->normalizeFilterValues($value);
 
-                    if ($degree === '') {
+                    if (empty($degrees)) {
                         return;
                     }
 
-                    $query->whereHas('studies', function (Builder $studyQuery) use ($degree): void {
-                        $studyQuery->whereRaw('LOWER(degree) = ?', [mb_strtolower($degree, 'UTF-8')]);
+                    $query->whereHas('studies', function (Builder $studyQuery) use ($degrees): void {
+                        $first = true;
+                        foreach ($degrees as $degree) {
+                            if ($first) {
+                                $studyQuery->whereRaw('LOWER(degree) = ?', [mb_strtolower($degree, 'UTF-8')]);
+                                $first = false;
+                            } else {
+                                $studyQuery->orWhereRaw('LOWER(degree) = ?', [mb_strtolower($degree, 'UTF-8')]);
+                            }
+                        }
                     });
                 }),
                 AllowedFilter::callback('academic_institution', function (Builder $query, $value): void {
-                    $institution = trim((string) $value);
+                    $institutions = $this->normalizeFilterValues($value);
 
-                    if ($institution === '') {
+                    if (empty($institutions)) {
                         return;
                     }
 
-                    $query->whereHas('studies', function (Builder $studyQuery) use ($institution): void {
-                        $studyQuery->whereRaw('LOWER(academic_institution) = ?', [mb_strtolower($institution, 'UTF-8')]);
+                    $query->whereHas('studies', function (Builder $studyQuery) use ($institutions): void {
+                        $first = true;
+                        foreach ($institutions as $institution) {
+                            if ($first) {
+                                $studyQuery->whereRaw('LOWER(academic_institution) = ?', [mb_strtolower($institution, 'UTF-8')]);
+                                $first = false;
+                            } else {
+                                $studyQuery->orWhereRaw('LOWER(academic_institution) = ?', [mb_strtolower($institution, 'UTF-8')]);
+                            }
+                        }
                     });
                 }),
                 AllowedFilter::custom('experiencia_cargo', new JobExperienceFilter()),
@@ -362,12 +422,22 @@ class UserController extends Controller
         });
 
         if ($users->total() === 0) {
-            return response()->json(array_merge($users->toArray(), [
-                'message' => 'Búsqueda no encontrada.',
-            ]), 200);
+            return response()->json(
+                array_merge($users->toArray(), [
+                    'message' => 'Búsqueda no encontrada.',
+                ]),
+                200,
+                [],
+                JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
+            );
         }
 
-        return response()->json($users, 200);
+        return response()->json(
+            $users,
+            200,
+            [],
+            JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
+        );
     }
 
     public function publicProfileFilters()

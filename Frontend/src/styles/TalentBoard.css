@@ -141,7 +141,7 @@
   width: min(76rem, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 22rem minmax(0, 1fr);
+  grid-template-columns: 27rem minmax(0, 1fr);
   gap: 1.5rem;
   align-items: start;
 }
@@ -161,7 +161,7 @@
   max-height: calc(100vh - 8rem);
   overflow: auto;
   display: grid;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .talent-board-filters__title {
@@ -183,13 +183,13 @@
 
 .talent-board-filters__groups {
   display: grid;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .talent-board-filters__section {
   display: grid;
-  gap: 0.9rem;
-  padding: 1rem;
+  gap: 1rem;
+  padding: 1.1rem;
   border: 1px solid rgba(var(--color-texto-rgb), 0.06);
   border-radius: 1rem;
   background: rgba(var(--color-blanco-rgb), 0.78);

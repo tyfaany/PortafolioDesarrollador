@@ -22,10 +22,18 @@ class SkillFilter implements Filter
         }
 
         return $query->where(function (Builder $mainQuery) use ($skills): void {
+            $first = true;
             foreach ($skills as $skill) {
-                $mainQuery->whereHas('skills', function (Builder $skillQuery) use ($skill): void {
-                    $skillQuery->whereRaw('LOWER(technical_skills.name) LIKE ?', ['%' . $skill . '%']);
-                });
+                if ($first) {
+                    $mainQuery->whereHas('skills', function (Builder $skillQuery) use ($skill): void {
+                        $skillQuery->whereRaw('LOWER(technical_skills.name) LIKE ?', ['%' . $skill . '%']);
+                    });
+                    $first = false;
+                } else {
+                    $mainQuery->orWhereHas('skills', function (Builder $skillQuery) use ($skill): void {
+                        $skillQuery->whereRaw('LOWER(technical_skills.name) LIKE ?', ['%' . $skill . '%']);
+                    });
+                }
             }
         });
     }

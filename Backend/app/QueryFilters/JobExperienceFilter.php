@@ -10,10 +10,13 @@ class JobExperienceFilter implements Filter
 {
     public function __invoke(Builder $query, $value, string $property)
     {
-        [$position, $minYears, $maxYears, $invalidYears] = $this->parseValue($value);
-        $position = trim($position);
+        [$positions, $minYears, $maxYears, $invalidYears] = $this->parseValue($value);
+        $positions = array_values(array_filter(array_map(
+            static fn ($position) => trim((string) $position),
+            $positions
+        ), static fn ($position) => $position !== '' && mb_strlen($position, 'UTF-8') >= 2));
 
-        if ($position === '' || mb_strlen($position, 'UTF-8') < 2) {
+        if ($positions === []) {
             return $query->whereRaw('1 = 0');
         }
 
@@ -22,22 +25,30 @@ class JobExperienceFilter implements Filter
         }
 
         if ($minYears === null && $maxYears === null) {
-            $positionLike = mb_strtolower($position, 'UTF-8') . '%';
+            return $query->whereHas('jobs', function (Builder $jobQuery) use ($positions): void {
+                $jobQuery->where(function (Builder $positionQuery) use ($positions): void {
+                    $first = true;
+                    foreach ($positions as $position) {
+                        $positionLike = mb_strtolower($position, 'UTF-8') . '%';
 
-            return $query->whereHas('jobs', function (Builder $jobQuery) use ($positionLike): void {
-                $jobQuery->whereRaw('LOWER(position) LIKE ?', [$positionLike]);
+                        if ($first) {
+                            $positionQuery->whereRaw('LOWER(position) LIKE ?', [$positionLike]);
+                            $first = false;
+                        } else {
+                            $positionQuery->orWhereRaw('LOWER(position) LIKE ?', [$positionLike]);
+                        }
+                    }
+                });
             });
         }
 
-        $positionLike = mb_strtolower($position, 'UTF-8') . '%';
         $now = Carbon::now();
         $currentYear = (int) $now->year;
         $currentMonth = (int) $now->month;
-
         $durationExpression = '((((COALESCE(end_year, ?) - start_year) * 12) + (COALESCE(end_month, ?) - start_month) + 1))';
 
         return $query->whereExists(function ($subQuery) use (
-            $positionLike,
+            $positions,
             $minYears,
             $maxYears,
             $durationExpression,
@@ -47,7 +58,19 @@ class JobExperienceFilter implements Filter
             $subQuery->selectRaw('1')
                 ->from('work_experiences')
                 ->whereColumn('work_experiences.user_id', 'users.id')
-                ->whereRaw('LOWER(position) LIKE ?', [$positionLike]);
+                ->where(function ($positionQuery) use ($positions): void {
+                    $first = true;
+                    foreach ($positions as $position) {
+                        $positionLike = mb_strtolower($position, 'UTF-8') . '%';
+
+                        if ($first) {
+                            $positionQuery->whereRaw('LOWER(position) LIKE ?', [$positionLike]);
+                            $first = false;
+                        } else {
+                            $positionQuery->orWhereRaw('LOWER(position) LIKE ?', [$positionLike]);
+                        }
+                    }
+                });
 
             if ($minYears !== null) {
                 $subQuery->whereRaw($durationExpression . ' >= ?', [
@@ -68,61 +91,67 @@ class JobExperienceFilter implements Filter
     }
 
     /**
-     * @return array{0: string, 1: int|null, 2: int|null, 3: bool}
+     * @return array{0: list<string>, 1: int|null, 2: int|null, 3: bool}
      */
     private function parseValue(mixed $value): array
     {
         $parts = $this->tokenizeValue($value);
 
         if ($parts === []) {
-            return ['', null, null, false];
+            return [[], null, null, false];
         }
 
-        $position = array_shift($parts);
+        $minYears = null;
+        $maxYears = null;
+        $invalidYears = false;
 
-        if ($position === null) {
-            return ['', null, null, false];
-        }
+        $yearTokens = [];
+        while ($parts !== [] && count($yearTokens) < 2) {
+            $candidate = end($parts);
+            $parsed = $this->parseYearToken((string) $candidate);
 
-        if ($position === '') {
-            return ['', null, null, false];
-        }
-
-        $yearTokens = array_slice($parts, 0, 2);
-        $yearTokens = array_map(static fn ($item) => trim((string) $item), $yearTokens);
-
-        if ($yearTokens === [] || $yearTokens === ['', '']) {
-            return [$position, null, null, false];
-        }
-
-        $firstYear = $this->parseYearToken($yearTokens[0]);
-        $secondYear = $this->parseYearToken($yearTokens[1] ?? null);
-
-        if ($this->isInvalidYearToken($firstYear) || $this->isInvalidYearToken($secondYear)) {
-            return [$position, null, null, true];
-        }
-
-        if ($yearTokens[0] === '' && $secondYear !== null) {
-            return [$position, null, $secondYear, false];
-        }
-
-        if ($firstYear !== null && ($yearTokens[1] ?? '') === '') {
-            return [$position, $firstYear, null, false];
-        }
-
-        if ($firstYear !== null && $secondYear !== null) {
-            if ($firstYear >= $secondYear) {
-                return [$position, null, null, true];
+            if ($parsed === '__invalid__') {
+                $invalidYears = true;
+                break;
             }
 
-            return [$position, $firstYear, $secondYear, false];
+            if ($parsed === null) {
+                break;
+            }
+
+            array_pop($parts);
+            array_unshift($yearTokens, $parsed);
         }
 
-        if ($firstYear !== null && $secondYear === null) {
-            return [$position, $firstYear, null, false];
+        if ($invalidYears) {
+            return [[], null, null, true];
         }
 
-        return [$position, null, null, true];
+        if (count($yearTokens) === 2) {
+            [$minYears, $maxYears] = $yearTokens;
+        } elseif (count($yearTokens) === 1) {
+            $minYears = $yearTokens[0];
+        }
+
+        $positions = [];
+        foreach ($parts as $part) {
+            foreach ($this->splitPositions((string) $part) as $position) {
+                $positions[] = $position;
+            }
+        }
+
+        return [$positions, $minYears, $maxYears, false];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function splitPositions(string $value): array
+    {
+        return array_values(array_filter(array_map(
+            static fn ($position) => trim((string) $position),
+            preg_split('/\|/', $value, -1, PREG_SPLIT_NO_EMPTY)
+        ), static fn ($position) => $position !== ''));
     }
 
     /**

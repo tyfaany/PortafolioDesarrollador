@@ -9,19 +9,33 @@ class ProfileTechnologyFilter implements Filter
 {
     public function __invoke(Builder $query, $value, string $property)
     {
-        $technology = is_array($value) ? ($value[0] ?? null) : trim((string) $value);
+        $technologies = is_array($value) ? $value : preg_split('/\s*,\s*/', (string) $value, -1, PREG_SPLIT_NO_EMPTY);
+        $technologies = $technologies === false ? [] : $technologies;
 
-        if ($technology === null || $technology === '') {
+        $technologies = array_values(array_filter(array_map(
+            fn ($tech) => mb_strtolower(trim((string) $tech), 'UTF-8'),
+            $technologies
+        ), fn (string $tech) => $tech !== ''));
+
+        if ($technologies === []) {
             return $query;
         }
 
-        $technology = mb_strtolower($technology, 'UTF-8');
-
-        return $query->whereHas('projects', function (Builder $projectQuery) use ($technology): void {
-            $projectQuery->where('is_public', true)
-                ->whereHas('technologies', function (Builder $techQuery) use ($technology): void {
-                    $techQuery->whereRaw('LOWER(project_technologies.name) = ?', [$technology]);
-                });
+        return $query->whereHas('projects', function (Builder $projectQuery) use ($technologies): void {
+            $projectQuery->where('is_public', true);
+            $first = true;
+            foreach ($technologies as $technology) {
+                if ($first) {
+                    $projectQuery->whereHas('technologies', function (Builder $t) use ($technology): void {
+                        $t->whereRaw('LOWER(project_technologies.name) = ?', [$technology]);
+                    });
+                    $first = false;
+                } else {
+                    $projectQuery->orWhereHas('technologies', function (Builder $t) use ($technology): void {
+                        $t->whereRaw('LOWER(project_technologies.name) = ?', [$technology]);
+                    });
+                }
+            }
         });
     }
 }

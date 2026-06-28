@@ -10,80 +10,111 @@ class SkillLevelFilter implements Filter
 {
     public function __invoke(Builder $query, $value, string $property)
     {
-        [$skillName, $levels, $invalidLevel] = $this->parseValue($value);
+        [$entries, $invalidLevel] = $this->parseValue($value);
 
         if ($invalidLevel) {
             return $query->whereRaw('1 = 0');
         }
 
-        if ($skillName === '' && $levels === []) {
+        if ($entries === []) {
             return $query;
         }
 
-        return $query->whereIn('id', function ($subQuery) use ($skillName, $levels): void {
-            $subQuery->select('user_skills.user_id')
-                ->from('user_skills')
-                ->join('technical_skills', 'technical_skills.id', '=', 'user_skills.technical_skill_id');
+        return $query->where(function (Builder $mainQuery) use ($entries): void {
+            $firstEntry = true;
 
-            if ($skillName !== '') {
-                $subQuery->whereRaw('LOWER(technical_skills.name) LIKE ?', ['%' . mb_strtolower($skillName, 'UTF-8') . '%']);
-            }
+            foreach ($entries as [$skillName, $levels]) {
+                $subQueryCallback = function ($subQuery) use ($skillName, $levels): void {
+                    $subQuery->select('user_skills.user_id')
+                        ->from('user_skills')
+                        ->join('technical_skills', 'technical_skills.id', '=', 'user_skills.technical_skill_id');
 
-            if ($levels !== []) {
-                $subQuery->whereIn(
-                    DB::raw('LOWER(user_skills.level)'),
-                    array_map(
-                        static fn (string $level) => mb_strtolower($level, 'UTF-8'),
-                        $levels
-                    )
-                );
+                    if ($skillName !== '') {
+                        $subQuery->whereRaw('LOWER(technical_skills.name) LIKE ?', ['%' . mb_strtolower($skillName, 'UTF-8') . '%']);
+                    }
+
+                    if ($levels !== []) {
+                        $subQuery->whereIn(
+                            DB::raw('LOWER(user_skills.level)'),
+                            array_map(
+                                static fn (string $level) => mb_strtolower($level, 'UTF-8'),
+                                $levels
+                            )
+                        );
+                    }
+                };
+
+                if ($firstEntry) {
+                    $mainQuery->whereIn('id', $subQueryCallback);
+                    $firstEntry = false;
+                } else {
+                    $mainQuery->orWhereIn('id', $subQueryCallback);
+                }
             }
         });
     }
 
     /**
-     * @return array{0: string, 1: array<int, string>, 2: bool}
+     * @return array{0: array<int, array{0: string, 1: array<int, string>}>, 1: bool}
      */
     private function parseValue(mixed $value): array
     {
         $parts = $this->tokenizeValue($value);
 
         if ($parts === []) {
+            return [[], false];
+        }
+
+        $entries = [];
+
+        foreach ($parts as $part) {
+            [$skillName, $levels, $invalidEntry] = $this->parseEntry($part);
+
+            if ($invalidEntry) {
+                return [[], true];
+            }
+
+            if ($skillName === '' && $levels === []) {
+                continue;
+            }
+
+            $entries[] = [$skillName, array_values(array_unique($levels))];
+        }
+
+        return [$entries, false];
+    }
+
+    /**
+     * @return array{0: string, 1: array<int, string>, 2: bool}
+     */
+    private function parseEntry(string $value): array
+    {
+        $tokens = array_values(array_filter(array_map('trim', preg_split('/\s*[,]\s*/', trim($value), -1, PREG_SPLIT_NO_EMPTY) ?: []), static fn (string $item) => $item !== ''));
+
+        if ($tokens === []) {
             return ['', [], false];
         }
 
-        $firstPartLevel = $this->normalizeLevelLabel($parts[0]);
-
-        if ($firstPartLevel !== null) {
-            $levels = [];
-
-            foreach ($parts as $part) {
-                $level = $this->normalizeLevelLabel($part);
-
-                if ($level === null) {
-                    return ['', [], true];
-                }
-
-                $levels[] = $level;
-            }
-
-            return ['', array_values(array_unique($levels)), false];
-        }
-
-        $skillName = $parts[0];
+        $skillName = '';
         $levels = [];
 
-        foreach (array_slice($parts, 1) as $part) {
-            $level = $this->normalizeLevelLabel($part);
+        foreach ($tokens as $token) {
+            $level = $this->normalizeLevelLabel($token);
 
-            if ($level === null) {
-                return [$skillName, [], true];
+            if ($level !== null) {
+                $levels[] = $level;
+                continue;
             }
 
-            $levels[] = $level;
+            if ($skillName === '') {
+                $skillName = $token;
+                continue;
+            }
+
+            return ['', [], true];
         }
 
-        return [$skillName, array_values(array_unique($levels)), false];
+        return [$skillName, $levels, false];
     }
 
     /**
@@ -109,7 +140,7 @@ class SkillLevelFilter implements Filter
      */
     private function tokenizeString(string $value): array
     {
-        $parts = preg_split('/\s*[|,]\s*/', trim($value), -1, PREG_SPLIT_NO_EMPTY);
+        $parts = preg_split('/\s*[|]\s*/', trim($value), -1, PREG_SPLIT_NO_EMPTY);
 
         return $parts === false ? [] : array_map('trim', $parts);
     }

@@ -38,6 +38,16 @@ class SkillLevelFilterTest extends TestCase
         $this->assertSame(['basico', 'intermedio'], $query->getBindings());
     }
 
+    public function test_it_filters_users_by_multiple_skill_level_entries(): void
+    {
+        $query = User::query();
+
+        (new SkillLevelFilter())($query, 'React,Avanzado|Laravel,Intermedio', 'habilidadTecnica_nivel');
+
+        $this->assertStringContainsString('technical_skills', $query->toSql());
+        $this->assertSame(['%react%', 'avanzado', '%laravel%', 'intermedio'], $query->getBindings());
+    }
+
     public function test_it_does_not_modify_query_for_empty_skill_level_values(): void
     {
         $query = User::query();

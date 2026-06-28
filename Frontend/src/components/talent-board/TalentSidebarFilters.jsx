@@ -14,10 +14,6 @@ import {
 
 const TECH_LEVEL_OPTIONS = ['Basico', 'Intermedio', 'Avanzado'];
 
-function getCatalogLabel(options, id) {
-  return options.find((option) => String(option.id) === String(id))?.name || '';
-}
-
 function Section({ icon, title, subtitle, children }) {
   return (
     <section className="talent-board-filters__section">
@@ -239,25 +235,31 @@ SimpleTag.propTypes = {
 };
 
 function AcademicPanel({
-  degree,
+  degrees,
   degreeOptions,
-  onDegreeChange,
-  institution,
-  institutionOptions,
-  onInstitutionChange,
+  onAddDegree,
   onRemoveDegree,
+  institutions,
+  institutionOptions,
+  onAddInstitution,
   onRemoveInstitution,
 }) {
-  const [degreeDraft, setDegreeDraft] = useState(degree);
-  const [institutionDraft, setInstitutionDraft] = useState(institution);
+  const [degreeDraft, setDegreeDraft] = useState('');
+  const [institutionDraft, setInstitutionDraft] = useState('');
 
-  useEffect(() => {
-    setDegreeDraft(degree);
-  }, [degree]);
+  const handleAddDegree = () => {
+    if (degreeDraft && !degrees.includes(degreeDraft)) {
+      onAddDegree(degreeDraft);
+      setDegreeDraft('');
+    }
+  };
 
-  useEffect(() => {
-    setInstitutionDraft(institution);
-  }, [institution]);
+  const handleAddInstitution = () => {
+    if (institutionDraft && !institutions.includes(institutionDraft)) {
+      onAddInstitution(institutionDraft);
+      setInstitutionDraft('');
+    }
+  };
 
   return (
     <div className="talent-board-filters__academic-panel">
@@ -267,21 +269,28 @@ function AcademicPanel({
           <select value={degreeDraft} onChange={(event) => setDegreeDraft(event.target.value)}>
             <option value="">Añadir grado...</option>
             {degreeOptions.map((option) => (
-              <option key={option} value={option}>
+              <option key={option} value={option} disabled={degrees.includes(option)}>
                 {option}
               </option>
             ))}
           </select>
           <AddBtn
-            onClick={() => {
-              onDegreeChange(degreeDraft);
-              setDegreeDraft('');
-            }}
+            onClick={handleAddDegree}
             disabled={!degreeDraft}
             ariaLabel="Aplicar grado"
           />
         </div>
-        {degree ? <SimpleTag label={degree} onDelete={onRemoveDegree} /> : null}
+        <div className="talent-board-filters__stack">
+          {degrees.length > 0 ? (
+            degrees.map((degree) => (
+              <SimpleTag
+                key={degree}
+                label={degree}
+                onDelete={() => onRemoveDegree(degree)}
+              />
+            ))
+          ) : null}
+        </div>
       </div>
 
       <div className="talent-board-filters__subsection">
@@ -290,34 +299,41 @@ function AcademicPanel({
           <select value={institutionDraft} onChange={(event) => setInstitutionDraft(event.target.value)}>
             <option value="">Añadir institución...</option>
             {institutionOptions.map((option) => (
-              <option key={option} value={option}>
+              <option key={option} value={option} disabled={institutions.includes(option)}>
                 {option}
               </option>
             ))}
           </select>
           <AddBtn
-            onClick={() => {
-              onInstitutionChange(institutionDraft);
-              setInstitutionDraft('');
-            }}
+            onClick={handleAddInstitution}
             disabled={!institutionDraft}
             ariaLabel="Aplicar institución"
           />
         </div>
-        {institution ? <SimpleTag label={institution} onDelete={onRemoveInstitution} /> : null}
+        <div className="talent-board-filters__stack">
+          {institutions.length > 0 ? (
+            institutions.map((institution) => (
+              <SimpleTag
+                key={institution}
+                label={institution}
+                onDelete={() => onRemoveInstitution(institution)}
+              />
+            ))
+          ) : null}
+        </div>
       </div>
     </div>
   );
 }
 
 AcademicPanel.propTypes = {
-  degree: PropTypes.string.isRequired,
+  degrees: PropTypes.arrayOf(PropTypes.string).isRequired,
   degreeOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  onDegreeChange: PropTypes.func.isRequired,
-  institution: PropTypes.string.isRequired,
-  institutionOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  onInstitutionChange: PropTypes.func.isRequired,
+  onAddDegree: PropTypes.func.isRequired,
   onRemoveDegree: PropTypes.func.isRequired,
+  institutions: PropTypes.arrayOf(PropTypes.string).isRequired,
+  institutionOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onAddInstitution: PropTypes.func.isRequired,
   onRemoveInstitution: PropTypes.func.isRequired,
 };
 
@@ -327,54 +343,65 @@ function TalentSidebarFilters({
   professionOptions,
   selectedSkills,
   onToggleSkill,
-  selectedSkillLevelSkillId,
-  onSelectedSkillLevelSkillChange,
-  selectedSkillLevelOptions,
-  onToggleSkillLevel,
-  selectedTechnologyId,
-  onTechnologyChange,
+  onRemoveSkill,
+  skillLevelFilters,
+  onSkillLevelFiltersChange,
+  selectedTechnologies,
+  onAddTechnology,
+  onRemoveTechnology,
   roleOptions,
-  profession,
-  onProfessionChange,
+  professions,
+  onAddProfession,
+  onRemoveProfession,
   degreeOptions,
-  degree,
-  onDegreeChange,
+  degrees,
+  onAddDegree,
+  onRemoveDegree,
   institutionOptions,
-  institution,
-  onInstitutionChange,
-  experienceRole,
-  onExperienceRoleChange,
-  experienceMinYears,
-  onExperienceMinYearsChange,
-  experienceMaxYears,
-  onExperienceMaxYearsChange,
+  institutions,
+  onAddInstitution,
+  onRemoveInstitution,
+  experienceRoles,
+  onExperienceRolesChange,
   onClearFilters,
 }) {
   const [skillToAddId, setSkillToAddId] = useState('');
-  const [professionDraft, setProfessionDraft] = useState(profession);
-  const [technologyDraftId, setTechnologyDraftId] = useState(selectedTechnologyId);
-  const [roleDraft, setRoleDraft] = useState(experienceRole);
-  const [roleOpen, setRoleOpen] = useState(Boolean(experienceRole));
+  const [professionDraft, setProfessionDraft] = useState('');
+  const [technologyDraftId, setTechnologyDraftId] = useState('');
+  const [roleDraft, setRoleDraft] = useState('');
+  const [roleOpen, setRoleOpen] = useState(experienceRoles.length > 0);
+  const [openSkillId, setOpenSkillId] = useState('');
 
   useEffect(() => {
-    setProfessionDraft(profession);
-  }, [profession]);
-
-  useEffect(() => {
-    setTechnologyDraftId(selectedTechnologyId);
-  }, [selectedTechnologyId]);
-
-  useEffect(() => {
-    setRoleDraft(experienceRole);
-    setRoleOpen(Boolean(experienceRole));
-  }, [experienceRole]);
+    setRoleDraft('');
+    setRoleOpen(experienceRoles.length > 0);
+  }, [experienceRoles]);
 
   const availableSkillOptions = Array.isArray(availableSkills) ? availableSkills : [];
   const availableTechnologyOptions = Array.isArray(availableTechnologies) ? availableTechnologies : [];
 
-  const selectedSkillCards = selectedSkills
-    .map((skillId) => availableSkillOptions.find((skill) => String(skill.id) === String(skillId)))
-    .filter(Boolean);
+  const selectedSkillCards = skillLevelFilters
+    .map((entry) => {
+      const skill = availableSkillOptions.find((option) => {
+        const entrySkillId = String(entry?.skillId || '').trim();
+        const optionId = String(option.id || '').trim();
+        const entrySkillName = String(entry?.skillName || '').trim().toLowerCase();
+        const optionName = String(option.name || '').trim().toLowerCase();
+
+        return entrySkillId ? optionId === entrySkillId : entrySkillName === optionName;
+      });
+
+      const label = skill?.name || entry?.skillName || 'Habilidad';
+      const entryKey = String(skill?.id ?? entry?.skillId ?? entry?.skillName ?? '').trim();
+
+      return {
+        entryKey,
+        label,
+        levels: Array.isArray(entry?.levels) ? entry.levels : [],
+        skillId: String(skill?.id ?? entry?.skillId ?? '').trim(),
+      };
+    })
+    .filter((item) => item.label);
 
   const addSkill = () => {
     if (!skillToAddId) {
@@ -382,54 +409,101 @@ function TalentSidebarFilters({
     }
 
     const skill = availableSkillOptions.find((option) => String(option.id) === String(skillToAddId));
-    if (skill) {
+    if (!skill) {
+      setSkillToAddId('');
+      return;
+    }
+
+    const skillId = String(skill.id);
+    const hasEntry = skillLevelFilters.some((entry) => {
+      const entrySkillId = String(entry?.skillId || '').trim();
+      const entrySkillName = String(entry?.skillName || '').trim().toLowerCase();
+      const skillName = String(skill.name || '').trim().toLowerCase();
+
+      return entrySkillId === skillId || entrySkillName === skillName;
+    });
+
+    if (!selectedSkills.includes(skillId)) {
       onToggleSkill(skill);
-      onSelectedSkillLevelSkillChange(String(skill.id));
+    }
+
+    if (!hasEntry) {
+      onSkillLevelFiltersChange([
+        ...skillLevelFilters,
+        {
+          skillId,
+          skillName: skill.name,
+          levels: [],
+        },
+      ]);
     }
 
     setSkillToAddId('');
   };
 
   const removeSkill = (skillId) => {
-    const skill = availableSkillOptions.find((option) => String(option.id) === String(skillId));
-    if (skill) {
-      onToggleSkill(skill);
-    }
-
-    if (String(selectedSkillLevelSkillId) === String(skillId)) {
-      onSelectedSkillLevelSkillChange('');
-      onToggleSkillLevel('__clear__');
-    }
+    onRemoveSkill(skillId);
   };
 
   const toggleSkillOpen = (skillId) => {
-    if (String(selectedSkillLevelSkillId) !== String(skillId)) {
-      onToggleSkillLevel('__clear__');
-    }
-
-    onSelectedSkillLevelSkillChange(
-      String(selectedSkillLevelSkillId) === String(skillId) ? '' : String(skillId),
-    );
+    setOpenSkillId((currentId) => (currentId === skillId ? '' : skillId));
   };
 
-  const handleToggleLevel = (level, skillId) => {
-    if (String(selectedSkillLevelSkillId) !== String(skillId)) {
-      onSelectedSkillLevelSkillChange(String(skillId));
-    }
+  const handleToggleLevel = (skillId, level) => {
+    onSkillLevelFiltersChange((currentEntries) => currentEntries.map((entry) => {
+      const entrySkillId = String(entry?.skillId || '').trim();
+      const entrySkillName = String(entry?.skillName || '').trim().toLowerCase();
+      const normalizedSkillId = String(skillId || '').trim();
+      const normalizedSkillName = normalizedSkillId.toLowerCase();
+      const matches = entrySkillId === normalizedSkillId
+        || entrySkillName === normalizedSkillName;
 
-    onToggleSkillLevel(level);
+      if (!matches) {
+        return entry;
+      }
+
+      const currentLevels = Array.isArray(entry?.levels) ? entry.levels : [];
+      const nextLevels = currentLevels.includes(level)
+        ? currentLevels.filter((currentLevel) => currentLevel !== level)
+        : [...currentLevels, level];
+
+      return {
+        ...entry,
+        levels: nextLevels,
+      };
+    }));
   };
 
   const addProfession = () => {
-    onProfessionChange(professionDraft.trim());
+    if (professionDraft && !professions.includes(professionDraft)) {
+      onAddProfession(professionDraft);
+      setProfessionDraft('');
+    }
   };
 
   const addTechnology = () => {
-    onTechnologyChange(technologyDraftId);
+    if (technologyDraftId && !selectedTechnologies.includes(technologyDraftId)) {
+      onAddTechnology(technologyDraftId);
+      setTechnologyDraftId('');
+    }
   };
 
   const addRole = () => {
-    onExperienceRoleChange(roleDraft.trim());
+    const value = roleDraft.trim();
+
+    if (!value) {
+      return;
+    }
+
+    if (!experienceRoles.some((item) => item.role === value)) {
+      onExperienceRolesChange([...experienceRoles, {
+        role: value,
+        minYears: '',
+        maxYears: '',
+      }] );
+    }
+
+    setRoleDraft('');
   };
 
   return (
@@ -461,19 +535,22 @@ function TalentSidebarFilters({
 
           <div className="talent-board-filters__stack">
             {selectedSkillCards.length > 0 ? (
-              selectedSkillCards.map((skill) => (
+              selectedSkillCards.map((item) => (
                 <SkillTag
-                  key={skill.id}
-                  label={skill.name}
-                  isOpen={String(selectedSkillLevelSkillId) === String(skill.id)}
+                  key={item.entryKey || item.label}
+                  label={item.label}
+                  isOpen={String(openSkillId) === String(item.entryKey || item.label)}
                   levelValues={
-                    String(selectedSkillLevelSkillId) === String(skill.id)
-                      ? selectedSkillLevelOptions
-                      : []
+                    skillLevelFilters.find((entry) => {
+                      const entrySkillId = String(entry?.skillId || '').trim();
+                      const entrySkillName = String(entry?.skillName || '').trim().toLowerCase();
+                      const normalizedEntryKey = String(item.entryKey || '').trim().toLowerCase();
+                      return entrySkillId === item.skillId || entrySkillName === normalizedEntryKey;
+                    })?.levels || []
                   }
-                  onToggleOpen={() => toggleSkillOpen(skill.id)}
-                  onDelete={() => removeSkill(skill.id)}
-                  onToggleLevel={(level) => handleToggleLevel(level, skill.id)}
+                  onToggleOpen={() => toggleSkillOpen(item.entryKey || item.label)}
+                  onDelete={() => removeSkill(item.skillId || item.entryKey)}
+                  onToggleLevel={(level) => handleToggleLevel(item.entryKey || item.label, level)}
                 />
               ))
             ) : (
@@ -492,14 +569,24 @@ function TalentSidebarFilters({
             <select value={professionDraft} onChange={(event) => setProfessionDraft(event.target.value)}>
               <option value="">Añadir profesión...</option>
               {professionOptions.map((option) => (
-                <option key={option} value={option}>
+                <option key={option} value={option} disabled={professions.includes(option)}>
                   {option}
                 </option>
               ))}
             </select>
             <AddBtn onClick={addProfession} disabled={!professionDraft} ariaLabel="Aplicar profesión" />
           </div>
-          {profession ? <SimpleTag label={profession} onDelete={() => onProfessionChange('')} /> : null}
+          <div className="talent-board-filters__stack">
+            {professions.length > 0 ? (
+              professions.map((prof) => (
+                <SimpleTag
+                  key={prof}
+                  label={prof}
+                  onDelete={() => onRemoveProfession(prof)}
+                />
+              ))
+            ) : null}
+          </div>
         </Section>
 
         <Section
@@ -518,24 +605,43 @@ function TalentSidebarFilters({
             <AddBtn onClick={addRole} disabled={!roleDraft} ariaLabel="Aplicar cargo" />
           </div>
 
-          {experienceRole ? (
-            <RoleTag
-              label={experienceRole}
-              isOpen={roleOpen}
-              onToggleOpen={() => setRoleOpen((value) => !value)}
-              onDelete={() => {
-                onExperienceRoleChange('');
-                onExperienceMinYearsChange('');
-                onExperienceMaxYearsChange('');
-                onToggleSkillLevel('__clear__');
-                onSelectedSkillLevelSkillChange('');
-                setRoleOpen(false);
-              }}
-              minYears={experienceMinYears}
-              onChangeMinYears={onExperienceMinYearsChange}
-              maxYears={experienceMaxYears}
-              onChangeMaxYears={onExperienceMaxYearsChange}
-            />
+          {experienceRoles.length > 0 ? (
+            experienceRoles.map((item) => (
+              <RoleTag
+                key={item.role}
+                label={item.role}
+                isOpen={roleOpen}
+                onToggleOpen={() => setRoleOpen((value) => !value)}
+                onDelete={() => {
+                  const nextRoles = experienceRoles.filter((roleItem) => roleItem.role !== item.role);
+                  onExperienceRolesChange(nextRoles);
+
+                  if (nextRoles.length === 0) {
+                    setRoleOpen(false);
+                  }
+                }}
+                minYears={item.minYears}
+                onChangeMinYears={(value) => {
+                  onExperienceRolesChange(
+                    experienceRoles.map((roleItem) => (
+                      roleItem.role === item.role
+                        ? { ...roleItem, minYears: String(value || '').trim() }
+                        : roleItem
+                    )),
+                  );
+                }}
+                maxYears={item.maxYears}
+                onChangeMaxYears={(value) => {
+                  onExperienceRolesChange(
+                    experienceRoles.map((roleItem) => (
+                      roleItem.role === item.role
+                        ? { ...roleItem, maxYears: String(value || '').trim() }
+                        : roleItem
+                    )),
+                  );
+                }}
+              />
+            ))
           ) : null}
         </Section>
 
@@ -547,7 +653,7 @@ function TalentSidebarFilters({
             <select value={technologyDraftId} onChange={(event) => setTechnologyDraftId(event.target.value)}>
               <option value="">Añadir tecnología...</option>
               {availableTechnologyOptions.map((technology) => (
-                <option key={technology.id} value={technology.id}>
+                <option key={technology.id} value={technology.id} disabled={selectedTechnologies.includes(String(technology.id))}>
                   {technology.name}
                 </option>
               ))}
@@ -555,12 +661,20 @@ function TalentSidebarFilters({
             <AddBtn onClick={addTechnology} disabled={!technologyDraftId} ariaLabel="Aplicar tecnología" />
           </div>
 
-          {selectedTechnologyId ? (
-            <SimpleTag
-              label={getCatalogLabel(availableTechnologyOptions, selectedTechnologyId) || selectedTechnologyId}
-              onDelete={() => onTechnologyChange('')}
-            />
-          ) : null}
+          <div className="talent-board-filters__stack">
+            {selectedTechnologies.length > 0 ? (
+              selectedTechnologies.map((techId) => {
+                const tech = availableTechnologyOptions.find((t) => String(t.id) === String(techId));
+                return (
+                  <SimpleTag
+                    key={techId}
+                    label={tech?.name || techId}
+                    onDelete={() => onRemoveTechnology(techId)}
+                  />
+                );
+              })
+            ) : null}
+          </div>
         </Section>
 
         <Section
@@ -568,14 +682,14 @@ function TalentSidebarFilters({
           title="Académico"
         >
           <AcademicPanel
-            degree={degree}
+            degrees={degrees}
             degreeOptions={degreeOptions}
-            onDegreeChange={onDegreeChange}
-            institution={institution}
+            onAddDegree={onAddDegree}
+            onRemoveDegree={onRemoveDegree}
+            institutions={institutions}
             institutionOptions={institutionOptions}
-            onInstitutionChange={onInstitutionChange}
-            onRemoveDegree={() => onDegreeChange('')}
-            onRemoveInstitution={() => onInstitutionChange('')}
+            onAddInstitution={onAddInstitution}
+            onRemoveInstitution={onRemoveInstitution}
           />
         </Section>
       </div>
@@ -599,27 +713,34 @@ TalentSidebarFilters.propTypes = {
   professionOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
   selectedSkills: PropTypes.arrayOf(PropTypes.string).isRequired,
   onToggleSkill: PropTypes.func.isRequired,
-  selectedSkillLevelSkillId: PropTypes.string.isRequired,
-  onSelectedSkillLevelSkillChange: PropTypes.func.isRequired,
-  selectedSkillLevelOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  onToggleSkillLevel: PropTypes.func.isRequired,
-  selectedTechnologyId: PropTypes.string.isRequired,
-  onTechnologyChange: PropTypes.func.isRequired,
+  onRemoveSkill: PropTypes.func.isRequired,
+  skillLevelFilters: PropTypes.arrayOf(PropTypes.shape({
+    skillId: PropTypes.string,
+    skillName: PropTypes.string,
+    levels: PropTypes.arrayOf(PropTypes.string),
+  })).isRequired,
+  onSkillLevelFiltersChange: PropTypes.func.isRequired,
+  selectedTechnologies: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onAddTechnology: PropTypes.func.isRequired,
+  onRemoveTechnology: PropTypes.func.isRequired,
   roleOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  profession: PropTypes.string.isRequired,
-  onProfessionChange: PropTypes.func.isRequired,
+  professions: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onAddProfession: PropTypes.func.isRequired,
+  onRemoveProfession: PropTypes.func.isRequired,
   degreeOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  degree: PropTypes.string.isRequired,
-  onDegreeChange: PropTypes.func.isRequired,
+  degrees: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onAddDegree: PropTypes.func.isRequired,
+  onRemoveDegree: PropTypes.func.isRequired,
   institutionOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  institution: PropTypes.string.isRequired,
-  onInstitutionChange: PropTypes.func.isRequired,
-  experienceRole: PropTypes.string.isRequired,
-  onExperienceRoleChange: PropTypes.func.isRequired,
-  experienceMinYears: PropTypes.string.isRequired,
-  onExperienceMinYearsChange: PropTypes.func.isRequired,
-  experienceMaxYears: PropTypes.string.isRequired,
-  onExperienceMaxYearsChange: PropTypes.func.isRequired,
+  institutions: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onAddInstitution: PropTypes.func.isRequired,
+  onRemoveInstitution: PropTypes.func.isRequired,
+  experienceRoles: PropTypes.arrayOf(PropTypes.shape({
+    role: PropTypes.string.isRequired,
+    minYears: PropTypes.string.isRequired,
+    maxYears: PropTypes.string.isRequired,
+  })).isRequired,
+  onExperienceRolesChange: PropTypes.func.isRequired,
   onClearFilters: PropTypes.func.isRequired,
 };
 
