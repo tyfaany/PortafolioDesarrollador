@@ -66,11 +66,109 @@ class QueryBuilderProfilesTest extends TestCase
             'evidence_url' => null,
         ]);
 
+        $jobUser = User::factory()->create([
+            'name' => 'Job Match',
+            'profession' => 'QA Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $jobUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $jobUser->jobs()->create([
+            'company_name' => 'Acme',
+            'position' => 'Backend Engineer',
+            'achievements' => 'Built APIs and services',
+            'start_month' => 1,
+            'start_year' => 2022,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+        ]);
+
+        $studyUser = User::factory()->create([
+            'name' => 'Study Match',
+            'profession' => 'QA Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $studyUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Schema::disableForeignKeyConstraints();
+
+        try {
+            Study::create([
+                'user_id' => $studyUser->id,
+                'academic_institution' => 'University A',
+                'degree' => 'Licenciatura',
+                'start_date' => now()->subYears(4)->toDateString(),
+                'end_date' => now()->subYears(1)->toDateString(),
+                'achievements' => null,
+            ]);
+        } finally {
+            Schema::enableForeignKeyConstraints();
+        }
+
+        $projectUser = User::factory()->create([
+            'name' => 'Project Match',
+            'profession' => 'QA Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $projectUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Project::create([
+            'user_id' => $projectUser->id,
+            'name' => 'React Portal',
+            'description' => 'Internal dashboard for teams',
+            'start_date' => now()->subMonths(2),
+            'end_date' => now()->subMonth(),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
         $response = $this->getJson('/api/profiles?filter[search]=John');
 
         $response->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'John React');
+
+        $jobResponse = $this->getJson('/api/profiles?filter[search]=Backend Engineer');
+
+        $jobResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Job Match');
+
+        $studyResponse = $this->getJson('/api/profiles?filter[search]=University A');
+
+        $studyResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Study Match');
+
+        $projectResponse = $this->getJson('/api/profiles?filter[search]=React Portal');
+
+        $projectResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Project Match');
+
+        $skillSearchResponse = $this->getJson('/api/profiles?filter[search]=Laravel');
+
+        $skillSearchResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'John React');
+
+        $shortSearchResponse = $this->getJson('/api/profiles?filter[search]=a');
+
+        $shortSearchResponse->assertOk()
+            ->assertJsonCount(0, 'data');
 
         $skillResponse = $this->getJson('/api/profiles?filter[habilidades]=Laravel');
 

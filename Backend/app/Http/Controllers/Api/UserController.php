@@ -268,13 +268,37 @@ class UserController extends Controller
                         return;
                     }
 
+                    if (mb_strlen($value, 'UTF-8') < 2) {
+                        $query->whereRaw('1 = 0');
+
+                        return;
+                    }
+
                     $query->where(function (Builder $subQuery) use ($value): void {
-                        $subQuery->where('name', 'LIKE', "%{$value}%")
-                            ->orWhere('profession', 'LIKE', "%{$value}%")
-                            ->orWhere('biography', 'LIKE', "%{$value}%")
-                            ->orWhereHas('jobs', function (Builder $jobQuery) use ($value): void {
-                                $jobQuery->where('achievements', 'LIKE', "%{$value}%");
-                        });
+                        $search = mb_strtolower($value, 'UTF-8');
+                        $like = "%{$search}%";
+
+                        $subQuery->whereRaw('LOWER(name) LIKE ?', [$like])
+                            ->orWhereRaw('LOWER(profession) LIKE ?', [$like])
+                            ->orWhereRaw('LOWER(biography) LIKE ?', [$like])
+                            ->orWhereHas('jobs', function (Builder $jobQuery) use ($like): void {
+                                $jobQuery->whereRaw('LOWER(position) LIKE ?', [$like])
+                                    ->orWhereRaw('LOWER(achievements) LIKE ?', [$like]);
+                            })
+                            ->orWhereHas('skills', function (Builder $skillQuery) use ($like): void {
+                                $skillQuery->whereRaw('LOWER(name) LIKE ?', [$like]);
+                            })
+                            ->orWhereHas('studies', function (Builder $studyQuery) use ($like): void {
+                                $studyQuery->whereRaw('LOWER(degree) LIKE ?', [$like])
+                                    ->orWhereRaw('LOWER(academic_institution) LIKE ?', [$like]);
+                            })
+                            ->orWhereHas('projects', function (Builder $projectQuery) use ($like): void {
+                                $projectQuery->where('is_public', true)
+                                    ->where(function (Builder $publicProjectQuery) use ($like): void {
+                                        $publicProjectQuery->whereRaw('LOWER(name) LIKE ?', [$like])
+                                            ->orWhereRaw('LOWER(description) LIKE ?', [$like]);
+                                    });
+                            });
                     });
                 }),
                 AllowedFilter::callback('profession', function (Builder $query, $value): void {
