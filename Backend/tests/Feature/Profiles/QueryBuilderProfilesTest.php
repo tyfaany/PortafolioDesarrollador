@@ -925,6 +925,10 @@ class QueryBuilderProfilesTest extends TestCase
             'name' => 'Laravel',
         ]);
 
+        $vue = TechnicalSkill::create([
+            'name' => 'Vue',
+        ]);
+
         $advancedUser->skills()->attach($react->id, [
             'level' => 'Avanzado',
             'evidence_url' => null,
@@ -951,6 +955,38 @@ class QueryBuilderProfilesTest extends TestCase
             'evidence_url' => null,
         ]);
 
+        $basicReactUser = User::factory()->create([
+            'name' => 'Basic React Dev',
+            'profession' => 'Frontend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $basicReactUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $basicReactUser->skills()->attach($react->id, [
+            'level' => 'Basico',
+            'evidence_url' => null,
+        ]);
+
+        $basicVueUser = User::factory()->create([
+            'name' => 'Basic Vue Dev',
+            'profession' => 'Frontend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $basicVueUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $basicVueUser->skills()->attach($vue->id, [
+            'level' => 'Basico',
+            'evidence_url' => null,
+        ]);
+
         $levelResponse = $this->getJson('/api/profiles?filter[habilidadTecnica_nivel]=Avanzado');
 
         $levelResponse->assertOk()
@@ -968,6 +1004,21 @@ class QueryBuilderProfilesTest extends TestCase
         $intermediateResponse->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Intermediate React Dev');
+
+        $multiLevelResponse = $this->getJson('/api/profiles?filter[habilidadTecnica_nivel]=React,1,3');
+
+        $multiLevelResponse->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonFragment(['name' => 'Advanced React Dev'])
+            ->assertJsonFragment(['name' => 'Basic React Dev']);
+
+        $levelsOnlyResponse = $this->getJson('/api/profiles?filter[habilidadTecnica_nivel]=1,3');
+
+        $levelsOnlyResponse->assertOk()
+            ->assertJsonCount(3, 'data')
+            ->assertJsonFragment(['name' => 'Advanced React Dev'])
+            ->assertJsonFragment(['name' => 'Basic React Dev'])
+            ->assertJsonFragment(['name' => 'Basic Vue Dev']);
     }
 
     public function test_it_filters_public_profiles_by_job_position(): void

@@ -10,17 +10,17 @@ class SkillLevelFilter implements Filter
 {
     public function __invoke(Builder $query, $value, string $property)
     {
-        [$skillName, $levelLabel, $invalidLevel] = $this->parseValue($value);
+        [$skillName, $levels, $invalidLevel] = $this->parseValue($value);
 
         if ($invalidLevel) {
             return $query->whereRaw('1 = 0');
         }
 
-        if ($skillName === '' && $levelLabel === null) {
+        if ($skillName === '' && $levels === []) {
             return $query;
         }
 
-        return $query->whereIn('id', function ($subQuery) use ($skillName, $levelLabel): void {
+        return $query->whereIn('id', function ($subQuery) use ($skillName, $levels): void {
             $subQuery->select('user_skills.user_id')
                 ->from('user_skills')
                 ->join('technical_skills', 'technical_skills.id', '=', 'user_skills.technical_skill_id');
@@ -29,61 +29,89 @@ class SkillLevelFilter implements Filter
                 $subQuery->whereRaw('LOWER(technical_skills.name) LIKE ?', ['%' . mb_strtolower($skillName, 'UTF-8') . '%']);
             }
 
-            if ($levelLabel !== null) {
-                $subQuery->where(DB::raw('LOWER(user_skills.level)'), '=', mb_strtolower($levelLabel, 'UTF-8'));
+            if ($levels !== []) {
+                $subQuery->whereIn(
+                    DB::raw('LOWER(user_skills.level)'),
+                    array_map(
+                        static fn (string $level) => mb_strtolower($level, 'UTF-8'),
+                        $levels
+                    )
+                );
             }
         });
     }
 
     /**
-     * @return array{0: string, 1: string|null, 2: bool}
+     * @return array{0: string, 1: array<int, string>, 2: bool}
      */
     private function parseValue(mixed $value): array
     {
+        $parts = $this->tokenizeValue($value);
+
+        if ($parts === []) {
+            return ['', [], false];
+        }
+
+        $firstPartLevel = $this->normalizeLevelLabel($parts[0]);
+
+        if ($firstPartLevel !== null) {
+            $levels = [];
+
+            foreach ($parts as $part) {
+                $level = $this->normalizeLevelLabel($part);
+
+                if ($level === null) {
+                    return ['', [], true];
+                }
+
+                $levels[] = $level;
+            }
+
+            return ['', array_values(array_unique($levels)), false];
+        }
+
+        $skillName = $parts[0];
+        $levels = [];
+
+        foreach (array_slice($parts, 1) as $part) {
+            $level = $this->normalizeLevelLabel($part);
+
+            if ($level === null) {
+                return [$skillName, [], true];
+            }
+
+            $levels[] = $level;
+        }
+
+        return [$skillName, array_values(array_unique($levels)), false];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function tokenizeValue(mixed $value): array
+    {
         if (is_array($value)) {
-            $parts = array_values(array_filter(array_map(
-                static fn ($item) => trim((string) $item),
-                $value
-            ), static fn (string $item) => $item !== ''));
+            $tokens = [];
 
-            if ($parts === []) {
-                return ['', null, false];
+            foreach ($value as $item) {
+                $tokens = array_merge($tokens, $this->tokenizeString((string) $item));
             }
 
-            if (count($parts) >= 2) {
-                $skillName = $parts[0];
-                $level = $parts[1];
-                $levelLabel = $this->normalizeLevelLabel($level);
-
-                return [$skillName, $levelLabel, $level !== '' && $levelLabel === null];
-            }
-
-            $value = $parts[0];
+            return array_values(array_filter($tokens, static fn (string $item) => $item !== ''));
         }
 
-        $value = trim((string) $value);
+        return array_values(array_filter($this->tokenizeString((string) $value), static fn (string $item) => $item !== ''));
+    }
 
-        if ($value === '') {
-            return ['', null, false];
-        }
+    /**
+     * @return array<int, string>
+     */
+    private function tokenizeString(string $value): array
+    {
+        $parts = preg_split('/\s*[|,]\s*/', trim($value), -1, PREG_SPLIT_NO_EMPTY);
 
-        if (str_contains($value, ',')) {
-            [$skillName, $level] = explode(',', $value, 2);
-            $skillName = trim($skillName);
-            $level = trim($level);
-
-            $levelLabel = $this->normalizeLevelLabel($level);
-
-            return [$skillName, $levelLabel, $level !== '' && $levelLabel === null];
-        }
-
-        $levelLabel = $this->normalizeLevelLabel($value);
-
-        if ($levelLabel !== null) {
-            return ['', $levelLabel, false];
-        }
-
-        return [$value, null, false];
+        return $parts === false ? [] : array_map('trim', $parts);
     }
 
     private function normalizeLevelLabel(string $level): ?string
