@@ -259,6 +259,61 @@ class QueryBuilderProfilesTest extends TestCase
             ->assertJsonPath('data.0.name', 'Licenciatura User');
     }
 
+    public function test_it_filters_public_profiles_by_academic_institution(): void
+    {
+        $universityAUser = User::factory()->create([
+            'name' => 'University A User',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $universityAUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $universityBUser = User::factory()->create([
+            'name' => 'University B User',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $universityBUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Schema::disableForeignKeyConstraints();
+
+        try {
+            Study::create([
+                'user_id' => $universityAUser->id,
+                'academic_institution' => 'University A',
+                'degree' => 'Licenciatura',
+                'start_date' => now()->subYears(5)->toDateString(),
+                'end_date' => now()->subYears(1)->toDateString(),
+                'achievements' => null,
+            ]);
+
+            Study::create([
+                'user_id' => $universityBUser->id,
+                'academic_institution' => 'University B',
+                'degree' => 'Licenciatura',
+                'start_date' => now()->subYears(4)->toDateString(),
+                'end_date' => now()->subYears(2)->toDateString(),
+                'achievements' => null,
+            ]);
+        } finally {
+            Schema::enableForeignKeyConstraints();
+        }
+
+        $response = $this->getJson('/api/profiles?filter[academic_institution]=University A');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'University A User');
+    }
+
     public function test_it_filters_public_profiles_by_skill_level(): void
     {
         $advancedUser = User::factory()->create([

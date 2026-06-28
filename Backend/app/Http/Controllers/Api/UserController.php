@@ -295,6 +295,17 @@ class UserController extends Controller
                         $studyQuery->whereRaw('LOWER(degree) = ?', [mb_strtolower($degree, 'UTF-8')]);
                     });
                 }),
+                AllowedFilter::callback('academic_institution', function (Builder $query, $value): void {
+                    $institution = trim((string) $value);
+
+                    if ($institution === '') {
+                        return;
+                    }
+
+                    $query->whereHas('studies', function (Builder $studyQuery) use ($institution): void {
+                        $studyQuery->whereRaw('LOWER(academic_institution) = ?', [mb_strtolower($institution, 'UTF-8')]);
+                    });
+                }),
                 AllowedFilter::custom('experiencia_cargo', new JobExperienceFilter()),
                 AllowedFilter::custom('habilidadTecnica_nivel', new SkillLevelFilter()),
                 AllowedFilter::custom('habilidades', new SkillFilter()),
