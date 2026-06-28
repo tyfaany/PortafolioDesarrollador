@@ -27,6 +27,7 @@ Route::get('/users/{user}/profile-photo', [UserController::class, 'showPublicPro
 Route::get('/project-technologies', [ProjectTechnologyController::class, 'index']);
 Route::get('/users/{user}/projects', [ProjectController::class, 'indexPublic']);
 Route::get('/projects/{project}/image', [ProjectController::class, 'showPublicImage']);
+Route::get('/profiles/catalogs', [UserController::class, 'publicProfileFilters']);
 Route::get('profiles', [UserController::class, 'indexPublicProfilesFull']);
 
 Route::middleware(['auth:sanctum', 'role:owner,admin'])->group(function () {

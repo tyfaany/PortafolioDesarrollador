@@ -17,6 +17,7 @@ use Illuminate\Support\Arr;
 use App\Http\Requests\UpdateContactRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -366,6 +367,82 @@ class UserController extends Controller
         }
 
         return response()->json($users, 200);
+    }
+
+    public function publicProfileFilters()
+    {
+        $baseQuery = User::query()
+            ->where('profile_completed', true)
+            ->where(function (Builder $query): void {
+                $query->whereDoesntHave('visibility')
+                    ->orWhereHas('visibility', function (Builder $visibilityQuery): void {
+                        $visibilityQuery->where('show_in_search', true);
+                    });
+            });
+
+        $professions = (clone $baseQuery)
+            ->whereNotNull('profession')
+            ->whereRaw('TRIM(profession) <> \'\'')
+            ->select('profession')
+            ->distinct()
+            ->orderByRaw('LOWER(profession)')
+            ->pluck('profession')
+            ->values();
+
+        $degrees = DB::table('studies')
+            ->join('users', 'users.id', '=', 'studies.user_id')
+            ->leftJoin('user_visibility', 'user_visibility.user_id', '=', 'users.id')
+            ->where('users.profile_completed', true)
+            ->where(function ($query): void {
+                $query->whereNull('user_visibility.user_id')
+                    ->orWhere('user_visibility.show_in_search', true);
+            })
+            ->whereNotNull('studies.degree')
+            ->whereRaw('TRIM(studies.degree) <> \'\'')
+            ->select('studies.degree')
+            ->distinct()
+            ->orderByRaw('LOWER(studies.degree)')
+            ->pluck('studies.degree')
+            ->values();
+
+        $institutions = DB::table('studies')
+            ->join('users', 'users.id', '=', 'studies.user_id')
+            ->leftJoin('user_visibility', 'user_visibility.user_id', '=', 'users.id')
+            ->where('users.profile_completed', true)
+            ->where(function ($query): void {
+                $query->whereNull('user_visibility.user_id')
+                    ->orWhere('user_visibility.show_in_search', true);
+            })
+            ->whereNotNull('studies.academic_institution')
+            ->whereRaw('TRIM(studies.academic_institution) <> \'\'')
+            ->select('studies.academic_institution')
+            ->distinct()
+            ->orderByRaw('LOWER(studies.academic_institution)')
+            ->pluck('studies.academic_institution')
+            ->values();
+
+        $experienceRoles = DB::table('work_experiences')
+            ->join('users', 'users.id', '=', 'work_experiences.user_id')
+            ->leftJoin('user_visibility', 'user_visibility.user_id', '=', 'users.id')
+            ->where('users.profile_completed', true)
+            ->where(function ($query): void {
+                $query->whereNull('user_visibility.user_id')
+                    ->orWhere('user_visibility.show_in_search', true);
+            })
+            ->whereNotNull('work_experiences.position')
+            ->whereRaw('TRIM(work_experiences.position) <> \'\'')
+            ->select('work_experiences.position')
+            ->distinct()
+            ->orderByRaw('LOWER(work_experiences.position)')
+            ->pluck('work_experiences.position')
+            ->values();
+
+        return response()->json([
+            'professions' => $professions,
+            'degrees' => $degrees,
+            'institutions' => $institutions,
+            'experience_roles' => $experienceRoles,
+        ], 200);
     }
 
     public function showPublicProfile(User $user)

@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
 import Icon from '@mdi/react';
-import { mdiMagnify } from '@mdi/js';
-import { obtenerPerfilesPublicos, obtenerTecnologias } from '../../services/authService';
+import { mdiMagnify, mdiRefresh, mdiSortVariant } from '@mdi/js';
+import {
+  obtenerCatalogoSkillsTecnicas,
+  obtenerCatalogosPerfilPublico,
+  obtenerPerfilesPublicos,
+  obtenerTecnologias,
+} from '../../services/authService';
 import TalentProfileCard from './TalentProfileCard';
 import ProfilePagination from './ProfilePagination';
 import TalentSidebarFilters from './TalentSidebarFilters';
 import '../../styles/TalentBoard.css';
 
 const PROFILES_PER_PAGE = 4;
+const DEFAULT_SORT = '-created_at';
 
 function getInitials(name) {
   return String(name || '')
@@ -53,10 +59,6 @@ function formatYearRange(startMonth, startYear, endMonth, endYear, isCurrentJob)
 
 function pickFirstText(...values) {
   return values.find((value) => String(value || '').trim() !== '') || '';
-}
-
-function normalizeSkillValue(skill) {
-  return String(skill || '').trim().toLowerCase();
 }
 
 function mapPublicProfile(profile) {
@@ -118,9 +120,39 @@ function mapPublicProfile(profile) {
   };
 }
 
+function buildExperienceFilterValue(role, minYears, maxYears) {
+  const position = String(role || '').trim();
+  if (!position) {
+    return '';
+  }
+
+  const min = String(minYears || '').trim();
+  const max = String(maxYears || '').trim();
+
+  if (!min && !max) {
+    return position;
+  }
+
+  return [position, min, max].join(',');
+}
+
+function getOptionNameById(options, id) {
+  return options.find((option) => String(option.id) === String(id))?.name || '';
+}
+
 function TalentBoardHome() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSkills, setSelectedSkills] = useState([]);
+  const [selectedSkillLevelSkillId, setSelectedSkillLevelSkillId] = useState('');
+  const [selectedSkillLevelOptions, setSelectedSkillLevelOptions] = useState([]);
+  const [selectedTechnologyId, setSelectedTechnologyId] = useState('');
+  const [profession, setProfession] = useState('');
+  const [degree, setDegree] = useState('');
+  const [institution, setInstitution] = useState('');
+  const [experienceRole, setExperienceRole] = useState('');
+  const [experienceMinYears, setExperienceMinYears] = useState('');
+  const [experienceMaxYears, setExperienceMaxYears] = useState('');
+  const [sortValue, setSortValue] = useState(DEFAULT_SORT);
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshTick, setRefreshTick] = useState(0);
   const [profiles, setProfiles] = useState([]);
@@ -130,35 +162,48 @@ function TalentBoardHome() {
   const [apiCurrentPage, setApiCurrentPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
   const [availableSkills, setAvailableSkills] = useState(null);
+  const [availableTechnologies, setAvailableTechnologies] = useState(null);
+  const [availableProfileCatalogs, setAvailableProfileCatalogs] = useState(null);
+  const profileCatalogs = availableProfileCatalogs || {};
+  const professionOptions = Array.isArray(profileCatalogs.professions) ? profileCatalogs.professions : [];
+  const roleOptions = Array.isArray(profileCatalogs.experience_roles) ? profileCatalogs.experience_roles : [];
+  const degreeOptions = Array.isArray(profileCatalogs.degrees) ? profileCatalogs.degrees : [];
+  const institutionOptions = Array.isArray(profileCatalogs.institutions) ? profileCatalogs.institutions : [];
 
   useEffect(() => {
     let isActive = true;
 
-    const loadTechnologies = async () => {
+    const loadCatalogs = async () => {
       setAvailableSkills(null);
+      setAvailableTechnologies(null);
+      setAvailableProfileCatalogs(null);
 
-      try {
-        const response = await obtenerTecnologias();
-        const technologies = Array.isArray(response?.data) ? response.data : [];
-        const names = technologies
-          .map((technology) => (typeof technology === 'string' ? technology : technology?.name))
-          .filter(Boolean);
+      const [skillsResult, technologiesResult, profileCatalogsResult] = await Promise.allSettled([
+        obtenerCatalogoSkillsTecnicas(),
+        obtenerTecnologias(),
+        obtenerCatalogosPerfilPublico(),
+      ]);
 
-        if (!isActive) {
-          return;
-        }
-
-        setAvailableSkills(Array.from(new Set(names)));
-      } catch {
-        if (!isActive) {
-          return;
-        }
-
-        setAvailableSkills([]);
+      if (!isActive) {
+        return;
       }
+
+      const skillCatalog = skillsResult.status === 'fulfilled' && Array.isArray(skillsResult.value?.data)
+        ? skillsResult.value.data
+        : [];
+      const technologyCatalog = technologiesResult.status === 'fulfilled' && Array.isArray(technologiesResult.value?.data)
+        ? technologiesResult.value.data
+        : [];
+      const publicCatalogs = profileCatalogsResult.status === 'fulfilled' && profileCatalogsResult.value?.data
+        ? profileCatalogsResult.value.data
+        : {};
+
+      setAvailableSkills(skillCatalog);
+      setAvailableTechnologies(technologyCatalog);
+      setAvailableProfileCatalogs(publicCatalogs);
     };
 
-    loadTechnologies();
+    loadCatalogs();
 
     return () => {
       isActive = false;
@@ -167,7 +212,20 @@ function TalentBoardHome() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedSkills]);
+  }, [
+    searchTerm,
+    selectedSkills,
+    selectedSkillLevelSkillId,
+    selectedSkillLevelOptions,
+    selectedTechnologyId,
+    profession,
+    degree,
+    institution,
+    experienceRole,
+    experienceMinYears,
+    experienceMaxYears,
+    sortValue,
+  ]);
 
   useEffect(() => {
     let isActive = true;
@@ -187,9 +245,55 @@ function TalentBoardHome() {
         }
 
         if (selectedSkills.length > 0) {
-          params['filter[habilidades]'] = selectedSkills
-            .map((skill) => skill.toLowerCase())
-            .join(',');
+          const catalog = Array.isArray(availableSkills) ? availableSkills : [];
+          const selectedSkillNames = selectedSkills
+            .map((skillId) => getOptionNameById(catalog, skillId))
+            .filter(Boolean);
+
+          if (selectedSkillNames.length > 0) {
+            params['filter[habilidades]'] = selectedSkillNames.join(',');
+          }
+        }
+
+        if (selectedSkillLevelSkillId || selectedSkillLevelOptions.length > 0) {
+          const catalog = Array.isArray(availableSkills) ? availableSkills : [];
+          const skillName = getOptionNameById(catalog, selectedSkillLevelSkillId);
+
+          if (skillName) {
+            params['filter[habilidadTecnica_nivel]'] = [skillName, ...selectedSkillLevelOptions].join(',');
+          } else if (selectedSkillLevelOptions.length > 0) {
+            params['filter[habilidadTecnica_nivel]'] = selectedSkillLevelOptions.join(',');
+          }
+        }
+
+        if (selectedTechnologyId) {
+          const catalog = Array.isArray(availableTechnologies) ? availableTechnologies : [];
+          const technologyName = getOptionNameById(catalog, selectedTechnologyId);
+
+          if (technologyName) {
+            params['filter[technology]'] = technologyName;
+          }
+        }
+
+        if (profession.trim()) {
+          params['filter[profession]'] = profession.trim();
+        }
+
+        if (degree.trim()) {
+          params['filter[degree]'] = degree.trim();
+        }
+
+        if (institution.trim()) {
+          params['filter[academic_institution]'] = institution.trim();
+        }
+
+        const experienceValue = buildExperienceFilterValue(experienceRole, experienceMinYears, experienceMaxYears);
+        if (experienceValue) {
+          params['filter[experiencia_cargo]'] = experienceValue;
+        }
+
+        if (sortValue) {
+          params.sort = sortValue;
         }
 
         const response = await obtenerPerfilesPublicos(params);
@@ -225,30 +329,104 @@ function TalentBoardHome() {
       isActive = false;
       window.clearTimeout(timeoutId);
     };
-  }, [currentPage, refreshTick, searchTerm, selectedSkills]);
+  }, [
+    availableSkills,
+    availableTechnologies,
+    currentPage,
+    refreshTick,
+    searchTerm,
+    selectedSkills,
+    selectedSkillLevelSkillId,
+    selectedSkillLevelOptions,
+    selectedTechnologyId,
+    profession,
+    degree,
+    institution,
+    experienceRole,
+    experienceMinYears,
+    experienceMaxYears,
+    sortValue,
+  ]);
 
   const safePage = Math.min(apiCurrentPage, totalPages);
+  const selectedSkillsCount = selectedSkills.length;
+  const selectedLevelCount = selectedSkillLevelOptions.length;
+  const activeFiltersCount = [
+    searchTerm.trim(),
+    selectedSkillsCount > 0,
+    selectedSkillLevelSkillId || selectedLevelCount > 0,
+    selectedTechnologyId,
+    profession.trim(),
+    degree.trim(),
+    institution.trim(),
+    experienceRole.trim(),
+    experienceMinYears.trim(),
+    experienceMaxYears.trim(),
+    sortValue !== DEFAULT_SORT,
+  ].filter(Boolean).length;
 
   const toggleSkill = (skill) => {
-    const normalizedSkill = normalizeSkillValue(skill);
+    const skillId = String(skill?.id ?? '');
+    if (!skillId) {
+      return;
+    }
 
     setSelectedSkills((currentSkills) => (
-      currentSkills.includes(normalizedSkill)
-        ? currentSkills.filter((currentSkill) => currentSkill !== normalizedSkill)
-        : [...currentSkills, normalizedSkill]
+      currentSkills.includes(skillId)
+        ? currentSkills.filter((currentSkill) => currentSkill !== skillId)
+        : [...currentSkills, skillId]
     ));
+  };
+
+  const removeSkill = (skillId) => {
+    setSelectedSkills((currentSkills) => currentSkills.filter((currentSkill) => currentSkill !== skillId));
+  };
+
+  const toggleSkillLevel = (level) => {
+    if (level === '__clear__') {
+      setSelectedSkillLevelOptions([]);
+      return;
+    }
+
+    setSelectedSkillLevelOptions((currentLevels) => (
+      currentLevels.includes(level)
+        ? currentLevels.filter((currentLevel) => currentLevel !== level)
+        : [...currentLevels, level]
+    ));
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedSkills([]);
+    setSelectedSkillLevelSkillId('');
+    setSelectedSkillLevelOptions([]);
+    setSelectedTechnologyId('');
+    setProfession('');
+    setDegree('');
+    setInstitution('');
+    setExperienceRole('');
+    setExperienceMinYears('');
+    setExperienceMaxYears('');
+    setSortValue(DEFAULT_SORT);
   };
 
   return (
     <main className="talent-board-page">
-      <div className="talent-board-page__orb talent-board-page__orb--one" aria-hidden="true" />
-      <div className="talent-board-page__orb talent-board-page__orb--two" aria-hidden="true" />
+      <div
+        className="talent-board-page__orb talent-board-page__orb--one"
+        aria-hidden="true"
+      />
+      <div
+        className="talent-board-page__orb talent-board-page__orb--two"
+        aria-hidden="true"
+      />
 
       <section className="talent-board-hero">
         <h1>Explora talento, proyectos y trayectoria en una sola vista</h1>
         <p>
-          Una experiencia de discovery pensada para encontrar perfiles que encajan con tu stack,
-          tus retos tecnicos y la narrativa visual de DevStack.
+          Una experiencia de discovery pensada para encontrar perfiles que
+          encajan con tu stack, tus retos técnicos y la narrativa visual de
+          DevStack.
         </p>
 
         <form
@@ -258,15 +436,16 @@ function TalentBoardHome() {
           <span className="talent-board-search__icon" aria-hidden="true">
             <Icon path={mdiMagnify} size={0.9} />
           </span>
-          <label className="talent-board-search__label" htmlFor="talent-board-search-input">
-            Buscar perfiles
-          </label>
+          <label
+            className="talent-board-search__label"
+            htmlFor="talent-board-search-input"
+          ></label>
           <input
             id="talent-board-search-input"
             type="search"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Busca por nombre, rol, biografía o experiencia"
+            placeholder="Buscar..."
             aria-label="Buscar perfiles por nombre, rol, biografía o experiencia"
           />
           <button type="submit" className="talent-board-primary-button">
@@ -278,25 +457,94 @@ function TalentBoardHome() {
       <section className="talent-board-layout">
         <TalentSidebarFilters
           availableSkills={availableSkills}
+          availableTechnologies={availableTechnologies}
+          professionOptions={professionOptions}
           selectedSkills={selectedSkills}
           onToggleSkill={toggleSkill}
-          onClearFilters={() => setSelectedSkills([])}
+          onRemoveSkill={removeSkill}
+          selectedSkillLevelSkillId={selectedSkillLevelSkillId}
+          onSelectedSkillLevelSkillChange={setSelectedSkillLevelSkillId}
+          selectedSkillLevelOptions={selectedSkillLevelOptions}
+          onToggleSkillLevel={toggleSkillLevel}
+          selectedTechnologyId={selectedTechnologyId}
+          onTechnologyChange={setSelectedTechnologyId}
+          roleOptions={roleOptions}
+          profession={profession}
+          onProfessionChange={setProfession}
+          degreeOptions={degreeOptions}
+          degree={degree}
+          onDegreeChange={setDegree}
+          institutionOptions={institutionOptions}
+          institution={institution}
+          onInstitutionChange={setInstitution}
+          experienceRole={experienceRole}
+          onExperienceRoleChange={setExperienceRole}
+          experienceMinYears={experienceMinYears}
+          onExperienceMinYearsChange={setExperienceMinYears}
+          experienceMaxYears={experienceMaxYears}
+          onExperienceMaxYearsChange={setExperienceMaxYears}
+          onClearFilters={clearFilters}
         />
 
         <div className="talent-board-results">
           <div className="talent-board-results__bar">
-            <p>
-              Mostrando <span>{totalResults}</span> perfiles destacados
-            </p>
-            <p>
-              Pagina <span>{safePage}</span> de <span>{totalPages}</span>
-            </p>
+            <div className="talent-board-results__summary">
+              <p>
+                Mostrando <span>{totalResults}</span> perfiles
+              </p>
+              <p className="talent-board-results__meta">
+                {activeFiltersCount > 0 ? (
+                  <>
+                    <span>{activeFiltersCount}</span> filtro/orden activos
+                  </>
+                ) : (
+                  "Sin filtros aplicados"
+                )}
+              </p>
+            </div>
+
+            <div className="talent-board-results__sort">
+              <label htmlFor="talent-board-sort">
+                <Icon path={mdiSortVariant} size={0.72} />
+                Ordenar por
+              </label>
+              <select
+                id="talent-board-sort"
+                value={sortValue}
+                onChange={(event) => setSortValue(event.target.value)}
+              >
+                <option value="-created_at">Más recientes</option>
+                <option value="created_at">Más antiguos</option>
+                <option value="-projects_count">Más proyectos</option>
+                <option value="projects_count">Menos proyectos</option>
+                <option value="name">Nombre (A-Z)</option>
+                <option value="-name">Nombre (Z-A)</option>
+                <option value="profession">Profesión (A-Z)</option>
+                <option value="-profession">Profesión (Z-A)</option>
+              </select>
+            </div>
+
+            <div className="talent-board-results__page">
+              <p>
+                Página <span>{safePage}</span> de <span>{totalPages}</span>
+              </p>
+              <button
+                type="button"
+                className="talent-board-results__refresh"
+                onClick={() => setRefreshTick((value) => value + 1)}
+              >
+                <Icon path={mdiRefresh} size={0.72} />
+                Reintentar
+              </button>
+            </div>
           </div>
 
           {loading ? (
             <div className="talent-board-empty softsave-projects-card">
               <h2>Cargando perfiles</h2>
-              <p>Estamos consultando la informacion mas reciente del directorio.</p>
+              <p>
+                Estamos consultando la información más reciente del directorio.
+              </p>
             </div>
           ) : error ? (
             <div className="talent-board-empty softsave-projects-card">
@@ -314,10 +562,7 @@ function TalentBoardHome() {
             <>
               <div className="talent-board-results__grid">
                 {profiles.map((profile) => (
-                  <TalentProfileCard
-                    key={profile.id}
-                    profile={profile}
-                  />
+                  <TalentProfileCard key={profile.id} profile={profile} />
                 ))}
               </div>
 
@@ -331,16 +576,13 @@ function TalentBoardHome() {
             <div className="talent-board-empty softsave-projects-card">
               <h2>No se encontraron resultados</h2>
               <p>
-                Prueba con otro nombre, un rol distinto o limpia los filtros tecnicos para volver
-                a explorar el directorio.
+                Prueba con otro nombre, ajusta las habilidades o limpia los
+                filtros para volver a explorar el directorio.
               </p>
               <button
                 type="button"
                 className="talent-board-primary-button talent-board-empty__action"
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedSkills([]);
-                }}
+                onClick={clearFilters}
               >
                 Limpiar filtros
               </button>
