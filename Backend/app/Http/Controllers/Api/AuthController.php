@@ -69,6 +69,7 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        Log::info('AuthController: login method initiated.');
         // Limpiamos el email antes de hacer nada
         if ($request->has('email')) {
             $request->merge([
@@ -93,7 +94,15 @@ class AuthController extends Controller
         }
 
         $user = User::where('email', $request->email)->first();
-        if ($user && method_exists($user, 'hasVerifiedEmail') && ! $user->hasVerifiedEmail()) {
+
+        $isEmailVerified = false;
+
+        if ($user) {
+            $isEmailVerified = ! empty($user->email_verified_at)
+                || (method_exists($user, 'hasVerifiedEmail') && $user->hasVerifiedEmail());
+        }
+
+        if ($user && ! $isEmailVerified) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Debes verificar tu correo electrónico antes de iniciar sesión.',
