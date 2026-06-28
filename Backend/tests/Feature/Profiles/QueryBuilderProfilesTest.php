@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Profiles;
 
+use App\Models\Job;
 use App\Models\TechnicalSkill;
 use App\Models\User;
 use App\Models\UserVisibility;
@@ -149,6 +150,302 @@ class QueryBuilderProfilesTest extends TestCase
         $intermediateResponse->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Intermediate React Dev');
+    }
+
+    public function test_it_filters_public_profiles_by_job_position(): void
+    {
+        $backendSenior = User::factory()->create([
+            'name' => 'Backend Senior',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $backendSenior->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $backendJunior = User::factory()->create([
+            'name' => 'Backend Junior',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $backendJunior->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $frontendDev = User::factory()->create([
+            'name' => 'Frontend Dev',
+            'profession' => 'Frontend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $frontendDev->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Job::create([
+            'user_id' => $backendSenior->id,
+            'position' => 'Backend Engineer',
+            'company_name' => 'Senior Co',
+            'start_month' => 1,
+            'start_year' => 2021,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+            'achievements' => 'Built APIs',
+        ]);
+
+        Job::create([
+            'user_id' => $backendJunior->id,
+            'position' => 'Backend Developer',
+            'company_name' => 'Junior Co',
+            'start_month' => 1,
+            'start_year' => 2022,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+            'achievements' => 'Maintained services',
+        ]);
+
+        Job::create([
+            'user_id' => $frontendDev->id,
+            'position' => 'Frontend Developer',
+            'company_name' => 'UI Co',
+            'start_month' => 1,
+            'start_year' => 2021,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+            'achievements' => 'Built interfaces',
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[experiencia_cargo]=Backend');
+
+        $response->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.name', 'Backend Senior')
+            ->assertJsonPath('data.1.name', 'Backend Junior');
+    }
+
+    public function test_it_filters_public_profiles_by_job_position_and_years(): void
+    {
+        $backendSenior = User::factory()->create([
+            'name' => 'Backend Senior',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $backendSenior->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $backendJunior = User::factory()->create([
+            'name' => 'Backend Junior',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $backendJunior->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Job::create([
+            'user_id' => $backendSenior->id,
+            'position' => 'Backend Engineer',
+            'company_name' => 'Senior Co',
+            'start_month' => 1,
+            'start_year' => 2021,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+            'achievements' => 'Built APIs',
+        ]);
+
+        Job::create([
+            'user_id' => $backendJunior->id,
+            'position' => 'Backend Developer',
+            'company_name' => 'Junior Co',
+            'start_month' => 1,
+            'start_year' => 2022,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+            'achievements' => 'Maintained services',
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[experiencia_cargo]=Backend,3');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Backend Senior');
+    }
+
+    public function test_it_filters_the_two_year_job_bucket(): void
+    {
+        $backendTwoYears = User::factory()->create([
+            'name' => 'Backend Two Years',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $backendTwoYears->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Job::create([
+            'user_id' => $backendTwoYears->id,
+            'position' => 'Backend Developer',
+            'company_name' => 'Two Years Co',
+            'start_month' => 1,
+            'start_year' => 2022,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+            'achievements' => 'Built services',
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[experiencia_cargo]=Backend,2');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Backend Two Years');
+    }
+
+    public function test_it_filters_a_real_job_title_example_with_years(): void
+    {
+        $matchedUser = User::factory()->create([
+            'name' => 'Desarrollador Backend Full',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $matchedUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Job::create([
+            'user_id' => $matchedUser->id,
+            'position' => 'Desarrollador Backend',
+            'company_name' => 'Real Co',
+            'start_month' => 3,
+            'start_year' => 2019,
+            'end_month' => 6,
+            'end_year' => 2021,
+            'is_current_job' => false,
+            'achievements' => 'Built APIs',
+        ]);
+
+        Job::create([
+            'user_id' => $matchedUser->id,
+            'position' => 'Desarrollador Backend',
+            'company_name' => 'Real Co 2',
+            'start_month' => 1,
+            'start_year' => 2020,
+            'end_month' => 1,
+            'end_year' => 2026,
+            'is_current_job' => false,
+            'achievements' => 'Scaled APIs',
+        ]);
+
+        $longOnlyUser = User::factory()->create([
+            'name' => 'Desarrollador Backend Largo',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $longOnlyUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Job::create([
+            'user_id' => $longOnlyUser->id,
+            'position' => 'Desarrollador Backend',
+            'company_name' => 'Long Co',
+            'start_month' => 1,
+            'start_year' => 2020,
+            'end_month' => 1,
+            'end_year' => 2026,
+            'is_current_job' => false,
+            'achievements' => 'Long running project',
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[experiencia_cargo]=Desarrollador%20Backend,2');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Desarrollador Backend Full')
+            ->assertJsonMissing(['name' => 'Desarrollador Backend Largo']);
+    }
+
+    public function test_it_requires_the_full_year_threshold_for_job_filters(): void
+    {
+        $backendAlmostTwoYears = User::factory()->create([
+            'name' => 'Backend Almost Two',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $backendAlmostTwoYears->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Job::create([
+            'user_id' => $backendAlmostTwoYears->id,
+            'position' => 'Backend Developer',
+            'company_name' => 'Almost Co',
+            'start_month' => 1,
+            'start_year' => 2022,
+            'end_month' => 11,
+            'end_year' => 2023,
+            'is_current_job' => false,
+            'achievements' => 'Built services',
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[experiencia_cargo]=Backend,2');
+
+        $response->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_it_rejects_too_short_job_position_filters(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Backend Senior',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $user->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Job::create([
+            'user_id' => $user->id,
+            'position' => 'Backend Engineer',
+            'company_name' => 'Senior Co',
+            'start_month' => 1,
+            'start_year' => 2020,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+            'achievements' => 'Built APIs',
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[experiencia_cargo]=a');
+
+        $response->assertOk()
+            ->assertJsonCount(0, 'data');
     }
 
     public function test_it_hides_profiles_marked_as_not_visible_in_search(): void
