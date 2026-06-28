@@ -246,11 +246,6 @@ function TalentBoardHome() {
       <div className="talent-board-page__orb talent-board-page__orb--two" aria-hidden="true" />
 
       <section className="talent-board-hero">
-        <h1>Explora talento, proyectos y trayectoria en una sola vista</h1>
-        <p>
-          Una experiencia de discovery pensada para encontrar perfiles que encajan con tu stack,
-          tus retos tecnicos y la narrativa visual de SoftSave.
-        </p>
 
         <form
           className="talent-board-search softsave-projects-card"

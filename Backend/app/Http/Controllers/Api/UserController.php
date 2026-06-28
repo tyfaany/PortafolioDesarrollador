@@ -243,7 +243,7 @@ private function checkIfProfileIsComplete(User $user, array $newData): bool
     $users = \Spatie\QueryBuilder\QueryBuilder::for($baseQuery)
         ->allowedFilters([
            
-            \Spatie\QueryBuilder\AllowedFilter::callback('experiencia_cargo', function (\Illuminate\Database\Eloquent\Builder $query): void {}),
+            \Spatie\QueryBuilder\AllowedFilter::callback('cargo_experiencia', function (\Illuminate\Database\Eloquent\Builder $query): void {}),
             \Spatie\QueryBuilder\AllowedFilter::callback('habilidadTecnica_nivel', function (\Illuminate\Database\Eloquent\Builder $query): void {}),
             
             \Spatie\QueryBuilder\AllowedFilter::callback('search', function (\Illuminate\Database\Eloquent\Builder $query, $value): void {

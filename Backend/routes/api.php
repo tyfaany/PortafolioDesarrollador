@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ProjectTechnologyController;
 use App\Http\Controllers\Api\PrivacyController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\GithubController;
+use App\http\Controllers\Api\TechnologyController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -24,6 +25,8 @@ Route::get('/users/{id}/contact', [UserController::class, 'showPublicContact']);
 Route::get('/users/{user}/profile', [UserController::class, 'showPublicProfile']);
 Route::get('/project-technologies', [ProjectTechnologyController::class, 'index']);
 Route::get('/users/{user}/projects', [ProjectController::class, 'indexPublic']);
+Route::get('technologies',[TechnologyController::class, 'index']);
+Route::post('technologies',[TechnologyController::class, 'store']);
 Route::get('profiles', [UserController::class, 'indexPublicProfilesFull']);
 
 Route::middleware(['auth:sanctum', 'role:owner,admin'])->group(function () {

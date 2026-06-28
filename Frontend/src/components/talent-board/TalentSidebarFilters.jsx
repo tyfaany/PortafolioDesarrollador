@@ -17,8 +17,8 @@ function TalentSidebarFilters({
       <div className="talent-board-filters__title">
         <Icon path={mdiTuneVariant} size={0.95} />
         <div>
-          <h2>Filtros tecnicos</h2>
-          <p>Afina la busqueda por stack y enfoque.</p>
+          <h2>Filtros </h2>
+    
         </div>
       </div>
 

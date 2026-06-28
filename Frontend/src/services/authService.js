@@ -136,8 +136,8 @@ export const toggleVisibilidadProyecto = (project) => {
 };
 
 export const eliminarProyecto = (id) => api.delete(`/user/projects/${id}`);
-
-export const obtenerTecnologias = () => api.get('/project-technologies');
+//ojo
+export const obtenerTecnologias = () => api.get('/technologies');
 export const obtenerPerfilesPublicos = (params = {}) => api.get('/profiles', { params });
 
 export const obtenerPrivacidad = () => api.get('/user/privacy');
