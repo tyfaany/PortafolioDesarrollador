@@ -512,6 +512,84 @@ class QueryBuilderProfilesTest extends TestCase
             ->assertJsonPath('data.2.name', 'Hidden Projects User');
     }
 
+    public function test_it_sorts_public_profiles_by_name_with_stable_tiebreakers(): void
+    {
+        $olderUser = User::factory()->create([
+            'name' => 'Same Name',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $olderUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        User::whereKey($olderUser->id)->update([
+            'updated_at' => now()->subDays(7),
+        ]);
+
+        $recentUser = User::factory()->create([
+            'name' => 'Same Name',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $recentUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        User::whereKey($recentUser->id)->update([
+            'updated_at' => now()->subDay(),
+        ]);
+
+        $response = $this->getJson('/api/profiles?sort=name');
+
+        $response->assertOk()
+            ->assertJsonPath('data.0.id', $recentUser->id)
+            ->assertJsonPath('data.1.id', $olderUser->id);
+    }
+
+    public function test_it_sorts_public_profiles_by_profession_with_stable_tiebreakers(): void
+    {
+        $olderUser = User::factory()->create([
+            'name' => 'Older Profession User',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $olderUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        User::whereKey($olderUser->id)->update([
+            'updated_at' => now()->subDays(7),
+        ]);
+
+        $recentUser = User::factory()->create([
+            'name' => 'Recent Profession User',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $recentUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        User::whereKey($recentUser->id)->update([
+            'updated_at' => now()->subDay(),
+        ]);
+
+        $response = $this->getJson('/api/profiles?sort=profession');
+
+        $response->assertOk()
+            ->assertJsonPath('data.0.id', $recentUser->id)
+            ->assertJsonPath('data.1.id', $olderUser->id);
+    }
+
     public function test_it_uses_recent_activity_as_tiebreaker_for_projects_count_sort(): void
     {
         $olderUser = User::factory()->create([

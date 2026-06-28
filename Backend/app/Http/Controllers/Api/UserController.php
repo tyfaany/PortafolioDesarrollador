@@ -10,6 +10,7 @@ use App\QueryFilters\ProfileTechnologyFilter;
 use App\QueryFilters\SkillFilter;
 use App\QueryFilters\SkillLevelFilter;
 use App\Sorts\ProjectsCountSort;
+use App\Sorts\StableTextSort;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -339,9 +340,9 @@ class UserController extends Controller
             ])
             ->allowedSorts([
                 AllowedSort::custom('projects_count', new ProjectsCountSort()),
-                AllowedSort::field('name'),
+                AllowedSort::custom('name', new StableTextSort('name')),
                 AllowedSort::field('created_at'),
-                AllowedSort::field('profession'),
+                AllowedSort::custom('profession', new StableTextSort('profession')),
             ])
             ->defaultSort('-created_at')
             ->paginate($perPage)
