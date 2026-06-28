@@ -171,6 +171,37 @@ class QueryBuilderProfilesTest extends TestCase
             ->assertJsonMissing(['name' => 'Vue Builder']);
     }
 
+    public function test_it_filters_public_profiles_by_profession(): void
+    {
+        $backendUser = User::factory()->create([
+            'name' => 'Backend Specialist',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $backendUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $frontendUser = User::factory()->create([
+            'name' => 'Frontend Specialist',
+            'profession' => 'Frontend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $frontendUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[profession]=Backend Engineer');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Backend Specialist');
+    }
+
     public function test_it_filters_public_profiles_by_skill_level(): void
     {
         $advancedUser = User::factory()->create([

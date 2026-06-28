@@ -272,8 +272,17 @@ class UserController extends Controller
                             ->orWhere('biography', 'LIKE', "%{$value}%")
                             ->orWhereHas('jobs', function (Builder $jobQuery) use ($value): void {
                                 $jobQuery->where('achievements', 'LIKE', "%{$value}%");
-                            });
+                        });
                     });
+                }),
+                AllowedFilter::callback('profession', function (Builder $query, $value): void {
+                    $profession = trim((string) $value);
+
+                    if ($profession === '') {
+                        return;
+                    }
+
+                    $query->whereRaw('LOWER(profession) = ?', [mb_strtolower($profession, 'UTF-8')]);
                 }),
                 AllowedFilter::custom('experiencia_cargo', new JobExperienceFilter()),
                 AllowedFilter::custom('habilidadTecnica_nivel', new SkillLevelFilter()),
