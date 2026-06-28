@@ -5,10 +5,12 @@ namespace Tests\Feature\Profiles;
 use App\Models\Job;
 use App\Models\Project;
 use App\Models\ProjectTechnology;
+use App\Models\Study;
 use App\Models\TechnicalSkill;
 use App\Models\User;
 use App\Models\UserVisibility;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class QueryBuilderProfilesTest extends TestCase
@@ -200,6 +202,61 @@ class QueryBuilderProfilesTest extends TestCase
         $response->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Backend Specialist');
+    }
+
+    public function test_it_filters_public_profiles_by_degree(): void
+    {
+        $licenciaturaUser = User::factory()->create([
+            'name' => 'Licenciatura User',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $licenciaturaUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $maestriaUser = User::factory()->create([
+            'name' => 'Maestria User',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $maestriaUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Schema::disableForeignKeyConstraints();
+
+        try {
+            Study::create([
+                'user_id' => $licenciaturaUser->id,
+                'academic_institution' => 'University A',
+                'degree' => 'Licenciatura',
+                'start_date' => now()->subYears(5)->toDateString(),
+                'end_date' => now()->subYears(1)->toDateString(),
+                'achievements' => null,
+            ]);
+
+            Study::create([
+                'user_id' => $maestriaUser->id,
+                'academic_institution' => 'University B',
+                'degree' => 'Maestria',
+                'start_date' => now()->subYears(3)->toDateString(),
+                'end_date' => now()->subYear()->toDateString(),
+                'achievements' => null,
+            ]);
+        } finally {
+            Schema::enableForeignKeyConstraints();
+        }
+
+        $response = $this->getJson('/api/profiles?filter[degree]=Licenciatura');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Licenciatura User');
     }
 
     public function test_it_filters_public_profiles_by_skill_level(): void
