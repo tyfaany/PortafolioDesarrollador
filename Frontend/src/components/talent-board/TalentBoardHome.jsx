@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@mdi/react';
+import { useSearchParams } from 'react-router-dom';
 import { mdiMagnify, mdiRefresh, mdiSortVariant } from '@mdi/js';
 import {
   obtenerCatalogoSkillsTecnicas,
@@ -14,6 +15,21 @@ import '../../styles/TalentBoard.css';
 
 const PROFILES_PER_PAGE = 4;
 const DEFAULT_SORT = '-created_at';
+const QUERY_KEYS = {
+  currentPage: 'page',
+  searchTerm: 'q',
+  selectedSkills: 'skills',
+  selectedSkillLevelSkillId: 'skillLevelSkillId',
+  selectedSkillLevelOptions: 'skillLevels',
+  selectedTechnologyId: 'technology',
+  profession: 'profession',
+  degree: 'degree',
+  institution: 'institution',
+  experienceRole: 'experienceRole',
+  experienceMinYears: 'experienceMinYears',
+  experienceMaxYears: 'experienceMaxYears',
+  sortValue: 'sort',
+};
 
 function getInitials(name) {
   return String(name || '')
@@ -140,20 +156,110 @@ function getOptionNameById(options, id) {
   return options.find((option) => String(option.id) === String(id))?.name || '';
 }
 
+function parseListParam(value) {
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parsePageParam(value) {
+  const page = Number.parseInt(String(value || ''), 10);
+  return Number.isFinite(page) && page > 0 ? page : 1;
+}
+
+function normalizeFiltersFromSearchParams(searchParams) {
+  return {
+    searchTerm: searchParams.get(QUERY_KEYS.searchTerm) || '',
+    selectedSkills: parseListParam(searchParams.get(QUERY_KEYS.selectedSkills)),
+    selectedSkillLevelSkillId: searchParams.get(QUERY_KEYS.selectedSkillLevelSkillId) || '',
+    selectedSkillLevelOptions: parseListParam(searchParams.get(QUERY_KEYS.selectedSkillLevelOptions)),
+    selectedTechnologyId: searchParams.get(QUERY_KEYS.selectedTechnologyId) || '',
+    profession: searchParams.get(QUERY_KEYS.profession) || '',
+    degree: searchParams.get(QUERY_KEYS.degree) || '',
+    institution: searchParams.get(QUERY_KEYS.institution) || '',
+    experienceRole: searchParams.get(QUERY_KEYS.experienceRole) || '',
+    experienceMinYears: searchParams.get(QUERY_KEYS.experienceMinYears) || '',
+    experienceMaxYears: searchParams.get(QUERY_KEYS.experienceMaxYears) || '',
+    sortValue: searchParams.get(QUERY_KEYS.sortValue) || DEFAULT_SORT,
+    currentPage: parsePageParam(searchParams.get(QUERY_KEYS.currentPage)),
+  };
+}
+
+function serializeFiltersToSearchParams(filters) {
+  const params = new URLSearchParams();
+
+  if (filters.searchTerm.trim()) {
+    params.set(QUERY_KEYS.searchTerm, filters.searchTerm.trim());
+  }
+
+  if (filters.selectedSkills.length > 0) {
+    params.set(QUERY_KEYS.selectedSkills, filters.selectedSkills.join(','));
+  }
+
+  if (filters.selectedSkillLevelSkillId) {
+    params.set(QUERY_KEYS.selectedSkillLevelSkillId, filters.selectedSkillLevelSkillId);
+  }
+
+  if (filters.selectedSkillLevelOptions.length > 0) {
+    params.set(QUERY_KEYS.selectedSkillLevelOptions, filters.selectedSkillLevelOptions.join(','));
+  }
+
+  if (filters.selectedTechnologyId) {
+    params.set(QUERY_KEYS.selectedTechnologyId, filters.selectedTechnologyId);
+  }
+
+  if (filters.profession.trim()) {
+    params.set(QUERY_KEYS.profession, filters.profession.trim());
+  }
+
+  if (filters.degree.trim()) {
+    params.set(QUERY_KEYS.degree, filters.degree.trim());
+  }
+
+  if (filters.institution.trim()) {
+    params.set(QUERY_KEYS.institution, filters.institution.trim());
+  }
+
+  if (filters.experienceRole.trim()) {
+    params.set(QUERY_KEYS.experienceRole, filters.experienceRole.trim());
+  }
+
+  if (filters.experienceMinYears.trim()) {
+    params.set(QUERY_KEYS.experienceMinYears, filters.experienceMinYears.trim());
+  }
+
+  if (filters.experienceMaxYears.trim()) {
+    params.set(QUERY_KEYS.experienceMaxYears, filters.experienceMaxYears.trim());
+  }
+
+  if (filters.sortValue && filters.sortValue !== DEFAULT_SORT) {
+    params.set(QUERY_KEYS.sortValue, filters.sortValue);
+  }
+
+  if (filters.currentPage > 1) {
+    params.set(QUERY_KEYS.currentPage, String(filters.currentPage));
+  }
+
+  return params;
+}
+
 function TalentBoardHome() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState([]);
-  const [selectedSkillLevelSkillId, setSelectedSkillLevelSkillId] = useState('');
-  const [selectedSkillLevelOptions, setSelectedSkillLevelOptions] = useState([]);
-  const [selectedTechnologyId, setSelectedTechnologyId] = useState('');
-  const [profession, setProfession] = useState('');
-  const [degree, setDegree] = useState('');
-  const [institution, setInstitution] = useState('');
-  const [experienceRole, setExperienceRole] = useState('');
-  const [experienceMinYears, setExperienceMinYears] = useState('');
-  const [experienceMaxYears, setExperienceMaxYears] = useState('');
-  const [sortValue, setSortValue] = useState(DEFAULT_SORT);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlFilters = useMemo(() => normalizeFiltersFromSearchParams(searchParams), [searchParams]);
+  const [searchTerm, setSearchTerm] = useState(() => urlFilters.searchTerm);
+  const [selectedSkills, setSelectedSkills] = useState(() => urlFilters.selectedSkills);
+  const [selectedSkillLevelSkillId, setSelectedSkillLevelSkillId] = useState(() => urlFilters.selectedSkillLevelSkillId);
+  const [selectedSkillLevelOptions, setSelectedSkillLevelOptions] = useState(() => urlFilters.selectedSkillLevelOptions);
+  const [selectedTechnologyId, setSelectedTechnologyId] = useState(() => urlFilters.selectedTechnologyId);
+  const [profession, setProfession] = useState(() => urlFilters.profession);
+  const [degree, setDegree] = useState(() => urlFilters.degree);
+  const [institution, setInstitution] = useState(() => urlFilters.institution);
+  const [experienceRole, setExperienceRole] = useState(() => urlFilters.experienceRole);
+  const [experienceMinYears, setExperienceMinYears] = useState(() => urlFilters.experienceMinYears);
+  const [experienceMaxYears, setExperienceMaxYears] = useState(() => urlFilters.experienceMaxYears);
+  const [sortValue, setSortValue] = useState(() => urlFilters.sortValue);
+  const [currentPage, setCurrentPage] = useState(() => urlFilters.currentPage);
   const [refreshTick, setRefreshTick] = useState(0);
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -169,6 +275,72 @@ function TalentBoardHome() {
   const roleOptions = Array.isArray(profileCatalogs.experience_roles) ? profileCatalogs.experience_roles : [];
   const degreeOptions = Array.isArray(profileCatalogs.degrees) ? profileCatalogs.degrees : [];
   const institutionOptions = Array.isArray(profileCatalogs.institutions) ? profileCatalogs.institutions : [];
+  const searchParamsString = searchParams.toString();
+  const lastWrittenSearchParamsRef = useRef(searchParamsString);
+
+  useEffect(() => {
+    if (searchParamsString === lastWrittenSearchParamsRef.current) {
+      return;
+    }
+
+    const nextFilters = normalizeFiltersFromSearchParams(searchParams);
+
+    setSearchTerm(nextFilters.searchTerm);
+    setSelectedSkills(nextFilters.selectedSkills);
+    setSelectedSkillLevelSkillId(nextFilters.selectedSkillLevelSkillId);
+    setSelectedSkillLevelOptions(nextFilters.selectedSkillLevelOptions);
+    setSelectedTechnologyId(nextFilters.selectedTechnologyId);
+    setProfession(nextFilters.profession);
+    setDegree(nextFilters.degree);
+    setInstitution(nextFilters.institution);
+    setExperienceRole(nextFilters.experienceRole);
+    setExperienceMinYears(nextFilters.experienceMinYears);
+    setExperienceMaxYears(nextFilters.experienceMaxYears);
+    setSortValue(nextFilters.sortValue);
+    setCurrentPage(nextFilters.currentPage);
+    lastWrittenSearchParamsRef.current = searchParamsString;
+  }, [searchParams, searchParamsString]);
+
+  useEffect(() => {
+    const nextParams = serializeFiltersToSearchParams({
+      searchTerm,
+      selectedSkills,
+      selectedSkillLevelSkillId,
+      selectedSkillLevelOptions,
+      selectedTechnologyId,
+      profession,
+      degree,
+      institution,
+      experienceRole,
+      experienceMinYears,
+      experienceMaxYears,
+      sortValue,
+      currentPage,
+    });
+
+    if (nextParams.toString() === searchParamsString) {
+      return;
+    }
+
+    lastWrittenSearchParamsRef.current = nextParams.toString();
+    setSearchParams(nextParams, { replace: true });
+  }, [
+    currentPage,
+    degree,
+    experienceMaxYears,
+    experienceMinYears,
+    experienceRole,
+    institution,
+    profession,
+    searchTerm,
+    selectedSkillLevelOptions,
+    selectedSkillLevelSkillId,
+    selectedSkills,
+    selectedTechnologyId,
+    setSearchParams,
+    sortValue,
+    searchParamsString,
+  ]);
 
   useEffect(() => {
     let isActive = true;

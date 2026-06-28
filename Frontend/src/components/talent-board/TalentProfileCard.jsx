@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
 import { mdiArrowRight } from '@mdi/js';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 function getInitials(name) {
   return String(name || '')
@@ -26,6 +26,7 @@ function getSkills(profile) {
 
 function TalentProfileCard({ profile, onViewDetail }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const name = profile?.name || profile?.nombre || 'Perfil sin nombre';
   const profession = profile?.profession || profile?.rol || 'Profesional';
   const projects = Array.isArray(profile?.projects)
@@ -79,7 +80,7 @@ function TalentProfileCard({ profile, onViewDetail }) {
           if (profile?.id) {
             navigate(`/users/${profile.id}/profile`, {
               state: {
-                backTo: '/inicio',
+                backTo: `${location.pathname}${location.search}`,
                 backLabel: 'Volver a la búsqueda',
               },
             });
