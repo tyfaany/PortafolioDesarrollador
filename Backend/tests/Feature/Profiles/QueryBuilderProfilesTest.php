@@ -242,6 +242,185 @@ class QueryBuilderProfilesTest extends TestCase
             ->assertJsonPath('data.0.name', 'John React');
     }
 
+    public function test_it_combines_search_with_other_filters(): void
+    {
+        $matchingUser = User::factory()->create([
+            'name' => 'Matching Profile',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $matchingUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Schema::disableForeignKeyConstraints();
+
+        try {
+            Study::create([
+                'user_id' => $matchingUser->id,
+                'academic_institution' => 'University A',
+                'degree' => 'Licenciatura',
+                'start_date' => now()->subYears(4)->toDateString(),
+                'end_date' => now()->subYear()->toDateString(),
+                'achievements' => null,
+            ]);
+        } finally {
+            Schema::enableForeignKeyConstraints();
+        }
+
+        $otherDegreeUser = User::factory()->create([
+            'name' => 'Other Degree Profile',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $otherDegreeUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Schema::disableForeignKeyConstraints();
+
+        try {
+            Study::create([
+                'user_id' => $otherDegreeUser->id,
+                'academic_institution' => 'University A',
+                'degree' => 'Maestria',
+                'start_date' => now()->subYears(5)->toDateString(),
+                'end_date' => now()->subYears(2)->toDateString(),
+                'achievements' => null,
+            ]);
+        } finally {
+            Schema::enableForeignKeyConstraints();
+        }
+
+        $tech = ProjectTechnology::create([
+            'name' => 'Angular',
+        ]);
+
+        $matchingProject = Project::create([
+            'user_id' => $matchingUser->id,
+            'name' => 'Angular Dashboard',
+            'description' => 'Private admin view',
+            'start_date' => now()->subMonths(4),
+            'end_date' => now()->subMonths(2),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        $matchingProject->technologies()->attach($tech->id);
+
+        $otherProject = Project::create([
+            'user_id' => $otherDegreeUser->id,
+            'name' => 'Angular Dashboard 2',
+            'description' => 'Private admin view',
+            'start_date' => now()->subMonths(4),
+            'end_date' => now()->subMonths(2),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        $otherProject->technologies()->attach($tech->id);
+
+        $response = $this->getJson('/api/profiles?filter[search]=Angular&filter[degree]=Licenciatura&filter[technology]=Angular');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Matching Profile');
+
+        $excludedResponse = $this->getJson('/api/profiles?filter[search]=Angular&filter[degree]=Maestria&filter[technology]=Angular');
+
+        $excludedResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Other Degree Profile');
+    }
+
+    public function test_it_combines_search_with_projects_count_sort(): void
+    {
+        $oneProjectUser = User::factory()->create([
+            'name' => 'One Project Search',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $oneProjectUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $twoProjectsUser = User::factory()->create([
+            'name' => 'Two Projects Search',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $twoProjectsUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $oneProjectUser->jobs()->create([
+            'company_name' => 'Search Co',
+            'position' => 'Backend Engineer',
+            'achievements' => 'Built services',
+            'start_month' => 1,
+            'start_year' => 2022,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+        ]);
+
+        $twoProjectsUser->jobs()->create([
+            'company_name' => 'Search Co',
+            'position' => 'Backend Engineer',
+            'achievements' => 'Built services',
+            'start_month' => 1,
+            'start_year' => 2022,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+        ]);
+
+        Project::create([
+            'user_id' => $oneProjectUser->id,
+            'name' => 'Public One',
+            'description' => 'Search match',
+            'start_date' => now()->subMonths(4),
+            'end_date' => now()->subMonths(2),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        Project::create([
+            'user_id' => $twoProjectsUser->id,
+            'name' => 'Public Two A',
+            'description' => 'Search match',
+            'start_date' => now()->subMonths(4),
+            'end_date' => now()->subMonths(2),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        Project::create([
+            'user_id' => $twoProjectsUser->id,
+            'name' => 'Public Two B',
+            'description' => 'Search match',
+            'start_date' => now()->subMonths(5),
+            'end_date' => now()->subMonths(3),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[search]=Backend Engineer&sort=-projects_count');
+
+        $response->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.name', 'Two Projects Search')
+            ->assertJsonPath('data.1.name', 'One Project Search');
+    }
+
     public function test_it_filters_public_profiles_by_project_technology(): void
     {
         $publicUser = User::factory()->create([
