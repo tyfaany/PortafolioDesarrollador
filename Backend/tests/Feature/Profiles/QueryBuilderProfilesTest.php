@@ -3,6 +3,8 @@
 namespace Tests\Feature\Profiles;
 
 use App\Models\Job;
+use App\Models\Project;
+use App\Models\ProjectTechnology;
 use App\Models\TechnicalSkill;
 use App\Models\User;
 use App\Models\UserVisibility;
@@ -73,6 +75,100 @@ class QueryBuilderProfilesTest extends TestCase
         $skillResponse->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'John React');
+    }
+
+    public function test_it_filters_public_profiles_by_project_technology(): void
+    {
+        $publicUser = User::factory()->create([
+            'name' => 'React Builder',
+            'profession' => 'Frontend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $publicUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $privateUser = User::factory()->create([
+            'name' => 'Hidden React Builder',
+            'profession' => 'Frontend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $privateUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $otherUser = User::factory()->create([
+            'name' => 'Vue Builder',
+            'profession' => 'Frontend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $otherUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $react = ProjectTechnology::create([
+            'name' => 'React',
+        ]);
+
+        $vue = ProjectTechnology::create([
+            'name' => 'Vue',
+        ]);
+
+        $publicProject = Project::create([
+            'user_id' => $publicUser->id,
+            'name' => 'Public React App',
+            'description' => 'Project description for testing',
+            'start_date' => now()->subMonth(),
+            'end_date' => now(),
+            'demo_url' => null,
+            'repository_url' => null,
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        $publicProject->technologies()->attach($react->id);
+
+        $privateProject = Project::create([
+            'user_id' => $privateUser->id,
+            'name' => 'Private React App',
+            'description' => 'Project description for testing',
+            'start_date' => now()->subMonth(),
+            'end_date' => now(),
+            'demo_url' => null,
+            'repository_url' => null,
+            'is_in_progress' => false,
+            'is_public' => false,
+        ]);
+
+        $privateProject->technologies()->attach($react->id);
+
+        $otherProject = Project::create([
+            'user_id' => $otherUser->id,
+            'name' => 'Public Vue App',
+            'description' => 'Project description for testing',
+            'start_date' => now()->subMonth(),
+            'end_date' => now(),
+            'demo_url' => null,
+            'repository_url' => null,
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        $otherProject->technologies()->attach($vue->id);
+
+        $response = $this->getJson('/api/profiles?filter[technology]=React');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'React Builder')
+            ->assertJsonMissing(['name' => 'Hidden React Builder'])
+            ->assertJsonMissing(['name' => 'Vue Builder']);
     }
 
     public function test_it_filters_public_profiles_by_skill_level(): void

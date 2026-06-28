@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserVisibility;
 use App\QueryFilters\JobExperienceFilter;
+use App\QueryFilters\ProfileTechnologyFilter;
 use App\QueryFilters\SkillFilter;
 use App\QueryFilters\SkillLevelFilter;
 use Illuminate\Database\Eloquent\Builder;
@@ -277,6 +278,7 @@ class UserController extends Controller
                 AllowedFilter::custom('experiencia_cargo', new JobExperienceFilter()),
                 AllowedFilter::custom('habilidadTecnica_nivel', new SkillLevelFilter()),
                 AllowedFilter::custom('habilidades', new SkillFilter()),
+                AllowedFilter::custom('technology', new ProfileTechnologyFilter()),
             ])
             ->allowedSorts(['name', 'created_at', 'profession'])
             ->defaultSort('-created_at')
