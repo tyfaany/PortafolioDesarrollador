@@ -9,6 +9,7 @@ use App\QueryFilters\JobExperienceFilter;
 use App\QueryFilters\ProfileTechnologyFilter;
 use App\QueryFilters\SkillFilter;
 use App\QueryFilters\SkillLevelFilter;
+use App\Sorts\ProjectsCountSort;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -16,6 +17,7 @@ use App\Http\Requests\UpdateContactRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class UserController extends Controller
@@ -311,7 +313,12 @@ class UserController extends Controller
                 AllowedFilter::custom('habilidades', new SkillFilter()),
                 AllowedFilter::custom('technology', new ProfileTechnologyFilter()),
             ])
-            ->allowedSorts(['name', 'created_at', 'profession'])
+            ->allowedSorts([
+                AllowedSort::custom('projects_count', new ProjectsCountSort()),
+                AllowedSort::field('name'),
+                AllowedSort::field('created_at'),
+                AllowedSort::field('profession'),
+            ])
             ->defaultSort('-created_at')
             ->paginate($perPage)
             ->appends($request->query());

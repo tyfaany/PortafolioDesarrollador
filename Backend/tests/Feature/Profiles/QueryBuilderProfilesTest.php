@@ -314,6 +314,106 @@ class QueryBuilderProfilesTest extends TestCase
             ->assertJsonPath('data.0.name', 'University A User');
     }
 
+    public function test_it_sorts_public_profiles_by_projects_count(): void
+    {
+        $oneProjectUser = User::factory()->create([
+            'name' => 'One Project User',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $oneProjectUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $threeProjectsUser = User::factory()->create([
+            'name' => 'Three Projects User',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $threeProjectsUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $hiddenProjectsUser = User::factory()->create([
+            'name' => 'Hidden Projects User',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $hiddenProjectsUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Project::create([
+            'user_id' => $oneProjectUser->id,
+            'name' => 'Public Project 1',
+            'description' => 'Testing',
+            'start_date' => now()->subMonth(),
+            'end_date' => now(),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        Project::create([
+            'user_id' => $threeProjectsUser->id,
+            'name' => 'Public Project 1',
+            'description' => 'Testing',
+            'start_date' => now()->subMonths(3),
+            'end_date' => now()->subMonths(2),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        Project::create([
+            'user_id' => $threeProjectsUser->id,
+            'name' => 'Public Project 2',
+            'description' => 'Testing',
+            'start_date' => now()->subMonths(5),
+            'end_date' => now()->subMonths(4),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        Project::create([
+            'user_id' => $threeProjectsUser->id,
+            'name' => 'Public Project 3',
+            'description' => 'Testing',
+            'start_date' => now()->subMonths(7),
+            'end_date' => now()->subMonths(6),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        Project::create([
+            'user_id' => $hiddenProjectsUser->id,
+            'name' => 'Hidden Project',
+            'description' => 'Testing',
+            'start_date' => now()->subMonths(2),
+            'end_date' => now()->subMonth(),
+            'is_in_progress' => false,
+            'is_public' => false,
+        ]);
+
+        $response = $this->getJson('/api/profiles?sort=projects_count');
+
+        $response->assertOk()
+            ->assertJsonPath('data.0.name', 'Hidden Projects User')
+            ->assertJsonPath('data.1.name', 'One Project User')
+            ->assertJsonPath('data.2.name', 'Three Projects User');
+
+        $descResponse = $this->getJson('/api/profiles?sort=-projects_count');
+
+        $descResponse->assertOk()
+            ->assertJsonPath('data.0.name', 'Three Projects User')
+            ->assertJsonPath('data.1.name', 'One Project User')
+            ->assertJsonPath('data.2.name', 'Hidden Projects User');
+    }
+
     public function test_it_filters_public_profiles_by_skill_level(): void
     {
         $advancedUser = User::factory()->create([
