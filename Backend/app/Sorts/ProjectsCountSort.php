@@ -16,5 +16,7 @@ class ProjectsCountSort implements Sort
         ]);
 
         $query->orderBy($property, $descending ? 'desc' : 'asc');
+        $query->orderByDesc('updated_at');
+        $query->orderBy('name');
     }
 }

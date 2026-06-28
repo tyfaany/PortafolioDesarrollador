@@ -512,6 +512,65 @@ class QueryBuilderProfilesTest extends TestCase
             ->assertJsonPath('data.2.name', 'Hidden Projects User');
     }
 
+    public function test_it_uses_recent_activity_as_tiebreaker_for_projects_count_sort(): void
+    {
+        $olderUser = User::factory()->create([
+            'name' => 'Older User',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+            'updated_at' => now()->subDays(10),
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $olderUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+        User::whereKey($olderUser->id)->update([
+            'updated_at' => now()->subDays(10),
+        ]);
+
+        $recentUser = User::factory()->create([
+            'name' => 'Recent User',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+            'updated_at' => now()->subDay(),
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $recentUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+        User::whereKey($recentUser->id)->update([
+            'updated_at' => now()->subDay(),
+        ]);
+
+        Project::create([
+            'user_id' => $olderUser->id,
+            'name' => 'Older Project',
+            'description' => 'Testing',
+            'start_date' => now()->subMonths(3),
+            'end_date' => now()->subMonths(2),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        Project::create([
+            'user_id' => $recentUser->id,
+            'name' => 'Recent Project',
+            'description' => 'Testing',
+            'start_date' => now()->subMonths(2),
+            'end_date' => now()->subMonth(),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        $response = $this->getJson('/api/profiles?sort=projects_count');
+
+        $response->assertOk()
+            ->assertJsonPath('data.0.name', 'Recent User')
+            ->assertJsonPath('data.1.name', 'Older User');
+    }
+
     public function test_it_filters_public_profiles_by_skill_level(): void
     {
         $advancedUser = User::factory()->create([
