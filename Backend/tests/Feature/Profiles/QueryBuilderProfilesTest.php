@@ -1180,11 +1180,97 @@ class QueryBuilderProfilesTest extends TestCase
             'achievements' => 'Built services',
         ]);
 
-        $response = $this->getJson('/api/profiles?filter[experiencia_cargo]=Backend,2');
+        $response = $this->getJson('/api/profiles?filter[experiencia_cargo]=Backend,2,3');
 
         $response->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Backend Two Years');
+    }
+
+    public function test_it_filters_jobs_by_a_maximum_year_threshold(): void
+    {
+        $backendTwoYears = User::factory()->create([
+            'name' => 'Backend Two Years Max',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $backendTwoYears->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $backendThreeYears = User::factory()->create([
+            'name' => 'Backend Three Years Max',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $backendThreeYears->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Job::create([
+            'user_id' => $backendTwoYears->id,
+            'position' => 'Backend Developer',
+            'company_name' => 'Two Years Co',
+            'start_month' => 1,
+            'start_year' => 2022,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+            'achievements' => 'Built services',
+        ]);
+
+        Job::create([
+            'user_id' => $backendThreeYears->id,
+            'position' => 'Backend Developer',
+            'company_name' => 'Three Years Co',
+            'start_month' => 1,
+            'start_year' => 2021,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+            'achievements' => 'Built services',
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[experiencia_cargo]=Backend,,3');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Backend Two Years Max');
+    }
+
+    public function test_it_rejects_inverted_job_year_ranges(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Backend Inverted Range',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $user->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        Job::create([
+            'user_id' => $user->id,
+            'position' => 'Backend Developer',
+            'company_name' => 'Range Co',
+            'start_month' => 1,
+            'start_year' => 2022,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+            'achievements' => 'Built services',
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[experiencia_cargo]=Backend,4,2');
+
+        $response->assertOk()
+            ->assertJsonCount(0, 'data');
     }
 
     public function test_it_filters_a_real_job_title_example_with_years(): void
@@ -1247,7 +1333,7 @@ class QueryBuilderProfilesTest extends TestCase
             'achievements' => 'Long running project',
         ]);
 
-        $response = $this->getJson('/api/profiles?filter[experiencia_cargo]=Desarrollador%20Backend,2');
+        $response = $this->getJson('/api/profiles?filter[experiencia_cargo]=Desarrollador%20Backend,2,3');
 
         $response->assertOk()
             ->assertJsonCount(1, 'data')
