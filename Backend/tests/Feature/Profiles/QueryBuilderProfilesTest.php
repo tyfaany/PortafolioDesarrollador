@@ -74,6 +74,83 @@ class QueryBuilderProfilesTest extends TestCase
             ->assertJsonPath('data.0.name', 'John React');
     }
 
+    public function test_it_filters_public_profiles_by_skill_level(): void
+    {
+        $advancedUser = User::factory()->create([
+            'name' => 'Advanced React Dev',
+            'profession' => 'Frontend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $advancedUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $intermediateReactUser = User::factory()->create([
+            'name' => 'Intermediate React Dev',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $intermediateReactUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $react = TechnicalSkill::create([
+            'name' => 'React',
+        ]);
+
+        $laravel = TechnicalSkill::create([
+            'name' => 'Laravel',
+        ]);
+
+        $advancedUser->skills()->attach($react->id, [
+            'level' => 'Avanzado',
+            'evidence_url' => null,
+        ]);
+
+        $intermediateReactUser->skills()->attach($react->id, [
+            'level' => 'Intermedio',
+            'evidence_url' => null,
+        ]);
+
+        $intermediateUser = User::factory()->create([
+            'name' => 'Intermediate Laravel Dev',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $intermediateUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $intermediateUser->skills()->attach($laravel->id, [
+            'level' => 'Intermedio',
+            'evidence_url' => null,
+        ]);
+
+        $levelResponse = $this->getJson('/api/profiles?filter[habilidadTecnica_nivel]=Avanzado');
+
+        $levelResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Advanced React Dev');
+
+        $combinedResponse = $this->getJson('/api/profiles?filter[habilidadTecnica_nivel]=React,Avanzado');
+
+        $combinedResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Advanced React Dev');
+
+        $intermediateResponse = $this->getJson('/api/profiles?filter[habilidadTecnica_nivel]=React,Intermedio');
+
+        $intermediateResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Intermediate React Dev');
+    }
+
     public function test_it_hides_profiles_marked_as_not_visible_in_search(): void
     {
         $visibleUser = User::factory()->create([
