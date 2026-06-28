@@ -5,6 +5,7 @@ namespace Tests\Feature\Profiles;
 use App\Models\Job;
 use App\Models\Project;
 use App\Models\ProjectTechnology;
+use App\Models\SoftSkill;
 use App\Models\Study;
 use App\Models\TechnicalSkill;
 use App\Models\User;
@@ -88,6 +89,25 @@ class QueryBuilderProfilesTest extends TestCase
             'is_current_job' => false,
         ]);
 
+        $softSkillUser = User::factory()->create([
+            'name' => 'Soft Skill Match',
+            'profession' => 'QA Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $softSkillUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $communication = SoftSkill::create([
+            'name' => 'Communication',
+        ]);
+
+        $softSkillUser->softSkills()->attach($communication->id, [
+            'evidence_url' => null,
+        ]);
+
         $studyUser = User::factory()->create([
             'name' => 'Study Match',
             'profession' => 'QA Engineer',
@@ -135,6 +155,33 @@ class QueryBuilderProfilesTest extends TestCase
             'is_public' => true,
         ]);
 
+        $techProjectUser = User::factory()->create([
+            'name' => 'Tech Project Match',
+            'profession' => 'QA Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $techProjectUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $techProject = Project::create([
+            'user_id' => $techProjectUser->id,
+            'name' => 'Internal Tool',
+            'description' => 'Internal dashboard for teams',
+            'start_date' => now()->subMonths(2),
+            'end_date' => now()->subMonth(),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        $angular = ProjectTechnology::create([
+            'name' => 'Angular',
+        ]);
+
+        $techProject->technologies()->attach($angular->id);
+
         $response = $this->getJson('/api/profiles?filter[search]=John');
 
         $response->assertOk()
@@ -164,6 +211,24 @@ class QueryBuilderProfilesTest extends TestCase
         $skillSearchResponse->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'John React');
+
+        $companySearchResponse = $this->getJson('/api/profiles?filter[search]=Acme');
+
+        $companySearchResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Job Match');
+
+        $softSkillSearchResponse = $this->getJson('/api/profiles?filter[search]=Communication');
+
+        $softSkillSearchResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Soft Skill Match');
+
+        $techSearchResponse = $this->getJson('/api/profiles?filter[search]=Angular');
+
+        $techSearchResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Tech Project Match');
 
         $shortSearchResponse = $this->getJson('/api/profiles?filter[search]=a');
 

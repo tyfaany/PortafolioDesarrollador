@@ -283,11 +283,15 @@ class UserController extends Controller
                             ->orWhereRaw('LOWER(profession) LIKE ?', [$like])
                             ->orWhereRaw('LOWER(biography) LIKE ?', [$like])
                             ->orWhereHas('jobs', function (Builder $jobQuery) use ($like): void {
-                                $jobQuery->whereRaw('LOWER(position) LIKE ?', [$like])
+                                $jobQuery->whereRaw('LOWER(company_name) LIKE ?', [$like])
+                                    ->orWhereRaw('LOWER(position) LIKE ?', [$like])
                                     ->orWhereRaw('LOWER(achievements) LIKE ?', [$like]);
                             })
                             ->orWhereHas('skills', function (Builder $skillQuery) use ($like): void {
                                 $skillQuery->whereRaw('LOWER(name) LIKE ?', [$like]);
+                            })
+                            ->orWhereHas('softSkills', function (Builder $softSkillQuery) use ($like): void {
+                                $softSkillQuery->whereRaw('LOWER(name) LIKE ?', [$like]);
                             })
                             ->orWhereHas('studies', function (Builder $studyQuery) use ($like): void {
                                 $studyQuery->whereRaw('LOWER(degree) LIKE ?', [$like])
@@ -297,7 +301,10 @@ class UserController extends Controller
                                 $projectQuery->where('is_public', true)
                                     ->where(function (Builder $publicProjectQuery) use ($like): void {
                                         $publicProjectQuery->whereRaw('LOWER(name) LIKE ?', [$like])
-                                            ->orWhereRaw('LOWER(description) LIKE ?', [$like]);
+                                            ->orWhereRaw('LOWER(description) LIKE ?', [$like])
+                                            ->orWhereHas('technologies', function (Builder $technologyQuery) use ($like): void {
+                                                $technologyQuery->whereRaw('LOWER(project_technologies.name) LIKE ?', [$like]);
+                                            });
                                     });
                             });
                     });
