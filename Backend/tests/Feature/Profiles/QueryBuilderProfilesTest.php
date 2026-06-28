@@ -50,6 +50,7 @@ class QueryBuilderProfilesTest extends TestCase
         $user = User::factory()->create([
             'name' => 'John React',
             'profession' => 'Full Stack',
+            'address' => 'La Paz, Bolivia',
             'profile_completed' => true,
         ]);
 
@@ -234,6 +235,12 @@ class QueryBuilderProfilesTest extends TestCase
 
         $shortSearchResponse->assertOk()
             ->assertJsonCount(0, 'data');
+
+        $addressSearchResponse = $this->getJson('/api/profiles?filter[search]=La Paz');
+
+        $addressSearchResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'John React');
 
         $skillResponse = $this->getJson('/api/profiles?filter[habilidades]=Laravel');
 

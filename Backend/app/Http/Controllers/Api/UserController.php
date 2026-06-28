@@ -282,6 +282,7 @@ class UserController extends Controller
 
                         $subQuery->whereRaw('LOWER(name) LIKE ?', [$like])
                             ->orWhereRaw('LOWER(profession) LIKE ?', [$like])
+                            ->orWhereRaw('LOWER(address) LIKE ?', [$like])
                             ->orWhereRaw('LOWER(biography) LIKE ?', [$like])
                             ->orWhereHas('jobs', function (Builder $jobQuery) use ($like): void {
                                 $jobQuery->whereRaw('LOWER(company_name) LIKE ?', [$like])
