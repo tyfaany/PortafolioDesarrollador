@@ -524,7 +524,6 @@ function TalentBoardHome() {
   const selectedSkillsCount = selectedSkills.length;
   const selectedLevelCount = selectedSkillLevelOptions.length;
   const activeFiltersCount = [
-    searchTerm.trim(),
     selectedSkillsCount > 0,
     selectedSkillLevelSkillId || selectedLevelCount > 0,
     selectedTechnologyId,
@@ -534,7 +533,6 @@ function TalentBoardHome() {
     experienceRole.trim(),
     experienceMinYears.trim(),
     experienceMaxYears.trim(),
-    sortValue !== DEFAULT_SORT,
   ].filter(Boolean).length;
 
   const toggleSkill = (skill) => {
@@ -667,10 +665,10 @@ function TalentBoardHome() {
               <p className="talent-board-results__meta">
                 {activeFiltersCount > 0 ? (
                   <>
-                    <span>{activeFiltersCount}</span> filtro/orden activos
+                    <span>{activeFiltersCount}</span> filtro/s activo/s
                   </>
                 ) : (
-                  "Sin filtros aplicados"
+                  "Sin filtros activos"
                 )}
               </p>
             </div>
