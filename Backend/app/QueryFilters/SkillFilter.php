@@ -21,8 +21,12 @@ class SkillFilter implements Filter
             return $query;
         }
 
-        return $query->whereHas('skills', function (Builder $skillQuery) use ($skills): void {
-            $skillQuery->whereIn('name', $skills);
+        return $query->where(function (Builder $mainQuery) use ($skills): void {
+            foreach ($skills as $skill) {
+                $mainQuery->whereHas('skills', function (Builder $skillQuery) use ($skill): void {
+                    $skillQuery->whereRaw('LOWER(technical_skills.name) LIKE ?', ['%' . $skill . '%']);
+                });
+            }
         });
     }
 }

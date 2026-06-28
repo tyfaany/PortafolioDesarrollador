@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserVisibility;
+use App\QueryFilters\JobExperienceFilter;
 use App\QueryFilters\SkillFilter;
+use App\QueryFilters\SkillLevelFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -272,6 +274,8 @@ class UserController extends Controller
                             });
                     });
                 }),
+                AllowedFilter::custom('experiencia_cargo', new JobExperienceFilter()),
+                AllowedFilter::custom('habilidadTecnica_nivel', new SkillLevelFilter()),
                 AllowedFilter::custom('habilidades', new SkillFilter()),
             ])
             ->allowedSorts(['name', 'created_at', 'profession'])
@@ -291,9 +295,9 @@ class UserController extends Controller
 
         return response()->json($users, 200);
     }
+
     public function showPublicProfile(User $user)
     {
-        // 1. Cargamos todas las relaciones de este usuario de forma eficiente
         $user->load([
             'projects.technologies',
             'studies',
@@ -304,10 +308,8 @@ class UserController extends Controller
             'githubRepositories',
         ]);
 
-        // 2. Pasamos el usuario por el filtro de privacidad común
         $profile = $this->filterProfilePrivacy($user);
 
-        // 3. Devolvemos la respuesta
         return response()->json($profile, 200);
     }
 
@@ -363,16 +365,15 @@ class UserController extends Controller
             ], 500);
         }
     }
+
     private function filterProfilePrivacy(User $user): array
     {
-        // Datos básicos que siempre son visibles
         $profile = [
             'id'         => $user->id,
             'name'       => $user->name,
             'profession' => $user->profession,
         ];
 
-        // Filtros de privacidad condicionales basados en tu modelo
         if ($user->show_bio) {
             $profile['biography'] = $user->biography;
         }
@@ -423,7 +424,6 @@ class UserController extends Controller
             $profile['soft_skills'] = $user->softSkills;
         }
 
-        // Filtrado individual de proyectos públicos
         $profile['projects'] = $user->projects
             ->where('is_public', true)
             ->values();

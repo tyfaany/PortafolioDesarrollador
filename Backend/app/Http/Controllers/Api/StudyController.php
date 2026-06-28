@@ -19,14 +19,16 @@ class StudyController extends Controller
     {
         // Obtenemos todos los estudios de ese usuario ordenados por fecha
         $studies = $user->studies()->orderBy('start_date', 'desc')->get();
-        
+
         return response()->json($studies, 200);
     }
 
-    
+
     public function index()
     {
-        $studies = Auth::user()->studies()->orderBy('start_date', 'desc')->get();
+        $user = $this->currentUser();
+        $studies = $user->studies()->orderBy('start_date', 'desc')->get();
+
         return response()->json($studies, 200);
     }
 
@@ -56,7 +58,8 @@ class StudyController extends Controller
         }
 
         // Se crea asociado al usuario autenticado
-        $study = Auth::user()->studies()->create($validated);
+        $user = $this->currentUser();
+        $study = $user->studies()->create($validated);
 
         return response()->json($study, 201);
     }
@@ -117,5 +120,13 @@ class StudyController extends Controller
             'status' => 'success',
             'message' => 'Estudio eliminado correctamente.'
         ], 200);
+    }
+
+    private function currentUser(): User
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        return $user;
     }
 }
