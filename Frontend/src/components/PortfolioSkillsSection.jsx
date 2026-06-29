@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Icon from '@mdi/react';
 import { mdiClose, mdiContentSaveOutline, mdiDeleteOutline, mdiOpenInNew, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
 import CatalogSearchInput from './CatalogSearchInput';
+import CharacterCounter from './CharacterCounter';
 import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import {
@@ -869,12 +870,22 @@ function PortfolioSkillsSection() {
                           helperText=""
                           required
                         />
+                        <div className="softsave-input-field__header">
+                          <span className="softsave-portafolio-job-form__sub-label">
+                            Enlace de evidencia (opcional)
+                          </span>
+                          <CharacterCounter
+                            value={evidenciasTecnicasEditando[skill.id] ?? (skill.evidence_url || '')}
+                            maxLength={255}
+                          />
+                        </div>
                         <input
                           type="url"
                           value={
                             evidenciasTecnicasEditando[skill.id] ??
                             (skill.evidence_url || "")
                           }
+                          maxLength={255}
                           onChange={(evento) => {
                             setEvidenciasTecnicasEditando((actual) => ({
                               ...actual,
@@ -1024,12 +1035,16 @@ function PortfolioSkillsSection() {
                   </label>
 
                   <label className="softsave-profile__field softsave-portafolio-skills__evidence-field">
-                    <span className="softsave-portafolio-job-form__sub-label">
-                      Enlace de evidencia (opcional)
-                    </span>
+                    <div className="softsave-input-field__header">
+                      <span className="softsave-portafolio-job-form__sub-label">
+                        Enlace de evidencia (opcional)
+                      </span>
+                      <CharacterCounter value={evidenciaTecnicaNueva} maxLength={255} />
+                    </div>
                     <input
                       type="url"
                       value={evidenciaTecnicaNueva}
+                      maxLength={255}
                       onChange={(evento) => {
                         setEvidenciaTecnicaNueva(evento.target.value);
                         setErrores((actual) => ({ ...actual, tecnica: "" }));
@@ -1140,9 +1155,11 @@ function PortfolioSkillsSection() {
                   error={errores.blanda}
                   required
                 />
+                <CharacterCounter value={evidenciaBlandaNueva} maxLength={255} />
                 <input
                   type="url"
                   value={evidenciaBlandaNueva}
+                  maxLength={255}
                   onChange={(evento) => {
                     setEvidenciaBlandaNueva(evento.target.value);
                     setErrores((actual) => ({ ...actual, blanda: "" }));

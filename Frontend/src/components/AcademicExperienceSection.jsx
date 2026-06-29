@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
 import { mdiClose, mdiContentSaveOutline, mdiDeleteOutline, mdiPencilOutline, mdiPlus, mdiSchoolOutline } from '@mdi/js';
+import CharacterCounter from './CharacterCounter';
 import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import { actualizarEstudio, crearEstudio, eliminarEstudio } from '../services/authService';
@@ -17,6 +18,10 @@ const FORMULARIO_ESTUDIO_INICIAL = {
   achievements: '',
   currentlyStudying: false,
 };
+
+const MAX_INSTITUTION_LENGTH = 100;
+const MAX_DEGREE_LENGTH = 100;
+const MAX_ACHIEVEMENTS_LENGTH = 500;
 
 function sanitizarTexto(valor) {
   return String(valor || '').replace(/\s+/g, ' ').trim();
@@ -244,12 +249,17 @@ function AcademicExperienceSection({
     const nuevosErrores = {};
     const institucion = sanitizarTexto(formularioEstudio.academic_institution);
     const titulo = sanitizarTexto(formularioEstudio.degree);
+    const logros = sanitizarTextoMultilinea(formularioEstudio.achievements);
     if (!institucion) {
       nuevosErrores.academic_institution = 'La institución es obligatoria.';
+    } else if (institucion.length > MAX_INSTITUTION_LENGTH) {
+      nuevosErrores.academic_institution = 'La institución no puede superar 100 caracteres.';
     }
 
     if (!titulo) {
       nuevosErrores.degree = 'El título obtenido es obligatorio.';
+    } else if (titulo.length > MAX_DEGREE_LENGTH) {
+      nuevosErrores.degree = 'El título obtenido no puede superar 100 caracteres.';
     }
 
     if (!formularioEstudio.start_month) {
@@ -268,8 +278,7 @@ function AcademicExperienceSection({
       nuevosErrores.end_month = 'La fecha de inicio no puede ser posterior a la fecha de fin.';
     }
 
-    const logros = sanitizarTextoMultilinea(formularioEstudio.achievements);
-    if (logros.length > 500) {
+    if (logros.length > MAX_ACHIEVEMENTS_LENGTH) {
       nuevosErrores.achievements = 'Los logros no pueden superar 500 caracteres.';
     }
 
@@ -504,12 +513,19 @@ function AcademicExperienceSection({
             <form className="softsave-profile__study-form" onSubmit={guardarEstudio}>
               <div className="softsave-profile__study-grid">
                 <label className="softsave-profile__field">
-                  <span className="softsave-profile__label">Institución</span>
+                  <div className="softsave-input-field__header">
+                    <span className="softsave-profile__label">Institución</span>
+                    <CharacterCounter
+                      value={formularioEstudio.academic_institution}
+                      maxLength={MAX_INSTITUTION_LENGTH}
+                    />
+                  </div>
                   <input
                     type="text"
                     name="academic_institution"
                     value={formularioEstudio.academic_institution}
                     onChange={manejarCambioEstudio}
+                    maxLength={MAX_INSTITUTION_LENGTH}
                     className="softsave-input softsave-profile__input"
                     placeholder="Ej. Universidad Mayor de San Simón"
                   />
@@ -521,12 +537,19 @@ function AcademicExperienceSection({
                 </label>
 
                 <label className="softsave-profile__field">
-                  <span className="softsave-profile__label">Título Obtenido</span>
+                  <div className="softsave-input-field__header">
+                    <span className="softsave-profile__label">Título Obtenido</span>
+                    <CharacterCounter
+                      value={formularioEstudio.degree}
+                      maxLength={MAX_DEGREE_LENGTH}
+                    />
+                  </div>
                   <input
                     type="text"
                     name="degree"
                     value={formularioEstudio.degree}
                     onChange={manejarCambioEstudio}
+                    maxLength={MAX_DEGREE_LENGTH}
                     className="softsave-input softsave-profile__input"
                     placeholder="Ej. Ingeniería de Sistemas"
                   />
@@ -594,11 +617,18 @@ function AcademicExperienceSection({
               </div>
 
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Logros y observaciones</span>
+                <div className="softsave-input-field__header">
+                  <span className="softsave-profile__label">Logros y observaciones</span>
+                  <CharacterCounter
+                    value={formularioEstudio.achievements}
+                    maxLength={MAX_ACHIEVEMENTS_LENGTH}
+                  />
+                </div>
                 <textarea
                   name="achievements"
                   value={formularioEstudio.achievements}
                   onChange={manejarCambioEstudio}
+                  maxLength={MAX_ACHIEVEMENTS_LENGTH}
                   className="softsave-input softsave-profile__textarea"
                   placeholder="Describe tus logros, proyectos o distinciones obtenidas."
                 />

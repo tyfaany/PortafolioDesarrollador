@@ -124,8 +124,37 @@ class JobController extends Controller
             'is_current_job' => 'boolean',
             'end_month' => 'nullable|string|max:20',
             'end_year' => 'nullable|integer',
-            'achievements' => 'nullable|string',
+            'achievements' => 'nullable|string|max:500',
             'evidence_url' => 'nullable|url|max:255'
+        ], [
+            'company_name.required' => 'El nombre de la empresa es obligatorio.',
+            'company_name.string' => 'El nombre de la empresa debe ser una cadena de texto.',
+            'company_name.max' => 'El nombre de la empresa no puede superar :max caracteres.',
+            'position.required' => 'El cargo / puesto es obligatorio.',
+            'position.string' => 'El cargo / puesto debe ser una cadena de texto.',
+            'position.max' => 'El cargo / puesto no puede superar :max caracteres.',
+            'start_month.required' => 'La fecha de inicio es obligatoria.',
+            'start_month.string' => 'La fecha de inicio debe ser una cadena de texto.',
+            'start_month.max' => 'La fecha de inicio no puede superar :max caracteres.',
+            'start_year.required' => 'El año de inicio es obligatorio.',
+            'start_year.integer' => 'El año de inicio debe ser un número entero.',
+            'is_current_job.boolean' => 'El estado del trabajo actual debe ser verdadero o falso.',
+            'end_month.string' => 'La fecha de fin debe ser una cadena de texto.',
+            'end_month.max' => 'La fecha de fin no puede superar :max caracteres.',
+            'end_year.integer' => 'El año de fin debe ser un número entero.',
+            'achievements.string' => 'Los logros deben ser una cadena de texto.',
+            'achievements.max' => 'Los logros no pueden superar :max caracteres.',
+            'evidence_url.url' => 'El enlace de evidencia debe ser una URL válida.',
+            'evidence_url.max' => 'El enlace de evidencia no puede superar :max caracteres.',
+        ], [
+            'company_name' => 'nombre de la empresa',
+            'position' => 'cargo / puesto',
+            'start_month' => 'fecha de inicio',
+            'start_year' => 'año de inicio',
+            'end_month' => 'fecha de fin',
+            'end_year' => 'año de fin',
+            'achievements' => 'logros',
+            'evidence_url' => 'enlace de evidencia',
         ]);
     }
 

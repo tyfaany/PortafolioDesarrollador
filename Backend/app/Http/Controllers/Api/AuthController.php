@@ -41,8 +41,15 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users',
             'password' => 'required|min:8|confirmed',
         ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.max' => 'El nombre no puede superar :max caracteres.',
             'name.regex' => 'El nombre solo puede contener letras y espacios.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico no es válido.',
             'email.unique' => 'El correo electrónico ya está registrado.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.min' => 'La contraseña debe tener al menos :min caracteres.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
         ]);
 
         // 3. Creamos el usuario
@@ -81,6 +88,11 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'required',
             'remember' => 'boolean'
+        ], [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico no es válido.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'remember.boolean' => 'La opción recordarme debe ser verdadera o falsa.',
         ]);
 
         $credentials = $request->only('email', 'password');
@@ -132,6 +144,9 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'email' => ['required', 'email'],
+        ], [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico no es válido.',
         ]);
 
         $user = User::where('email', Str::lower(Str::squish($validated['email'])))->first();
@@ -178,6 +193,8 @@ class AuthController extends Controller
     {
         $request->validate([
             'current_password' => 'required|string',
+        ], [
+            'current_password.required' => 'La contraseña actual es obligatoria.',
         ]);
 
         $user = $request->user();
@@ -213,6 +230,9 @@ class AuthController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
+        ], [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico no es válido.',
         ]);
 
         $status = Password::sendResetLink($request->only('email'));
@@ -239,6 +259,13 @@ class AuthController extends Controller
             'token' => 'required',
             'email' => 'required|email',
             'password' => 'required|min:8|confirmed',
+        ], [
+            'token.required' => 'El token es obligatorio.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico no es válido.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.min' => 'La contraseña debe tener al menos :min caracteres.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
         ]);
 
         $status = Password::reset(
@@ -271,6 +298,10 @@ class AuthController extends Controller
             'current_password' => 'required',
             'password' => 'required|min:8|confirmed|different:current_password',
         ], [
+            'current_password.required' => 'La contraseña actual es obligatoria.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.min' => 'La contraseña debe tener al menos :min caracteres.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
             'password.different' => 'La nueva contrasena debe ser diferente a la actual.'
         ]);
 
@@ -299,6 +330,11 @@ class AuthController extends Controller
     {
         $request->validate([
             'photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:10240',
+        ], [
+            'photo.required' => 'La foto es obligatoria.',
+            'photo.image' => 'La foto debe ser una imagen.',
+            'photo.mimes' => 'La foto debe ser de tipo jpeg, png, jpg o webp.',
+            'photo.max' => 'La foto no puede superar :max kilobytes.',
         ]);
 
         $user = $request->user();

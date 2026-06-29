@@ -28,6 +28,7 @@ import {
 import useAuth from "../hooks/useAuth";
 import useFeedback from "../hooks/useFeedback";
 import PrivacySettingsPanel from "../components/PrivacySettingsPanel";
+import CharacterCounter from "../components/CharacterCounter";
 import {
   actualizarContacto,
   actualizarPerfil,
@@ -1707,58 +1708,91 @@ function ProfileSettings() {
 
             <form className="softsave-profile__form" onSubmit={manejarGuardarCambios}>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Nombre Completo *</span>
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">Nombre Completo *</span>
+                  <CharacterCounter value={formularioPerfil.nombreCompleto} maxLength={50} />
+                </div>
                 <input type="text" name="nombreCompleto" value={formularioPerfil.nombreCompleto} onChange={manejarCambioFormulario} maxLength={50} className="softsave-input softsave-profile__input" placeholder="Ej. Alejandra García" />
                 {erroresFormulario.nombreCompleto ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.nombreCompleto}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Profesión *</span>
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">Profesión *</span>
+                  <CharacterCounter value={formularioPerfil.profesion} maxLength={100} />
+                </div>
                 <input type="text" name="profesion" value={formularioPerfil.profesion} onChange={manejarCambioFormulario} maxLength={100} className="softsave-input softsave-profile__input" placeholder="Ej. Senior Full Stack Engineer" />
                 {erroresFormulario.profesion ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.profesion}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Biografía *</span>
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">Biografía *</span>
+                  <CharacterCounter value={formularioPerfil.biografia} maxLength={1000} />
+                </div>
                 <textarea name="biografia" value={formularioPerfil.biografia} onChange={manejarCambioFormulario} maxLength={1000} required className="softsave-input softsave-profile__textarea" placeholder="Cuéntanos sobre tu enfoque, experiencia y tecnologías favoritas." />
                 {erroresFormulario.biografia ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.biografia}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Teléfono</span>
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">Teléfono</span>
+                  <CharacterCounter value={formularioPerfil.telefono} maxLength={20} />
+                </div>
                 <input type="tel" name="telefono" value={formularioPerfil.telefono} onChange={manejarCambioFormulario} maxLength={20} className="softsave-input softsave-profile__input" placeholder="Ej. +591 2 1234567" />
                 {erroresFormulario.telefono ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.telefono}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Móvil</span>
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">Móvil</span>
+                  <CharacterCounter value={formularioPerfil.movil} maxLength={20} />
+                </div>
                 <input type="tel" name="movil" value={formularioPerfil.movil} onChange={manejarCambioFormulario} maxLength={20} className="softsave-input softsave-profile__input" placeholder="Ej. +591 71234567" />
                 {erroresFormulario.movil ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.movil}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Correo de contacto</span>
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">Correo de contacto</span>
+                  <CharacterCounter value={formularioPerfil.correoContacto} maxLength={255} />
+                </div>
                 <input type="email" name="correoContacto" value={formularioPerfil.correoContacto} onChange={manejarCambioFormulario} maxLength={255} className="softsave-input softsave-profile__input" placeholder="ejemplo@correo.com" />
                 {erroresFormulario.correoContacto ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.correoContacto}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Dirección</span>
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">Dirección</span>
+                  <CharacterCounter value={formularioPerfil.direccion} maxLength={255} />
+                </div>
                 <input type="text" name="direccion" value={formularioPerfil.direccion} onChange={manejarCambioFormulario} maxLength={255} className="softsave-input softsave-profile__input" placeholder="Ciudad, país" />
                 {erroresFormulario.direccion ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.direccion}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Instagram</span>
-                <input type="url" name="instagramUrl" value={formularioPerfil.instagramUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://instagram.com/tu-usuario" />
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">Instagram</span>
+                  <CharacterCounter value={formularioPerfil.instagramUrl} maxLength={255} />
+                </div>
+                <input type="url" name="instagramUrl" value={formularioPerfil.instagramUrl} onChange={manejarCambioFormulario} maxLength={255} className="softsave-input softsave-profile__input" placeholder="https://instagram.com/tu-usuario" />
                 {erroresFormulario.instagramUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.instagramUrl}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Facebook</span>
-                <input type="url" name="facebookUrl" value={formularioPerfil.facebookUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://facebook.com/tu-perfil" />
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">Facebook</span>
+                  <CharacterCounter value={formularioPerfil.facebookUrl} maxLength={255} />
+                </div>
+                <input type="url" name="facebookUrl" value={formularioPerfil.facebookUrl} onChange={manejarCambioFormulario} maxLength={255} className="softsave-input softsave-profile__input" placeholder="https://facebook.com/tu-perfil" />
                 {erroresFormulario.facebookUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.facebookUrl}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">GitHub</span>
-                <input type="url" name="githubUrl" value={formularioPerfil.githubUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://github.com/tu-usuario" />
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">GitHub</span>
+                  <CharacterCounter value={formularioPerfil.githubUrl} maxLength={200} />
+                </div>
+                <input type="url" name="githubUrl" value={formularioPerfil.githubUrl} onChange={manejarCambioFormulario} maxLength={200} className="softsave-input softsave-profile__input" placeholder="https://github.com/tu-usuario" />
                 {erroresFormulario.githubUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.githubUrl}</span> : null}
               </label>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">LinkedIn</span>
-                <input type="url" name="linkedinUrl" value={formularioPerfil.linkedinUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://www.linkedin.com/in/tu-perfil" />
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">LinkedIn</span>
+                  <CharacterCounter value={formularioPerfil.linkedinUrl} maxLength={200} />
+                </div>
+                <input type="url" name="linkedinUrl" value={formularioPerfil.linkedinUrl} onChange={manejarCambioFormulario} maxLength={200} className="softsave-input softsave-profile__input" placeholder="https://www.linkedin.com/in/tu-perfil" />
                 {erroresFormulario.linkedinUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.linkedinUrl}</span> : null}
               </label>
               {mensajeGuardadoError ? <span className="error-text softsave-profile__error-text" role="alert">{mensajeGuardadoError}</span> : null}

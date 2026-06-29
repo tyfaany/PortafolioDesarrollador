@@ -144,24 +144,6 @@ function sanitizeHtml(description) {
   return root.innerHTML.trim();
 }
 
-function stripHtml(value) {
-  return String(value || '')
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function truncateText(value, maxLength = 180) {
-  const text = stripHtml(value);
-
-  if (text.length <= maxLength) {
-    return text;
-  }
-
-  return `${text.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
-}
-
 const MONTH_LABELS = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
 
 function parseDateValue(value) {

@@ -714,17 +714,23 @@ a.perfil-publico-contact__value {
 .perfil-publico-timeline__head h3,
 .perfil-publico-stack-item h3,
 .perfil-publico-featured__title,
-.perfil-publico-project-card h3 {
+.perfil-publico-project-card h3,
+.perfil-publico-github-card h3 {
   margin: 0;
   font-size: 1.05rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .perfil-publico-timeline__head p,
 .perfil-publico-stack-item__subline,
 .perfil-publico-project-card__text,
-.perfil-publico-featured__text {
+.perfil-publico-featured__text,
+.perfil-publico-github-card__text {
   margin: 0.2rem 0 0;
   color: var(--color-texto-suave);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .perfil-publico-timeline__period,
@@ -899,6 +905,8 @@ a.perfil-publico-contact__value {
   line-height: 1;
   letter-spacing: -0.04em;
   transform: none;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .perfil-publico-project-featured__meta {
@@ -976,6 +984,22 @@ a.perfil-publico-contact__value {
   margin-top: 0.1rem;
 }
 
+.perfil-publico-project-featured__text {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.perfil-publico-project-featured__text a,
+.perfil-publico-project-featured__text code,
+.perfil-publico-project-featured__text pre,
+.perfil-publico-project-card__text a,
+.perfil-publico-project-card__text code,
+.perfil-publico-project-card__text pre,
+.perfil-publico-github-card__text a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .perfil-publico-project-grid-card {
   padding: 1rem;
   display: grid;
@@ -1044,6 +1068,8 @@ a.perfil-publico-contact__value {
 
 .perfil-publico-project-card__text {
   line-height: 1.6;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .perfil-publico-project-card__links a {

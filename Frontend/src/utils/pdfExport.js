@@ -886,14 +886,19 @@ function drawRichContent(doc, x, y, maxWidth, value, baseSize = 9.2, lineFactor 
   return cursorY - y;
 }
 
-function measureHeight(doc, text, maxWidth, fontSize = 10, lineFactor = 1.25) {
+function measureWrappedText(doc, text, maxWidth, fontSize = 10, lineFactor = 1.25, fontStyle = 'normal') {
+  doc.setFont('helvetica', fontStyle);
+  doc.setFontSize(fontSize);
   const lines = splitLines(doc, text, maxWidth);
   if (!lines.length) {
-    return 0;
+    return { lines: [], height: 0 };
   }
 
   const lineHeight = fontSize * 0.3528 * lineFactor;
-  return lines.length * lineHeight;
+  return {
+    lines,
+    height: lines.length * lineHeight,
+  };
 }
 
 function addPageChrome(doc, pageNumber, totalPages) {
@@ -1086,11 +1091,11 @@ function drawCard(doc, state, options = {}) {
   const bodyContentX = innerX + bodyInsetX;
   const bodyContentWidth = innerWidth - bodyInsetX * 2;
   const imageBox = image ? fitImageIntoBox(doc, image, innerWidth, imageHeight) : null;
-  const titleHeight = title ? measureHeight(doc, title, innerWidth - 20, 11.5, 1.2) : 0;
+  const titleLayout = title ? measureWrappedText(doc, title, innerWidth - 20, 11.5, 1.2, 'bold') : { lines: [], height: 0 };
   const richBodyHeight = body ? measureRichContentHeight(doc, body, bodyContentWidth, 9.2, 1.25) : 0;
-  const subtitleHeight = subtitle ? measureHeight(doc, subtitle, innerWidth - 2 * cardPadding, 8.8, 1.2) : 0;
+  const subtitleLayout = subtitle ? measureWrappedText(doc, subtitle, innerWidth - 2 * cardPadding, 8.8, 1.2, 'normal') : { lines: [], height: 0 };
   const metaText = meta.filter(Boolean).join(' · ');
-  const metaHeight = metaText ? measureHeight(doc, metaText, innerWidth - 2 * cardPadding, 8.5, 1.2) : 0;
+  const metaLayout = metaText ? measureWrappedText(doc, metaText, innerWidth - 2 * cardPadding, 8.5, 1.2, 'normal') : { lines: [], height: 0 };
   const chipsHeight = chips.length ? measureChipRowsHeight(doc, chips, innerWidth - 10) : 0;
   const linksHeight = links.length ? links.length * 4.0 : 0;
   const topPadding = 9.5;
@@ -1102,22 +1107,22 @@ function drawCard(doc, state, options = {}) {
     contentHeight += imageBox.height + 3;
   }
 
-  if (titleHeight) {
-    contentHeight += titleHeight;
-    if (subtitleHeight || metaHeight || richBodyHeight || chipsHeight || linksHeight) {
+  if (titleLayout.height) {
+    contentHeight += titleLayout.height;
+    if (subtitleLayout.height || metaLayout.height || richBodyHeight || chipsHeight || linksHeight) {
       contentHeight += sectionGap;
     }
   }
 
-  if (subtitleHeight) {
-    contentHeight += subtitleHeight;
-    if (metaHeight || richBodyHeight || chipsHeight || linksHeight) {
+  if (subtitleLayout.height) {
+    contentHeight += subtitleLayout.height;
+    if (metaLayout.height || richBodyHeight || chipsHeight || linksHeight) {
       contentHeight += sectionGap;
     }
   }
 
-  if (metaHeight) {
-    contentHeight += metaHeight;
+  if (metaLayout.height) {
+    contentHeight += metaLayout.height;
     if (richBodyHeight || chipsHeight || linksHeight) {
       contentHeight += sectionGap;
     }
@@ -1166,24 +1171,24 @@ function drawCard(doc, state, options = {}) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11.5);
     doc.setTextColor(...THEME.text);
-    doc.text(splitLines(doc, title, innerWidth - 20), innerX, cursorY);
-    cursorY += titleHeight + (subtitleHeight || metaHeight || richBodyHeight || chipsHeight || linksHeight ? sectionGap : 0);
+    doc.text(titleLayout.lines, innerX, cursorY);
+    cursorY += titleLayout.height + (subtitleLayout.height || metaLayout.height || richBodyHeight || chipsHeight || linksHeight ? sectionGap : 0);
   }
 
   if (subtitle) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.8);
     doc.setTextColor(...THEME.muted);
-    doc.text(splitLines(doc, subtitle, innerWidth - 2 * cardPadding), innerX, cursorY);
-    cursorY += subtitleHeight + (metaHeight || richBodyHeight || chipsHeight || linksHeight ? sectionGap : 0);
+    doc.text(subtitleLayout.lines, innerX, cursorY);
+    cursorY += subtitleLayout.height + (metaLayout.height || richBodyHeight || chipsHeight || linksHeight ? sectionGap : 0);
   }
 
   if (metaText) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.5);
     doc.setTextColor(...THEME.primary);
-    doc.text(splitLines(doc, metaText, innerWidth - 2 * cardPadding), innerX, cursorY);
-    cursorY += metaHeight + (richBodyHeight || chipsHeight || linksHeight ? sectionGap : 0);
+    doc.text(metaLayout.lines, innerX, cursorY);
+    cursorY += metaLayout.height + (richBodyHeight || chipsHeight || linksHeight ? sectionGap : 0);
   }
 
   if (body) {
@@ -1355,7 +1360,8 @@ function drawSkillRow(doc, state, skill) {
   const badgeWidth = measureChipBoxWidth(doc, badgeLabel);
   const badgeX = PAGE.marginX + rowWidth - badgeWidth - paddingX;
   const nameMaxWidth = Math.max(42, badgeX - (PAGE.marginX + paddingX) - 4);
-  const nameHeight = measureHeight(doc, name, nameMaxWidth, 9.2, 1.15) || 3.8;
+  const nameLayout = measureWrappedText(doc, name, nameMaxWidth, 9.2, 1.15, 'bold');
+  const nameHeight = nameLayout.height || 3.8;
   const evidenceHeight = evidenceUrl ? 4.2 : 0;
   const rowHeight = Math.max(11.5, nameHeight + evidenceHeight + 7.4);
 
@@ -1368,7 +1374,7 @@ function drawSkillRow(doc, state, skill) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9.2);
   doc.setTextColor(...THEME.text);
-  doc.text(splitLines(doc, name, nameMaxWidth), PAGE.marginX + paddingX, state.y + 5.6);
+  doc.text(nameLayout.lines, PAGE.marginX + paddingX, state.y + 5.6);
 
   const badgeVariant = getSkillLevelVariant(level);
   const badgeY = state.y + 2.4;

@@ -85,6 +85,23 @@ select.softsave-input::-ms-expand {
   box-shadow: 0 0 0 4px var(--color-sombra-input);
 }
 
+.softsave-input-field__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.softsave-input-counter {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--color-texto-suave);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .error-alert {
   margin-bottom: 20px;
   border-radius: 12px;

@@ -385,6 +385,13 @@
   gap: 8px;
 }
 
+.softsave-profile__field-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .softsave-profile__label {
   font-size: 0.78rem;
   font-weight: 700;
@@ -985,6 +992,7 @@
 }
 
 .softsave-profile__study-body {
+  flex: 1 1 auto;
   min-width: 0;
   position: relative;
   z-index: 1;
@@ -1006,6 +1014,8 @@
   font-weight: 700;
   color: var(--color-texto);
   letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .softsave-profile__study-degree {
@@ -1013,6 +1023,8 @@
   color: rgba(var(--color-texto-rgb), 0.82);
   font-weight: 600;
   line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .softsave-profile__study-period {

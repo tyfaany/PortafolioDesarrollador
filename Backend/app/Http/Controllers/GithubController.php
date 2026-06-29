@@ -13,7 +13,11 @@ class GithubController extends Controller
     {
         // 1. Validamos que el frontend nos envíe el nombre de usuario de GitHub
         $request->validate([
-            'github_username' => 'required|string'
+            'github_username' => 'required|string|max:39'
+        ], [
+            'github_username.required' => 'El usuario de GitHub es obligatorio.',
+            'github_username.string' => 'El usuario de GitHub debe ser una cadena de texto.',
+            'github_username.max' => 'El usuario de GitHub no puede superar :max caracteres.',
         ]);
 
         $username = $request->github_username;
@@ -102,6 +106,11 @@ class GithubController extends Controller
         $request->validate([
             'selected_repos' => 'present|array|max:15',
             'selected_repos.*' => 'integer'
+        ], [
+            'selected_repos.present' => 'Debes enviar la selección de repositorios.',
+            'selected_repos.array' => 'La selección de repositorios debe ser una lista válida.',
+            'selected_repos.max' => 'Puedes seleccionar como máximo :max repositorios.',
+            'selected_repos.*.integer' => 'Cada repositorio seleccionado debe ser un identificador numérico.',
         ]);
 
         $userId = auth()->id();

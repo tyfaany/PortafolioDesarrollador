@@ -175,6 +175,13 @@
   font-weight: 600;
 }
 
+.auth-field__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .auth-field__control {
   position: relative;
   display: flex;

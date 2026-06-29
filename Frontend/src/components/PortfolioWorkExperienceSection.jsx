@@ -9,6 +9,7 @@ import {
   mdiPencilOutline,
   mdiPlus,
 } from '@mdi/js';
+import CharacterCounter from './CharacterCounter';
 import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import { actualizarJob, crearJob, eliminarJob, obtenerJobs } from '../services/authService';
@@ -49,6 +50,11 @@ const MESES = [
   { value: '12', label: 'Diciembre' },
 ];
 
+const MAX_COMPANY_NAME_LENGTH = 100;
+const MAX_POSITION_LENGTH = 100;
+const MAX_DESCRIPTION_LENGTH = 500;
+const MAX_EVIDENCE_URL_LENGTH = 255;
+
 function sanitizarTexto(valor) {
   return String(valor || '').replace(/\s+/g, ' ').trim();
 }
@@ -63,6 +69,10 @@ function sanitizarTextoMultilinea(valor) {
 
 function sanitizarUrl(valor) {
   return String(valor || '').trim();
+}
+
+function excedeLimite(valor, maximo) {
+  return String(valor || '').trim().length > maximo;
 }
 
 function esUrlValida(valor) {
@@ -465,13 +475,19 @@ function PortfolioWorkExperienceSection() {
     const cargo = sanitizarTexto(formulario.position);
     const fechaInicio = buildMonthKey(formulario.start_year, formulario.start_month);
     const fechaFin = buildMonthKey(formulario.end_year, formulario.end_month);
+    const descripcion = sanitizarTextoMultilinea(formulario.description);
+    const evidencia = sanitizarUrl(formulario.evidence_url);
 
     if (!empresa) {
       nuevosErrores.company_name = 'El nombre de la empresa es obligatorio.';
+    } else if (excedeLimite(empresa, MAX_COMPANY_NAME_LENGTH)) {
+      nuevosErrores.company_name = 'El nombre de la empresa no puede superar 100 caracteres.';
     }
 
     if (!cargo) {
       nuevosErrores.position = 'El cargo / puesto es obligatorio.';
+    } else if (excedeLimite(cargo, MAX_POSITION_LENGTH)) {
+      nuevosErrores.position = 'El cargo / puesto no puede superar 100 caracteres.';
     }
 
     if (!formulario.start_month || !formulario.start_year) {
@@ -494,13 +510,14 @@ function PortfolioWorkExperienceSection() {
       nuevosErrores.end_month = 'La fecha de inicio no puede ser posterior a la fecha de fin.';
     }
 
-    if (!esUrlValida(formulario.evidence_url)) {
+    if (evidencia && excedeLimite(evidencia, MAX_EVIDENCE_URL_LENGTH)) {
+      nuevosErrores.evidence_url = 'El enlace de evidencia no puede superar 255 caracteres.';
+    } else if (!esUrlValida(formulario.evidence_url)) {
       nuevosErrores.evidence_url = 'Ingresa una URL válida (http:// o https://).';
     }
 
-    const descripcion = sanitizarTextoMultilinea(formulario.description);
-    if (descripcion.length > 500) {
-      nuevosErrores.description = 'La descripción no puede superar 500 caracteres.';
+    if (descripcion.length > MAX_DESCRIPTION_LENGTH) {
+      nuevosErrores.description = 'Los logros no pueden superar 500 caracteres.';
     }
 
     setErrores(nuevosErrores);
@@ -759,12 +776,19 @@ function PortfolioWorkExperienceSection() {
             <form className="softsave-portafolio-job-form" onSubmit={guardarTrabajo}>
               <div className="softsave-portafolio-job-form__basic-grid">
                 <label className="softsave-profile__field">
-                  <span className="softsave-profile__label">Nombre de la Empresa</span>
+                  <div className="softsave-input-field__header">
+                    <span className="softsave-profile__label">Nombre de la Empresa</span>
+                    <CharacterCounter
+                      value={formulario.company_name}
+                      maxLength={MAX_COMPANY_NAME_LENGTH}
+                    />
+                  </div>
                   <input
                     type="text"
                     name="company_name"
                     value={formulario.company_name}
                     onChange={manejarCambio}
+                    maxLength={MAX_COMPANY_NAME_LENGTH}
                     className="softsave-input softsave-profile__input"
                   />
                   {errores.company_name ? (
@@ -775,12 +799,19 @@ function PortfolioWorkExperienceSection() {
                 </label>
 
                 <label className="softsave-profile__field">
-                  <span className="softsave-profile__label">Puesto o Cargo</span>
+                  <div className="softsave-input-field__header">
+                    <span className="softsave-profile__label">Puesto o Cargo</span>
+                    <CharacterCounter
+                      value={formulario.position}
+                      maxLength={MAX_POSITION_LENGTH}
+                    />
+                  </div>
                   <input
                     type="text"
                     name="position"
                     value={formulario.position}
                     onChange={manejarCambio}
+                    maxLength={MAX_POSITION_LENGTH}
                     className="softsave-input softsave-profile__input"
                   />
                   {errores.position ? (
@@ -850,11 +881,15 @@ function PortfolioWorkExperienceSection() {
               </div>
 
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Logros</span>
+                <div className="softsave-input-field__header">
+                  <span className="softsave-profile__label">Logros</span>
+                  <CharacterCounter value={formulario.description} maxLength={MAX_DESCRIPTION_LENGTH} />
+                </div>
                 <textarea
                   name="description"
                   value={formulario.description}
                   onChange={manejarCambio}
+                  maxLength={MAX_DESCRIPTION_LENGTH}
                   className="softsave-input softsave-profile__textarea"
                 />
                 {errores.description ? (
@@ -865,12 +900,19 @@ function PortfolioWorkExperienceSection() {
               </label>
 
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Enlace de evidencia (opcional)</span>
+                <div className="softsave-input-field__header">
+                  <span className="softsave-profile__label">Enlace de evidencia (opcional)</span>
+                  <CharacterCounter
+                    value={formulario.evidence_url}
+                    maxLength={MAX_EVIDENCE_URL_LENGTH}
+                  />
+                </div>
                 <input
                   type="url"
                   name="evidence_url"
                   value={formulario.evidence_url}
                   onChange={manejarCambio}
+                  maxLength={MAX_EVIDENCE_URL_LENGTH}
                   className="softsave-input softsave-profile__input"
                   placeholder="https://ejemplo.com/evidencia"
                 />

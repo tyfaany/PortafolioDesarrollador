@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import CharacterCounter from './CharacterCounter';
 
 function Field({
   label,
@@ -8,6 +9,7 @@ function Field({
   onChange,
   placeholder = '',
   autoComplete = undefined,
+  maxLength = undefined,
   icon = null,
   iconPosition = 'start',
   onIconClick = undefined,
@@ -41,7 +43,10 @@ function Field({
 
   return (
     <label className="auth-field">
-      <span>{label}</span>
+      <div className="auth-field__header">
+        <span>{label}</span>
+        <CharacterCounter value={value} maxLength={maxLength} />
+      </div>
       <div className={wrapperClass}>
         {hasStartIcon && (
           resolvedStartClick ? (
@@ -70,6 +75,7 @@ function Field({
           onChange={onChange}
           placeholder={placeholder}
           autoComplete={autoComplete}
+          maxLength={maxLength}
         />
         {hasEndIcon && (
           resolvedEndClick ? (
@@ -103,6 +109,7 @@ Field.propTypes = {
   onChange: PropTypes.func.isRequired,
   placeholder: PropTypes.string,
   autoComplete: PropTypes.string,
+  maxLength: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   icon: PropTypes.node,
   iconPosition: PropTypes.oneOf(['start', 'end']),
   onIconClick: PropTypes.func,

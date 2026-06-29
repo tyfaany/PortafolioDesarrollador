@@ -236,6 +236,9 @@
   display: inline;
   margin: 0;
   font-size: 1.6rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .softsave-projects-card__edit-strip {
@@ -986,6 +989,8 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   white-space: pre-line;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .softsave-projects-card__description--rich p,
@@ -998,6 +1003,11 @@
 .softsave-projects-card__description--rich ul:last-child,
 .softsave-projects-card__description--rich ol:last-child {
   margin-bottom: 0;
+}
+
+.softsave-projects-card__description--rich a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .softsave-projects-card .softsave-project-form__hint {

@@ -4,6 +4,7 @@ import 'react-quill/dist/quill.snow.css';
 import Icon from '@mdi/react';
 import PropTypes from 'prop-types';
 import CatalogSearchInput from './CatalogSearchInput';
+import CharacterCounter from './CharacterCounter';
 import {
   mdiCheckCircleOutline,
   mdiClose,
@@ -214,13 +215,8 @@ function buildFormData(formData, imageFile) {
     payload.append('end_date', formData.endDate);
   }
 
-  if (formData.demoUrl) {
-    payload.append('demo_url', formData.demoUrl.trim());
-  }
-
-  if (formData.repositoryUrl) {
-    payload.append('repo_url', formData.repositoryUrl.trim());
-  }
+  payload.append('demo_url', formData.demoUrl.trim());
+  payload.append('repo_url', formData.repositoryUrl.trim());
 
   if (imageFile) {
     payload.append('image', imageFile);
@@ -750,9 +746,12 @@ function ProjectForm({
 
       <form className="softsave-project-form" onSubmit={handleSubmit} noValidate>
         <label className="softsave-project-form__field">
-          <span className="softsave-project-form__label">
-            {useModalLayout ? 'Nombre del proyecto *' : 'Titulo del proyecto *'}
-          </span>
+          <div className="softsave-input-field__header">
+            <span className="softsave-project-form__label">
+              {useModalLayout ? 'Nombre del proyecto *' : 'Titulo del proyecto *'}
+            </span>
+            <CharacterCounter value={formData.title} maxLength={100} />
+          </div>
           <input
             type="text"
             className="softsave-input"
@@ -761,14 +760,16 @@ function ProjectForm({
             placeholder="Ej: Sistema de gestion de inventario"
             onChange={(event) => updateField('title', event.target.value)}
           />
-          <span className="softsave-project-form__hint">{formData.title.trim().length}/100</span>
           {errors.title ? <span className="error-text">{errors.title}</span> : null}
         </label>
 
         <div className="softsave-project-form__field">
-          <span className="softsave-project-form__label">
-            {useModalLayout ? 'Descripcion detallada *' : 'Descripcion *'}
-          </span>
+          <div className="softsave-input-field__header">
+            <span className="softsave-project-form__label">
+              {useModalLayout ? 'Descripcion detallada *' : 'Descripcion *'}
+            </span>
+            <CharacterCounter currentLength={getDescriptionLength(formData.description)} maxLength={500} />
+          </div>
           <div id={editorToolbarId} className="ql-toolbar ql-snow softsave-project-form__toolbar">
             <span className="ql-formats">
               <button type="button" className="ql-bold" aria-label="Negrita" />
@@ -802,9 +803,6 @@ function ProjectForm({
             className="softsave-project-form__textarea softsave-project-form__textarea--compact"
             placeholder="Describe tu proyecto... (min. 20, max. 500 caracteres visibles)"
           />
-          <span className="softsave-project-form__hint">
-            {getDescriptionLength(formData.description)}/500
-          </span>
           {errors.description ? <span className="error-text">{errors.description}</span> : null}
         </div>
 
@@ -966,11 +964,15 @@ function ProjectForm({
 
         <div className={`softsave-project-form__url-grid ${useModalLayout ? 'is-modal' : ''}`}>
           <label className="softsave-project-form__field">
-            <span className="softsave-project-form__label">URL demo</span>
+            <div className="softsave-input-field__header">
+              <span className="softsave-project-form__label">URL demo</span>
+              <CharacterCounter value={formData.demoUrl} maxLength={2048} />
+            </div>
             <input
               type="url"
               className="softsave-input"
               value={formData.demoUrl}
+              maxLength={2048}
               placeholder="https://mi-demo.com/proyecto"
               onChange={(event) => updateField('demoUrl', event.target.value)}
             />
@@ -978,11 +980,15 @@ function ProjectForm({
           </label>
 
           <label className="softsave-project-form__field">
-            <span className="softsave-project-form__label">URL repositorio</span>
+            <div className="softsave-input-field__header">
+              <span className="softsave-project-form__label">URL repositorio</span>
+              <CharacterCounter value={formData.repositoryUrl} maxLength={2048} />
+            </div>
             <input
               type="url"
               className="softsave-input"
               value={formData.repositoryUrl}
+              maxLength={2048}
               placeholder="https://github.com/usuario/repositorio"
               onChange={(event) => updateField('repositoryUrl', event.target.value)}
             />
