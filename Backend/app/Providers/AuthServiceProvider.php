@@ -49,20 +49,26 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
-            return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
+            // Lee la variable FRONTEND_URL de tu archivo .env local
+            $baseUrl = config('app.frontend_url') ?? 'FRONTEND_URL=http://softsave.tis.cs.umss.edu.bo';
+            return rtrim($baseUrl, '/') . "/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
         });
 
-        ResetPassword::toMailUsing(function (object $notifiable, string $url) {
+       
+        ResetPassword::toMailUsing(function (object $notifiable, string $token) {
+            // Construimos la URL local usando el token
+            $baseUrl = config('app.frontend_url') ?? 'FRONTEND_URL=http://softsave.tis.cs.umss.edu.bo';
+            $frontendUrl = rtrim($baseUrl, '/') . "/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
+
             return (new MailMessage)
-                ->subject('Restablecimiento de contraseña')
+                ->subject('Restablecimiento de contraseña (Local)')
                 ->greeting('Hola '.$notifiable->name.',')
                 ->line('Recibiste este mensaje porque solicitaste restablecer tu contraseña en DevStack.')
                 ->line('Haz clic en el botón de abajo para elegir una nueva contraseña.')
-                ->action('Restablecer contraseña', $url)
+                ->action('Restablecer contraseña', $frontendUrl) 
                 ->salutation('DevStack')
                 ->line('Si no solicitaste este cambio, puedes ignorar este correo.');
         });
-
         //
     }
 }
