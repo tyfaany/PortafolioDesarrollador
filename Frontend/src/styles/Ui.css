@@ -184,14 +184,40 @@ select.softsave-input::-ms-expand,
 
 .softsave-dropdown-select__trigger {
   text-align: left;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-right: 3rem;
+  background: linear-gradient(180deg, #ffffff 0%, #fffaf7 100%);
+  background-image: none;
 }
 
 .softsave-dropdown-select__value {
   display: block;
   min-width: 0;
+  flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.softsave-dropdown-select__chevron {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primario);
+  transition: transform 0.18s ease;
+  pointer-events: none;
+}
+
+.softsave-dropdown-select__chevron.is-open {
+  transform: translateY(-50%) rotate(180deg);
 }
 
 .softsave-dropdown__list.custom-scrollbar::-webkit-scrollbar {

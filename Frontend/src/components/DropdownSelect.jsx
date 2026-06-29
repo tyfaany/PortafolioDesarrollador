@@ -1,5 +1,7 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import Icon from '@mdi/react';
+import { mdiChevronDown } from '@mdi/js';
 
 function normalizeOption(option, index) {
   if (typeof option === 'string' || typeof option === 'number') {
@@ -78,7 +80,7 @@ function DropdownSelect({
     setActiveIndex(nextOpen ? nextIndex : -1);
   };
 
-  const getNextIndex = (currentIndex, direction) => {
+  const getNextIndex = useCallback((currentIndex, direction) => {
     if (!normalizedOptions.length) {
       return -1;
     }
@@ -93,7 +95,7 @@ function DropdownSelect({
     }
 
     return currentIndex;
-  };
+  }, [normalizedOptions]);
 
   useEffect(() => {
     const handlePointerDown = (event) => {
@@ -132,7 +134,7 @@ function DropdownSelect({
     }
 
     setActiveIndex(firstEnabledIndex >= 0 ? firstEnabledIndex : -1);
-  }, [highlightSelected, isOpen, normalizedOptions, selectedIndex]);
+  }, [getNextIndex, highlightSelected, isOpen, normalizedOptions, selectedIndex]);
 
   const openMenu = () => {
     if (disabled || normalizedOptions.length === 0) {
@@ -258,6 +260,9 @@ function DropdownSelect({
         disabled={disabled}
       >
         <span className="softsave-dropdown-select__value">{selectedLabel}</span>
+        <span className={`softsave-dropdown-select__chevron ${isOpen ? 'is-open' : ''}`} aria-hidden="true">
+          <Icon path={mdiChevronDown} size={0.78} />
+        </span>
       </button>
 
       {isOpen && normalizedOptions.length > 0 ? (
