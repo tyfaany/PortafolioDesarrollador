@@ -27,11 +27,7 @@ function App() {
         <Route path="/verificacion-pendiente" element={<VerificationPending />} />
       </Route>
 
-      <Route
-        element={(
-          <MainLayout />
-        )}
-      >
+      <Route element={<MainLayout />}>
         <Route path="/users/:user/profile" element={<PerfilPublico />} />
       </Route>
 

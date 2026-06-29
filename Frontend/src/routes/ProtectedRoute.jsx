@@ -36,6 +36,15 @@ function ProtectedRoute({ children }) {
     return <p>Verificando tu cuenta...</p>;
   }
 
+  // DETECCIÓN DE PERFIL INCOMPLETO
+  const perfilIncompleto = !user?.profession || !user?.biography;
+  const enRutaDePerfil = location.pathname.startsWith('/perfil');
+
+  // Si intenta huir sin guardar sus datos mínimos, lo mandamos avisándole mediante el state
+  if (perfilIncompleto && !enRutaDePerfil) {
+    return <Navigate to="/perfil/contacto" state={{ forcingProfileUpdate: true }} replace />;
+  }
+
   return children;
 }
 

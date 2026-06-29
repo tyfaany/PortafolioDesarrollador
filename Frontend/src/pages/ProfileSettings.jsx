@@ -75,10 +75,6 @@ function obtenerIniciales(nombreCompleto) {
 }
 
 function obtenerSeccionActiva(pathname) {
-  /* const seccionActiva = SECCIONES_PERFIL.find(
-    ({ route }) => pathname === route,
-  ); */
-
   if (pathname === "/perfil/privacidad" || pathname === "/perfil/ajustes") {
     return "privacidad";
   }
@@ -287,6 +283,7 @@ function iconoRepositorio(repositorio) {
   return mdiFolderOutline;
 }
 
+// COMPONENTE PRINCIPAL
 function ProfileSettings() {
   const { user, refreshUser } = useAuth();
   const { showFeedback } = useFeedback();
@@ -331,7 +328,7 @@ function ProfileSettings() {
   const [ultimaSyncGithub, setUltimaSyncGithub] = useState("hace 2 horas");
   const [busquedaRepos, setBusquedaRepos] = useState("");
   const [filtroRepos, setFiltroRepos] = useState("Todos");
-  const [ordenRepos, setOrdenRepos] = useState("Más recientes");
+  const [ordenRepos, setOrdenRepos] = useState("Más populares");
   const [reposGithub, setReposGithub] = useState([]);
   const [cargandoReposGithub, setCargandoReposGithub] = useState(false);
   const [reposSeleccionados, setReposSeleccionados] = useState([]);
@@ -342,13 +339,13 @@ function ProfileSettings() {
   const [desplazamientoImagen, setDesplazamientoImagen] = useState({ x: 0, y: 0 });
   const [perfilCabecera, setPerfilCabecera] = useState({
     nombreCompleto: user?.name || "",
-    profesion: user?.profession || "",
-    biografia: user?.biography || "",
+    profession: user?.profession || "",
+    biography: user?.biography || "",
   });
   const [formularioPerfil, setFormularioPerfil] = useState({
     nombreCompleto: user?.name || "",
     profesion: user?.profession || "",
-    biografia: user?.biography || "",
+    biography: user?.biography || "",
     githubUrl: user?.github_url || "",
     linkedinUrl: user?.linkedin_url || "",
     telefono: user?.phone || "",
@@ -362,6 +359,9 @@ function ProfileSettings() {
     githubUrl: user?.github_url || "",
     linkedinUrl: user?.linkedin_url || "",
   });
+
+  // Lógica de alerta intuitiva para el Bug ID:015
+  const mostrarAlertaObligatoria = location.state?.forcingProfileUpdate || (!user?.profession || !user?.biography);
 
   const inicialesPerfil = useMemo(
     () => obtenerIniciales(perfilCabecera.nombreCompleto || "Usuario"),
@@ -498,7 +498,7 @@ function ProfileSettings() {
     const datosPerfil = {
       nombreCompleto: user.name || "",
       profesion: user.profession || "",
-      biografia: user.biography || "",
+      biography: user.biography || "",
       githubUrl: user.github_url || "",
       linkedinUrl: user.linkedin_url || "",
       instagramUrl: user.instagram_url || "",
@@ -599,7 +599,7 @@ function ProfileSettings() {
     if (!nombreLimpio) {
       nuevosErrores.nombreCompleto = "El nombre es obligatorio.";
     } else if (nombreLimpio.length > 50) {
-      nuevosErrores.nombreCompleto = "El nombre debe tener máximo 50 caracteres.";
+      nuevesErrores.nombreCompleto = "El nombre debe tener máximo 50 caracteres.";
     } else if (!esNombreValido(nombreLimpio)) {
       nuevosErrores.nombreCompleto = "El nombre solo puede contener letras y espacios individuales.";
     }
@@ -681,7 +681,7 @@ function ProfileSettings() {
       setPerfilCabecera({
         nombreCompleto: payloadPerfil.name,
         profesion: payloadPerfil.profession,
-        biografia: payloadPerfil.biography,
+        biography: payloadPerfil.biography,
         githubUrl: payloadPerfil.github_url || "",
         linkedinUrl: payloadPerfil.linkedin_url || "",
       });
@@ -707,7 +707,7 @@ function ProfileSettings() {
     setFormularioPerfil({
       nombreCompleto: perfilCabecera.nombreCompleto,
       profesion: perfilCabecera.profesion,
-      biografia: perfilCabecera.biografia,
+      biography: perfilCabecera.biografia,
       githubUrl: user?.github_url || "",
       linkedinUrl: user?.linkedin_url || "",
       telefono: user?.phone || "",
@@ -1200,8 +1200,36 @@ function ProfileSettings() {
     transform: `translate(${desplazamientoImagen.x}px, ${desplazamientoImagen.y}px) scale(${zoomImagen})`,
   };
 
+  // RENDER SECCIÓN DE CONTACTO CON EL BANNER INTEGRADO
   const renderizarSeccionContacto = () => (
     <section className="softsave-profile__form-card softsave-profile__contact-card">
+      
+      {/* BANNER DE INICIALIZACIÓN REQUERIDA (BUG ID:015) */}
+      {mostrarAlertaObligatoria && (
+        <div style={{
+          backgroundColor: '#fef2f2',
+          borderLeft: '4px solid #ef4444',
+          padding: '1rem',
+          marginBottom: '1.5rem',
+          borderRadius: '0.375rem',
+          width: '100%'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ marginRight: '0.75rem', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
+              <Icon path={mdiAlertCircleOutline} size={1} />
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <h4 style={{ margin: 0, fontWeight: 'bold', color: '#991b1b', fontSize: '0.95rem' }}>
+                Inicialización de Perfil Requerida
+              </h4>
+              <p style={{ margin: '0.25rem 0 0 0', color: '#7f1d1d', fontSize: '0.875rem' }}>
+                Antes de navegar por la plataforma, es obligatorio que configures tu **Profesión** y **Biografía**. Esto permitirá estructurar correctamente tu portafolio público para los evaluadores.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="softsave-profile__contact-hero">
         <div className="softsave-profile__contact-intro">
           <h2 className="softsave-profile__contact-title">Tu identidad profesional</h2>
@@ -1249,7 +1277,7 @@ function ProfileSettings() {
         <article className="softsave-profile__contact-item softsave-profile__contact-item--bio">
           <span className="softsave-profile__view-label">Biografía</span>
           <p className="softsave-profile__contact-value softsave-profile__contact-value--bio">
-            {perfilCabecera.biografia || "Añade una breve biografía para destacar tu perfil profesional."}
+            {perfilCabecera.biography || "Añade una breve biografía para destacar tu perfil profesional."}
           </p>
         </article>
         <article className="softsave-profile__contact-item">

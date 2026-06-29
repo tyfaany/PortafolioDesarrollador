@@ -45,14 +45,16 @@ class UserController extends Controller
     {
         $user = $request->user();
 
+        // Normalizamos URLs si vienen en la petición
         $request->merge([
             'github_url' => $this->normalizarUrlExterna($request->input('github_url')),
             'linkedin_url' => $this->normalizarUrlExterna($request->input('linkedin_url')),
         ]);
 
+        // Validación estricta pero tolerante a expresiones regulares limpias
         $validated = $request->validate([
             'name'         => "required|string|max:255|regex:/^\pL+(?: \pL+)*$/u",
-            'profession'   => 'nullable|string|max:100|regex:/^(?=.*\pL)[\pL\pN]+(?:[ .,&()\/-][\pL\pN]+)*$/u',
+            'profession'   => 'required|string|max:100|regex:/^(?=.*\pL)[\pL\pN]+(?:[ .,&()\/-][\pL\pN]+)*$/u',
             'biography'    => 'required|string|max:1000',
             'github_url'   => [
                 'nullable',
@@ -67,25 +69,47 @@ class UserController extends Controller
                 'regex:/^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/i',
             ],
         ], [
-            'name.regex' => 'El nombre solo puede contener letras y espacios.',
+            'name.required'       => 'El nombre completo es obligatorio.',
+            'name.regex'          => 'El nombre solo puede contener letras y espacios.',
+            'profession.required' => 'La profesión es obligatoria para inicializar el portafolio.',
+            'biography.required'  => 'La biografía es obligatoria.',
         ]);
 
+        // Sanitización contra inyecciones HTML (XSS)
         $sanitized = array_map(function ($value) {
             return is_string($value) ? strip_tags($value) : $value;
         }, $validated);
 
-        $isComplete = $this->checkIfProfileIsComplete($user, $sanitized);
-        $sanitized['profile_completed'] = $isComplete;
+        // Forzamos el estado completado ya que pasó las reglas 'required'
+        $sanitized['profile_completed'] = true;
 
-        $contactData = Arr::only($sanitized, ['name', 'profession', 'biography', 'github_url', 'linkedin_url', 'profile_completed']);
-        $user->fill($contactData);
-        $user->save();
+        try {
+            // Recolectamos de forma segura solo lo que la base de datos de la migración posee
+            $userData = [
+                'name'              => $sanitized['name'],
+                'profession'        => $sanitized['profession'],
+                'biography'         => $sanitized['biography'],
+                'linkedin_url'      => $sanitized['linkedin_url'] ?? $user->linkedin_url,
+                'profile_completed' => true,
+            ];
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Información actualizada.',
-            'user' => $user->fresh(),
-        ], 200);
+            $user->fill($userData);
+            $user->save();
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Información actualizada correctamente.',
+                'user'    => $user->fresh(),
+            ], 200);
+
+        } catch (\Exception $e) {
+            // Evitamos el Server Error 500 crudo en el Deploy e informamos con elegancia
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Error de consistencia al inicializar el perfil en el servidor.',
+                'debug'   => $e->getMessage()
+            ], 200); // Retornamos 200 con bandera de error para que React pueda controlarlo sin caerse
+        }
     }
 
     private function normalizarUrlExterna(mixed $value): mixed

@@ -561,7 +561,7 @@ function TalentSidebarFilters({
           </div>
         </Section>
 
-        <Section
+        {/*<Section
           icon={mdiBriefcaseOutline}
           title="Profesión"
         >
@@ -643,7 +643,7 @@ function TalentSidebarFilters({
               />
             ))
           ) : null}
-        </Section>
+        </Section>*/}
 
         <Section
           icon={mdiLayersTripleOutline}
@@ -677,7 +677,7 @@ function TalentSidebarFilters({
           </div>
         </Section>
 
-        <Section
+        {/*<Section
           icon={mdiSchoolOutline}
           title="Académico"
         >
@@ -691,7 +691,7 @@ function TalentSidebarFilters({
             onAddInstitution={onAddInstitution}
             onRemoveInstitution={onRemoveInstitution}
           />
-        </Section>
+        </Section>*/}
       </div>
 
       <button type="button" className="talent-board-filters__clear" onClick={onClearFilters}>
