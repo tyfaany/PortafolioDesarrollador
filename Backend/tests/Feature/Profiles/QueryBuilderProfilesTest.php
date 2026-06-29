@@ -1100,6 +1100,35 @@ class QueryBuilderProfilesTest extends TestCase
             ->assertJsonFragment(['name' => 'Advanced React Dev'])
             ->assertJsonFragment(['name' => 'Basic React Dev'])
             ->assertJsonFragment(['name' => 'Basic Vue Dev']);
+
+        $combinedSkillUser = User::factory()->create([
+            'name' => 'React And Vue Dev',
+            'profession' => 'Frontend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $combinedSkillUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $combinedSkillUser->skills()->attach($react->id, [
+            'level' => 'Avanzado',
+            'evidence_url' => null,
+        ]);
+
+        $combinedSkillUser->skills()->attach($vue->id, [
+            'level' => 'Basico',
+            'evidence_url' => null,
+        ]);
+
+        $reactAndVueResponse = $this->getJson('/api/profiles?filter[habilidadTecnica_nivel]=React,Avanzado|Vue,Basico');
+
+        $reactAndVueResponse->assertOk()
+            ->assertJsonCount(3, 'data')
+            ->assertJsonFragment(['name' => 'Advanced React Dev'])
+            ->assertJsonFragment(['name' => 'Basic Vue Dev'])
+            ->assertJsonFragment(['name' => 'React And Vue Dev']);
     }
 
     public function test_it_filters_public_profiles_by_job_position(): void

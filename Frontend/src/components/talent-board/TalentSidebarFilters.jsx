@@ -305,7 +305,7 @@ function TalentSidebarFilters({
       <div className="talent-board-filters__title">
         <div>
           <h2>Filtros técnicos</h2>
-          <p>Afina la búsqueda por stack, trayectoria y enfoque académico.</p>
+          <p>Elige varias opciones para acercarte al perfil que buscas.</p>
         </div>
       </div>
 
@@ -313,6 +313,7 @@ function TalentSidebarFilters({
         <Section
           icon={mdiTuneVariant}
           title="Habilidades técnicas"
+          subtitle="Puedes elegir una o varias habilidades."
         >
           <div className="talent-board-filters__add-row">
             <DropdownSelect
@@ -362,6 +363,7 @@ function TalentSidebarFilters({
         <Section
           icon={mdiAccountGroupOutline}
           title="Habilidades blandas"
+          subtitle="Puedes elegir una o varias habilidades blandas."
         >
           <div className="talent-board-filters__add-row">
             <DropdownSelect
@@ -400,6 +402,7 @@ function TalentSidebarFilters({
         <Section
           icon={mdiLayersTripleOutline}
           title="Tecnología en proyectos"
+          subtitle="Puedes elegir una o varias tecnologías."
         >
           <div className="talent-board-filters__add-row">
             <DropdownSelect
