@@ -60,7 +60,7 @@ class UserController extends Controller
             'visibility',
         ]);
 
-        return response()->json($user, 200);
+        return response()->json($user, 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     /**
@@ -107,7 +107,7 @@ class UserController extends Controller
 
         // Sanitización contra inyecciones HTML (XSS)
         $sanitized = array_map(function ($value) {
-            return is_string($value) ? strip_tags($value) : $value;
+            return is_string($value) ? $this->sanitizeUtf8(strip_tags($value)) : $value;
         }, $validated);
 
         // Forzamos el estado completado ya que pasó las reglas 'required'
@@ -130,7 +130,7 @@ class UserController extends Controller
                 'status'  => 'success',
                 'message' => 'Información actualizada correctamente.',
                 'user'    => $user->fresh(),
-            ], 200);
+            ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
 
         } catch (\Exception $e) {
             // Evitamos el Server Error 500 crudo en el Deploy e informamos con elegancia
@@ -159,6 +159,21 @@ class UserController extends Controller
         }
 
         return 'https://' . ltrim($limpio, '/');
+    }
+
+    private function sanitizeUtf8(mixed $value): mixed
+    {
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $clean = @iconv('UTF-8', 'UTF-8//IGNORE', $value);
+
+        if ($clean === false) {
+            $clean = @mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+        }
+
+        return $clean === false ? '' : $clean;
     }
 
     private function checkIfProfileIsComplete(User $user, array $newData): bool
@@ -451,12 +466,12 @@ class UserController extends Controller
         $user = $request->user();
 
         return response()->json([
-            'phone' => $user->phone,
-            'mobile' => $user->mobile,
-            'contact_email' => $user->contact_email,
-            'address' => $user->address,
-            'instagram_url' => $user->instagram_url,
-            'facebook_url' => $user->facebook_url,
+            'phone' => $this->sanitizeUtf8($user->phone),
+            'mobile' => $this->sanitizeUtf8($user->mobile),
+            'contact_email' => $this->sanitizeUtf8($user->contact_email),
+            'address' => $this->sanitizeUtf8($user->address),
+            'instagram_url' => $this->sanitizeUtf8($user->instagram_url),
+            'facebook_url' => $this->sanitizeUtf8($user->facebook_url),
 
             'show_phone' => $user->show_phone,
             'show_mobile' => $user->show_mobile,
@@ -475,7 +490,7 @@ class UserController extends Controller
 
         // Sanitizar strings
         $sanitized = array_map(function ($value) {
-            return is_string($value) ? strip_tags($value) : $value;
+            return is_string($value) ? $this->sanitizeUtf8(strip_tags($value)) : $value;
         }, $data);
 
         $visibilityData = Arr::only($sanitized, [
@@ -516,20 +531,20 @@ class UserController extends Controller
         return response()->json([
             'message' => 'Información de contacto actualizada correctamente',
             'contact' => [
-                'phone' => $user->phone,
-                'mobile' => $user->mobile,
-                'contact_email' => $user->contact_email,
-                'address' => $user->address,
-                'instagram_url' => $user->instagram_url,
-                'facebook_url' => $user->facebook_url,
+                'phone' => $this->sanitizeUtf8($user->phone),
+                'mobile' => $this->sanitizeUtf8($user->mobile),
+                'contact_email' => $this->sanitizeUtf8($user->contact_email),
+                'address' => $this->sanitizeUtf8($user->address),
+                'instagram_url' => $this->sanitizeUtf8($user->instagram_url),
+                'facebook_url' => $this->sanitizeUtf8($user->facebook_url),
                 'show_phone' => $visibility->show_phone,
                 'show_mobile' => $visibility->show_mobile,
                 'show_contact_email' => $visibility->show_contact_email,
                 'show_address' => $visibility->show_address,
                 'show_instagram' => $visibility->show_instagram,
                 'show_facebook' => $visibility->show_facebook,
-            ]
-        ]);
+            ],
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
     public function showPublicContact(string $id)
     {
@@ -538,33 +553,33 @@ class UserController extends Controller
         $data = [];
 
         if ($user->show_phone) {
-            $data['phone'] = $user->phone;
+            $data['phone'] = $this->sanitizeUtf8($user->phone);
         }
 
         if ($user->show_mobile) {
-            $data['mobile'] = $user->mobile;
+            $data['mobile'] = $this->sanitizeUtf8($user->mobile);
             $data['whatsapp_url'] = preg_replace('/\D+/', '', (string) $user->mobile)
                 ? 'https://wa.me/' . preg_replace('/\D+/', '', (string) $user->mobile)
                 : null;
         }
 
         if ($user->show_contact_email) {
-            $data['contact_email'] = $user->contact_email;
+            $data['contact_email'] = $this->sanitizeUtf8($user->contact_email);
         }
 
         if ($user->show_address) {
-            $data['address'] = $user->address;
+            $data['address'] = $this->sanitizeUtf8($user->address);
         }
 
         if ($user->show_instagram) {
-            $data['instagram_url'] = $user->instagram_url;
+            $data['instagram_url'] = $this->sanitizeUtf8($user->instagram_url);
         }
 
         if ($user->show_facebook) {
-            $data['facebook_url'] = $user->facebook_url;
+            $data['facebook_url'] = $this->sanitizeUtf8($user->facebook_url);
         }
 
-        return response()->json($data);
+        return response()->json($data, 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     public function indexPublicProfilesFull(Request $request)
@@ -833,7 +848,7 @@ class UserController extends Controller
 
         $profile = $this->filterProfilePrivacy($user);
 
-        return response()->json($profile, 200);
+        return response()->json($profile, 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     public function showPublicProfilePhoto(User $user)
