@@ -8,6 +8,7 @@ import {
   obtenerPerfilesPublicos,
   obtenerTecnologias,
 } from '../../services/authService';
+import DropdownSelect from '../DropdownSelect';
 import TalentProfileCard from './TalentProfileCard';
 import ProfilePagination from './ProfilePagination';
 import TalentSidebarFilters from './TalentSidebarFilters';
@@ -736,20 +737,22 @@ function TalentBoardHome() {
                 <Icon path={mdiSortVariant} size={0.72} />
                 Ordenar por
               </label>
-              <select
+              <DropdownSelect
                 id="talent-board-sort"
                 value={sortValue}
-                onChange={(event) => setSortValue(event.target.value)}
-              >
-                <option value="-created_at">Más recientes</option>
-                <option value="created_at">Más antiguos</option>
-                <option value="-projects_count">Más proyectos</option>
-                <option value="projects_count">Menos proyectos</option>
-                <option value="name">Nombre (A-Z)</option>
-                <option value="-name">Nombre (Z-A)</option>
-                <option value="profession">Profesión (A-Z)</option>
-                <option value="-profession">Profesión (Z-A)</option>
-              </select>
+                onChange={setSortValue}
+                options={[
+                  { value: '-created_at', label: 'Más recientes' },
+                  { value: 'created_at', label: 'Más antiguos' },
+                  { value: '-projects_count', label: 'Más proyectos' },
+                  { value: 'projects_count', label: 'Menos proyectos' },
+                  { value: 'name', label: 'Nombre (A-Z)' },
+                  { value: '-name', label: 'Nombre (Z-A)' },
+                  { value: 'profession', label: 'Profesión (A-Z)' },
+                  { value: '-profession', label: 'Profesión (Z-A)' },
+                ]}
+                ariaLabel="Ordenar resultados"
+              />
             </div>
 
             <div className="talent-board-results__page">
