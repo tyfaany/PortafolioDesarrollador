@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Icon from '@mdi/react';
 import { mdiAccount, mdiClose, mdiContentSaveOutline, mdiPencilOutline } from '@mdi/js';
+import CharacterCounter from './CharacterCounter';
 import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import { actualizarPerfil } from '../services/authService';
@@ -43,6 +44,9 @@ function PortfolioPersonalInfoCard() {
     profesion: user?.profession || '',
     biografia: user?.biography || '',
   });
+  const MAX_NOMBRE_LENGTH = 255;
+  const MAX_PROFESION_LENGTH = 100;
+  const MAX_BIOGRAFIA_LENGTH = 1000;
 
   const hayDatos = useMemo(
     () => Boolean(user?.name || user?.profession || user?.biography),
@@ -123,15 +127,15 @@ function PortfolioPersonalInfoCard() {
 
     if (!nombreLimpio) {
       nuevosErrores.nombreCompleto = 'El nombre es obligatorio.';
-    } else if (nombreLimpio.length > 50) {
-      nuevosErrores.nombreCompleto = 'El nombre debe tener máximo 50 caracteres.';
+    } else if (nombreLimpio.length > MAX_NOMBRE_LENGTH) {
+      nuevosErrores.nombreCompleto = 'El nombre debe tener máximo 255 caracteres.';
     } else if (!esNombreValido(nombreLimpio)) {
       nuevosErrores.nombreCompleto = 'El nombre solo puede contener letras y espacios individuales.';
     }
 
     if (!profesionLimpia) {
       nuevosErrores.profesion = 'El título es obligatorio.';
-    } else if (profesionLimpia.length > 100) {
+    } else if (profesionLimpia.length > MAX_PROFESION_LENGTH) {
       nuevosErrores.profesion = 'El título debe tener máximo 100 caracteres.';
     } else if (!esProfesionValida(profesionLimpia)) {
       nuevosErrores.profesion = 'El título debe tener palabras válidas y no secuencias de símbolos.';
@@ -139,7 +143,7 @@ function PortfolioPersonalInfoCard() {
 
     if (!biografiaLimpia) {
       nuevosErrores.biografia = 'La biografía es obligatoria.';
-    } else if (biografiaLimpia.length > 1000) {
+    } else if (biografiaLimpia.length > MAX_BIOGRAFIA_LENGTH) {
       nuevosErrores.biografia = 'La biografía debe tener máximo 1000 caracteres.';
     }
 
@@ -246,12 +250,16 @@ function PortfolioPersonalInfoCard() {
 
             <form className="softsave-profile__form" onSubmit={guardarInformacion}>
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Nombre</span>
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">Nombre</span>
+                  <CharacterCounter value={formulario.nombreCompleto} maxLength={MAX_NOMBRE_LENGTH} />
+                </div>
                 <input
                   type="text"
                   name="nombreCompleto"
                   value={formulario.nombreCompleto}
                   onChange={manejarCambio}
+                  maxLength={MAX_NOMBRE_LENGTH}
                   className="softsave-input softsave-profile__input"
                   placeholder="Ej. Juan Pérez"
                 />
@@ -263,12 +271,16 @@ function PortfolioPersonalInfoCard() {
               </label>
 
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Título</span>
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">Título</span>
+                  <CharacterCounter value={formulario.profesion} maxLength={MAX_PROFESION_LENGTH} />
+                </div>
                 <input
                   type="text"
                   name="profesion"
                   value={formulario.profesion}
                   onChange={manejarCambio}
+                  maxLength={MAX_PROFESION_LENGTH}
                   className="softsave-input softsave-profile__input"
                   placeholder="Ej. Ingeniero informático"
                 />
@@ -280,11 +292,15 @@ function PortfolioPersonalInfoCard() {
               </label>
 
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Biografía</span>
+                <div className="softsave-profile__field-head">
+                  <span className="softsave-profile__label">Biografía</span>
+                  <CharacterCounter value={formulario.biografia} maxLength={MAX_BIOGRAFIA_LENGTH} />
+                </div>
                 <textarea
                   name="biografia"
                   value={formulario.biografia}
                   onChange={manejarCambio}
+                  maxLength={MAX_BIOGRAFIA_LENGTH}
                   required
                   className="softsave-input softsave-profile__textarea"
                   placeholder="Describe brevemente tu perfil profesional."
