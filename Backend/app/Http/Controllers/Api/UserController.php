@@ -14,6 +14,7 @@ use App\Sorts\StableTextSort;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use App\Http\Requests\UpdateContactRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -184,6 +185,129 @@ class UserController extends Controller
         return array_values($normalized);
     }
 
+    /**
+     * @return array<int, string>
+     */
+    private function tokenizeSearchValue(mixed $value): array
+    {
+        $text = trim((string) $value);
+
+        if ($text === '') {
+            return [];
+        }
+
+        $normalized = Str::ascii(mb_strtolower($text, 'UTF-8'));
+        $normalized = preg_replace('/[^a-z0-9]+/i', ' ', $normalized) ?? '';
+
+        return array_values(array_filter(array_map(
+            static fn (string $item): string => trim($item),
+            preg_split('/\s+/', trim($normalized), -1, PREG_SPLIT_NO_EMPTY) ?: []
+        ), static fn (string $item): bool => mb_strlen($item, 'UTF-8') >= 2));
+    }
+
+    private function normalizedSearchExpression(string $column): string
+    {
+        $expression = "LOWER({$column})";
+
+        foreach ([' ', '-', '_', '.', ',', '/', '\\', '(', ')', '[', ']', '{', '}', "'", '"', '#', '+'] as $character) {
+            $quotedCharacter = "'" . str_replace("'", "''", $character) . "'";
+            $expression = "REPLACE({$expression}, {$quotedCharacter}, '')";
+        }
+
+        return $expression;
+    }
+
+    private function addBroadSearchField(Builder $query, string $column, string $token): void
+    {
+        $like = '%' . mb_strtolower($token, 'UTF-8') . '%';
+        $normalizedLike = '%' . Str::ascii($token) . '%';
+        $normalizedExpression = $this->normalizedSearchExpression($column);
+
+        $query->whereRaw("LOWER({$column}) LIKE ?", [$like])
+            ->orWhereRaw("{$normalizedExpression} LIKE ?", [$normalizedLike]);
+    }
+
+    private function applyBroadSearch(Builder $query, mixed $value): void
+    {
+        $text = trim((string) $value);
+
+        if ($text === '') {
+            return;
+        }
+
+        $tokens = $this->tokenizeSearchValue($text);
+
+        if (empty($tokens)) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $query->where(function (Builder $outerQuery) use ($tokens): void {
+            foreach ($tokens as $token) {
+                $outerQuery->where(function (Builder $tokenQuery) use ($token): void {
+                    $tokenQuery->where(function (Builder $fieldQuery) use ($token): void {
+                        $this->addBroadSearchField($fieldQuery, 'name', $token);
+                    })
+                        ->orWhere(function (Builder $fieldQuery) use ($token): void {
+                            $this->addBroadSearchField($fieldQuery, 'profession', $token);
+                        })
+                        ->orWhere(function (Builder $fieldQuery) use ($token): void {
+                            $this->addBroadSearchField($fieldQuery, 'address', $token);
+                        })
+                        ->orWhere(function (Builder $fieldQuery) use ($token): void {
+                            $this->addBroadSearchField($fieldQuery, 'biography', $token);
+                        })
+                        ->orWhereHas('jobs', function (Builder $jobQuery) use ($token): void {
+                            $jobQuery->where(function (Builder $fieldQuery) use ($token): void {
+                                $this->addBroadSearchField($fieldQuery, 'company_name', $token);
+                            })
+                                ->orWhere(function (Builder $fieldQuery) use ($token): void {
+                                    $this->addBroadSearchField($fieldQuery, 'position', $token);
+                                })
+                                ->orWhere(function (Builder $fieldQuery) use ($token): void {
+                                    $this->addBroadSearchField($fieldQuery, 'achievements', $token);
+                                });
+                        })
+                        ->orWhereHas('skills', function (Builder $skillQuery) use ($token): void {
+                            $skillQuery->where(function (Builder $fieldQuery) use ($token): void {
+                                $this->addBroadSearchField($fieldQuery, 'name', $token);
+                            });
+                        })
+                        ->orWhereHas('softSkills', function (Builder $softSkillQuery) use ($token): void {
+                            $softSkillQuery->where(function (Builder $fieldQuery) use ($token): void {
+                                $this->addBroadSearchField($fieldQuery, 'name', $token);
+                            });
+                        })
+                        ->orWhereHas('studies', function (Builder $studyQuery) use ($token): void {
+                            $studyQuery->where(function (Builder $fieldQuery) use ($token): void {
+                                $this->addBroadSearchField($fieldQuery, 'degree', $token);
+                            })
+                                ->orWhere(function (Builder $fieldQuery) use ($token): void {
+                                    $this->addBroadSearchField($fieldQuery, 'academic_institution', $token);
+                                });
+                        })
+                        ->orWhereHas('projects', function (Builder $projectQuery) use ($token): void {
+                            $projectQuery->where('is_public', true)
+                                ->where(function (Builder $publicProjectQuery) use ($token): void {
+                                    $publicProjectQuery->where(function (Builder $fieldQuery) use ($token): void {
+                                        $this->addBroadSearchField($fieldQuery, 'name', $token);
+                                    })
+                                        ->orWhere(function (Builder $fieldQuery) use ($token): void {
+                                            $this->addBroadSearchField($fieldQuery, 'description', $token);
+                                        })
+                                        ->orWhereHas('technologies', function (Builder $technologyQuery) use ($token): void {
+                                            $technologyQuery->where(function (Builder $fieldQuery) use ($token): void {
+                                                $this->addBroadSearchField($fieldQuery, 'project_technologies.name', $token);
+                                            });
+                                        });
+                                });
+                        });
+                });
+            }
+        });
+    }
+
     public function showContact(Request $request)
     {
         $user = $request->user();
@@ -327,52 +451,7 @@ class UserController extends Controller
         )
             ->allowedFilters([
                 AllowedFilter::callback('search', function (Builder $query, $value): void {
-                    $value = trim((string) $value);
-
-                    if ($value === '') {
-                        return;
-                    }
-
-                    if (mb_strlen($value, 'UTF-8') < 2) {
-                        $query->whereRaw('1 = 0');
-
-                        return;
-                    }
-
-                    $query->where(function (Builder $subQuery) use ($value): void {
-                        $search = mb_strtolower($value, 'UTF-8');
-                        $like = "%{$search}%";
-
-                        $subQuery->whereRaw('LOWER(name) LIKE ?', [$like])
-                            ->orWhereRaw('LOWER(profession) LIKE ?', [$like])
-                            ->orWhereRaw('LOWER(address) LIKE ?', [$like])
-                            ->orWhereRaw('LOWER(biography) LIKE ?', [$like])
-                            ->orWhereHas('jobs', function (Builder $jobQuery) use ($like): void {
-                                $jobQuery->whereRaw('LOWER(company_name) LIKE ?', [$like])
-                                    ->orWhereRaw('LOWER(position) LIKE ?', [$like])
-                                    ->orWhereRaw('LOWER(achievements) LIKE ?', [$like]);
-                            })
-                            ->orWhereHas('skills', function (Builder $skillQuery) use ($like): void {
-                                $skillQuery->whereRaw('LOWER(name) LIKE ?', [$like]);
-                            })
-                            ->orWhereHas('softSkills', function (Builder $softSkillQuery) use ($like): void {
-                                $softSkillQuery->whereRaw('LOWER(name) LIKE ?', [$like]);
-                            })
-                            ->orWhereHas('studies', function (Builder $studyQuery) use ($like): void {
-                                $studyQuery->whereRaw('LOWER(degree) LIKE ?', [$like])
-                                    ->orWhereRaw('LOWER(academic_institution) LIKE ?', [$like]);
-                            })
-                            ->orWhereHas('projects', function (Builder $projectQuery) use ($like): void {
-                                $projectQuery->where('is_public', true)
-                                    ->where(function (Builder $publicProjectQuery) use ($like): void {
-                                        $publicProjectQuery->whereRaw('LOWER(name) LIKE ?', [$like])
-                                            ->orWhereRaw('LOWER(description) LIKE ?', [$like])
-                                            ->orWhereHas('technologies', function (Builder $technologyQuery) use ($like): void {
-                                                $technologyQuery->whereRaw('LOWER(project_technologies.name) LIKE ?', [$like]);
-                                            });
-                                    });
-                            });
-                    });
+                    $this->applyBroadSearch($query, $value);
                 }),
                 AllowedFilter::callback('profession', function (Builder $query, $value): void {
                     $professions = $this->normalizeFilterValues($value);
