@@ -192,8 +192,7 @@ class QueryBuilderProfilesTest extends TestCase
         $jobResponse = $this->getJson('/api/profiles?filter[search]=Backend Engineer');
 
         $jobResponse->assertOk()
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.name', 'Job Match');
+            ->assertJsonFragment(['name' => 'Job Match']);
 
         $studyResponse = $this->getJson('/api/profiles?filter[search]=University A');
 
@@ -204,8 +203,7 @@ class QueryBuilderProfilesTest extends TestCase
         $projectResponse = $this->getJson('/api/profiles?filter[search]=React Portal');
 
         $projectResponse->assertOk()
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.name', 'Project Match');
+            ->assertJsonFragment(['name' => 'Project Match']);
 
         $skillSearchResponse = $this->getJson('/api/profiles?filter[search]=Laravel');
 
@@ -239,8 +237,7 @@ class QueryBuilderProfilesTest extends TestCase
         $addressSearchResponse = $this->getJson('/api/profiles?filter[search]=La Paz');
 
         $addressSearchResponse->assertOk()
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.name', 'John React');
+            ->assertJsonFragment(['name' => 'John React']);
 
         $skillResponse = $this->getJson('/api/profiles?filter[habilidades]=Laravel');
 
@@ -284,6 +281,121 @@ class QueryBuilderProfilesTest extends TestCase
         $response->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Token Search');
+    }
+
+    public function test_it_matches_any_word_from_a_multi_word_search(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Word Match',
+            'profession' => 'Designer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $user->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[search]=Backend%20Design');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Word Match');
+    }
+
+    public function test_it_prioritizes_the_full_phrase_over_partial_word_matches(): void
+    {
+        $fullPhraseUser = User::factory()->create([
+            'name' => 'Full Phrase Match',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $fullPhraseUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $partialUser = User::factory()->create([
+            'name' => 'Partial Match',
+            'profession' => 'Backend Developer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $partialUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[search]=Backend Engineer');
+
+        $response->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.name', 'Full Phrase Match')
+            ->assertJsonPath('data.1.name', 'Partial Match');
+    }
+
+    public function test_it_prioritizes_the_full_phrase_before_individual_words_in_mixed_search_terms(): void
+    {
+        $exactUser = User::factory()->create([
+            'name' => 'Ing Software Exact',
+            'profession' => 'Ing Software',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $exactUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $softwareOnlyUser = User::factory()->create([
+            'name' => 'Software Only',
+            'profession' => 'Software Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $softwareOnlyUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $ingOnlyUser = User::factory()->create([
+            'name' => 'Ing Only',
+            'profession' => 'Ing',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $ingOnlyUser->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[search]=ing%20software');
+
+        $response->assertOk()
+            ->assertJsonCount(3, 'data')
+            ->assertJsonPath('data.0.name', 'Ing Software Exact')
+            ->assertJsonFragment(['name' => 'Software Only'])
+            ->assertJsonFragment(['name' => 'Ing Only']);
+    }
+
+    public function test_it_ignores_search_stopwords(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Stopword Match',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $user->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[search]=del');
+
+        $response->assertOk()
+            ->assertJsonCount(0, 'data');
     }
 
     public function test_it_ignores_special_characters_in_search_terms(): void

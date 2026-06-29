@@ -106,12 +106,28 @@ class JobExperienceFilter implements Filter
         $invalidYears = false;
 
         $yearTokens = [];
-        while ($parts !== [] && count($yearTokens) < 2) {
-            $candidate = end($parts);
-            $parsed = $this->parseYearToken((string) $candidate);
+        $singleYearWithGap = false;
+
+        $reversedParts = array_reverse($parts);
+
+        foreach ($reversedParts as $index => $candidate) {
+            $candidate = (string) $candidate;
+
+            if ($candidate === '') {
+                if (count($yearTokens) === 1) {
+                    $singleYearWithGap = true;
+                }
+
+                break;
+            }
+
+            $parsed = $this->parseYearToken($candidate);
 
             if ($parsed === '__invalid__') {
-                $invalidYears = true;
+                if ($yearTokens !== []) {
+                    $invalidYears = true;
+                }
+
                 break;
             }
 
@@ -119,8 +135,28 @@ class JobExperienceFilter implements Filter
                 break;
             }
 
-            array_pop($parts);
             array_unshift($yearTokens, $parsed);
+
+            if (count($yearTokens) === 2) {
+                break;
+            }
+
+            $nextCandidate = $reversedParts[$index + 1] ?? null;
+            if ($nextCandidate === null) {
+                break;
+            }
+
+            $nextCandidate = (string) $nextCandidate;
+
+            if ($nextCandidate === '') {
+                continue;
+            }
+
+            if (is_numeric($nextCandidate)) {
+                continue;
+            }
+
+            break;
         }
 
         if ($invalidYears) {
@@ -130,7 +166,15 @@ class JobExperienceFilter implements Filter
         if (count($yearTokens) === 2) {
             [$minYears, $maxYears] = $yearTokens;
         } elseif (count($yearTokens) === 1) {
-            $minYears = $yearTokens[0];
+            if ($singleYearWithGap) {
+                $maxYears = $yearTokens[0];
+            } else {
+                $minYears = $yearTokens[0];
+            }
+        }
+
+        if ($minYears !== null && $maxYears !== null && $minYears > $maxYears) {
+            return [[], null, null, true];
         }
 
         $positions = [];

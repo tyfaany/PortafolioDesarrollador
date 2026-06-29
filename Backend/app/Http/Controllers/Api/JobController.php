@@ -54,7 +54,7 @@ class JobController extends Controller
     /**
      * HU-12: Editar Experiencia Laboral
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, string $id)
     {
         $job = $request->user()->jobs()->find($id);
 
@@ -93,7 +93,7 @@ class JobController extends Controller
     /**
      * Eliminar experiencia laboral.
      */
-    public function destroy(Request $request, $id)
+    public function destroy(Request $request, string $id)
     {
         $job = $request->user()->jobs()->find($id);
 

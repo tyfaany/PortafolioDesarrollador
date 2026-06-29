@@ -26,6 +26,29 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class UserController extends Controller
 {
+    private const SEARCH_STOP_WORDS = [
+        'a',
+        'al',
+        'como',
+        'con',
+        'de',
+        'del',
+        'el',
+        'en',
+        'la',
+        'las',
+        'lo',
+        'los',
+        'o',
+        'para',
+        'por',
+        'sin',
+        'su',
+        'un',
+        'una',
+        'y',
+    ];
+
     public function show(Request $request)
     {
         $user = $request->user();
@@ -203,29 +226,138 @@ class UserController extends Controller
         return array_values(array_filter(array_map(
             static fn (string $item): string => trim($item),
             preg_split('/\s+/', trim($normalized), -1, PREG_SPLIT_NO_EMPTY) ?: []
-        ), static fn (string $item): bool => mb_strlen($item, 'UTF-8') >= 2));
+        ), fn (string $item): bool => mb_strlen($item, 'UTF-8') >= 2 && ! $this->isSearchStopWord($item)));
     }
 
-    private function normalizedSearchExpression(string $column): string
+    private function escapeLikeValue(string $value): string
     {
-        $expression = "LOWER({$column})";
+        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
+    }
 
-        foreach ([' ', '-', '_', '.', ',', '/', '\\', '(', ')', '[', ']', '{', '}', "'", '"', '#', '+'] as $character) {
-            $quotedCharacter = "'" . str_replace("'", "''", $character) . "'";
-            $expression = "REPLACE({$expression}, {$quotedCharacter}, '')";
-        }
+    private function normalizeSearchPhrase(string $value): string
+    {
+        $normalized = Str::ascii(mb_strtolower(trim($value), 'UTF-8'));
+        $normalized = preg_replace('/[^a-z0-9]+/i', ' ', $normalized) ?? '';
 
-        return $expression;
+        return trim(preg_replace('/\s+/', ' ', $normalized) ?? '');
+    }
+
+    private function isSearchStopWord(string $value): bool
+    {
+        return in_array(mb_strtolower(trim($value), 'UTF-8'), self::SEARCH_STOP_WORDS, true);
     }
 
     private function addBroadSearchField(Builder $query, string $column, string $token): void
     {
-        $like = '%' . mb_strtolower($token, 'UTF-8') . '%';
-        $normalizedLike = '%' . Str::ascii($token) . '%';
-        $normalizedExpression = $this->normalizedSearchExpression($column);
+        $lowerToken = $this->escapeLikeValue(mb_strtolower($token, 'UTF-8'));
+        $asciiToken = $this->escapeLikeValue(mb_strtolower(Str::ascii($token), 'UTF-8'));
 
-        $query->whereRaw("LOWER({$column}) LIKE ?", [$like])
-            ->orWhereRaw("{$normalizedExpression} LIKE ?", [$normalizedLike]);
+        $query->whereRaw("LOWER({$column}) LIKE ?", ['%' . $lowerToken . '%'])
+            ->orWhereRaw("LOWER({$column}) LIKE ?", ['%' . $asciiToken . '%']);
+    }
+
+    private function buildSearchSqlFragments(string $searchPhrase, array $tokens): array
+    {
+        $buildWeightedScore = function (string $like): array {
+            $bindings = [];
+            $parts = [];
+
+            $fieldWeights = [
+                'users.profession' => 2000,
+                'users.name' => 1500,
+                'users.address' => 250,
+                'users.biography' => 200,
+            ];
+
+            foreach ($fieldWeights as $column => $weight) {
+                $parts[] = "(CASE WHEN LOWER({$column}) LIKE ? THEN {$weight} ELSE 0 END)";
+                $bindings[] = $like;
+            }
+
+            $jobConditions = [];
+            foreach ([
+                'work_experiences.company_name' => 500,
+                'work_experiences.position' => 900,
+                'work_experiences.achievements' => 150,
+            ] as $column => $weight) {
+                $jobConditions[] = "CASE WHEN LOWER({$column}) LIKE ? THEN {$weight} ELSE 0 END";
+                $bindings[] = $like;
+            }
+
+            $parts[] = '(SELECT COALESCE(SUM(' . implode(' + ', $jobConditions) . '), 0) FROM `work_experiences` WHERE `work_experiences`.`user_id` = `users`.`id`)';
+
+            $studyConditions = [];
+            foreach ([
+                'studies.degree' => 450,
+                'studies.academic_institution' => 300,
+            ] as $column => $weight) {
+                $studyConditions[] = "CASE WHEN LOWER({$column}) LIKE ? THEN {$weight} ELSE 0 END";
+                $bindings[] = $like;
+            }
+
+            $parts[] = '(SELECT COALESCE(SUM(' . implode(' + ', $studyConditions) . '), 0) FROM `studies` WHERE `studies`.`user_id` = `users`.`id`)';
+
+            $projectConditions = [];
+            foreach ([
+                'projects.name' => 600,
+                'projects.description' => 250,
+            ] as $column => $weight) {
+                $projectConditions[] = "CASE WHEN LOWER({$column}) LIKE ? THEN {$weight} ELSE 0 END";
+                $bindings[] = $like;
+            }
+
+            $projectConditions[] = 'CASE WHEN LOWER(project_technologies.name) LIKE ? THEN 500 ELSE 0 END';
+            $bindings[] = $like;
+
+            $parts[] = '(SELECT COALESCE(SUM(' . implode(' + ', $projectConditions) . '), 0) '
+                . 'FROM `projects` '
+                . 'LEFT JOIN `project_technology` ON `projects`.`id` = `project_technology`.`project_id` '
+                . 'LEFT JOIN `project_technologies` ON `project_technologies`.`id` = `project_technology`.`technology_id` '
+                . 'WHERE `projects`.`user_id` = `users`.`id` AND `projects`.`is_public` = 1)';
+
+            return [
+                implode(' + ', $parts),
+                $bindings,
+            ];
+        };
+
+        $parts = [];
+        $bindings = [];
+
+        if ($searchPhrase !== '') {
+            [$phraseScore, $phraseBindings] = $buildWeightedScore('%' . $this->escapeLikeValue($searchPhrase) . '%');
+            $parts[] = '(' . $phraseScore . ' * 10)';
+            $bindings = array_merge($bindings, $phraseBindings);
+        }
+
+        $tokenConditions = [];
+        foreach ($tokens as $token) {
+            [$tokenScore, $tokenBindings] = $buildWeightedScore('%' . $this->escapeLikeValue(mb_strtolower($token, 'UTF-8')) . '%');
+            $parts[] = $tokenScore;
+            $bindings = array_merge($bindings, $tokenBindings);
+            $tokenConditions[] = [
+                'condition' => $tokenScore,
+                'bindings' => $tokenBindings,
+            ];
+        }
+
+        if (count($tokenConditions) > 1) {
+            $allTokensBindings = [];
+            $allTokensExpressions = [];
+
+            foreach ($tokenConditions as $tokenCondition) {
+                $allTokensExpressions[] = $tokenCondition['condition'];
+                $allTokensBindings = array_merge($allTokensBindings, $tokenCondition['bindings']);
+            }
+
+            $parts[] = '(CASE WHEN (' . implode(' and ', $allTokensExpressions) . ') THEN 2500 ELSE 0 END)';
+            $bindings = array_merge($bindings, $allTokensBindings);
+        }
+
+        return [
+            '(' . implode(' + ', $parts) . ')',
+            $bindings,
+        ];
     }
 
     private function applyBroadSearch(Builder $query, mixed $value): void
@@ -244,9 +376,14 @@ class UserController extends Controller
             return;
         }
 
+        $searchPhrase = $this->normalizeSearchPhrase($text);
+        [$relevanceSql, $bindings] = $this->buildSearchSqlFragments($searchPhrase, $tokens);
+        $query->selectRaw('users.*, ' . $relevanceSql . ' as search_relevance', $bindings);
+        $query->orderByDesc('search_relevance');
+
         $query->where(function (Builder $outerQuery) use ($tokens): void {
             foreach ($tokens as $token) {
-                $outerQuery->where(function (Builder $tokenQuery) use ($token): void {
+                $outerQuery->orWhere(function (Builder $tokenQuery) use ($token): void {
                     $tokenQuery->where(function (Builder $fieldQuery) use ($token): void {
                         $this->addBroadSearchField($fieldQuery, 'name', $token);
                     })
@@ -394,7 +531,7 @@ class UserController extends Controller
             ]
         ]);
     }
-    public function showPublicContact($id)
+    public function showPublicContact(string $id)
     {
         $user = \App\Models\User::findOrFail($id);
 
