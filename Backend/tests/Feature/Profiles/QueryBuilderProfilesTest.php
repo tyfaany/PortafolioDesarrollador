@@ -249,6 +249,68 @@ class QueryBuilderProfilesTest extends TestCase
             ->assertJsonPath('data.0.name', 'John React');
     }
 
+    public function test_it_searches_across_multiple_fields_with_separate_tokens(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Token Search',
+            'profession' => 'Backend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $user->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $user->jobs()->create([
+            'company_name' => 'Acme',
+            'position' => 'Backend Developer',
+            'achievements' => 'Built APIs and services',
+            'start_month' => 1,
+            'start_year' => 2022,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[search]=Backend%20Acme');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Token Search');
+    }
+
+    public function test_it_ignores_special_characters_in_search_terms(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Special Token',
+            'profession' => 'Frontend Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $user->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $user->jobs()->create([
+            'company_name' => 'UI Lab',
+            'position' => 'Frontend Engineer',
+            'achievements' => 'Built interfaces',
+            'start_month' => 1,
+            'start_year' => 2021,
+            'end_month' => 12,
+            'end_year' => 2023,
+            'is_current_job' => false,
+        ]);
+
+        $response = $this->getJson('/api/profiles?filter[search]=Frontend-Engineer');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Special Token');
+    }
+
     public function test_it_combines_search_with_other_filters(): void
     {
         $matchingUser = User::factory()->create([
