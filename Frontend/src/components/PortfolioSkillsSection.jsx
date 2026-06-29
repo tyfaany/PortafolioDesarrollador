@@ -875,6 +875,7 @@ function PortfolioSkillsSection() {
                             evidenciasTecnicasEditando[skill.id] ??
                             (skill.evidence_url || "")
                           }
+                          maxLength={255}
                           onChange={(evento) => {
                             setEvidenciasTecnicasEditando((actual) => ({
                               ...actual,
@@ -1030,6 +1031,7 @@ function PortfolioSkillsSection() {
                     <input
                       type="url"
                       value={evidenciaTecnicaNueva}
+                      maxLength={255}
                       onChange={(evento) => {
                         setEvidenciaTecnicaNueva(evento.target.value);
                         setErrores((actual) => ({ ...actual, tecnica: "" }));
@@ -1143,6 +1145,7 @@ function PortfolioSkillsSection() {
                 <input
                   type="url"
                   value={evidenciaBlandaNueva}
+                  maxLength={255}
                   onChange={(evento) => {
                     setEvidenciaBlandaNueva(evento.target.value);
                     setErrores((actual) => ({ ...actual, blanda: "" }));

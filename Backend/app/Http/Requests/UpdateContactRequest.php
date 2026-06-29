@@ -27,7 +27,7 @@ class UpdateContactRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-   public function rules(): array
+    public function rules(): array
     {
         return [
             'phone' => 'nullable|string|max:20',
@@ -40,6 +40,28 @@ class UpdateContactRequest extends FormRequest
             'show_mobile' => 'boolean',
             'show_contact_email' => 'boolean',
             'show_address' => 'boolean',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'phone.string' => 'El teléfono debe ser una cadena de texto.',
+            'phone.max' => 'El teléfono no puede superar :max caracteres.',
+            'mobile.string' => 'El celular debe ser una cadena de texto.',
+            'mobile.max' => 'El celular no puede superar :max caracteres.',
+            'contact_email.email' => 'El correo de contacto debe ser válido.',
+            'contact_email.max' => 'El correo de contacto no puede superar :max caracteres.',
+            'address.string' => 'La dirección debe ser una cadena de texto.',
+            'address.max' => 'La dirección no puede superar :max caracteres.',
+            'instagram_url.url' => 'El enlace de Instagram debe ser una URL válida.',
+            'instagram_url.max' => 'El enlace de Instagram no puede superar :max caracteres.',
+            'facebook_url.url' => 'El enlace de Facebook debe ser una URL válida.',
+            'facebook_url.max' => 'El enlace de Facebook no puede superar :max caracteres.',
+            'show_phone.boolean' => 'La visibilidad del teléfono debe ser verdadera o falsa.',
+            'show_mobile.boolean' => 'La visibilidad del celular debe ser verdadera o falsa.',
+            'show_contact_email.boolean' => 'La visibilidad del correo de contacto debe ser verdadera o falsa.',
+            'show_address.boolean' => 'La visibilidad de la dirección debe ser verdadera o falsa.',
         ];
     }
 

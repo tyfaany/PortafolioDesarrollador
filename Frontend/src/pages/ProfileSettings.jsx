@@ -1715,22 +1715,22 @@ function ProfileSettings() {
               </label>
               <label className="softsave-profile__field">
                 <span className="softsave-profile__label">Instagram</span>
-                <input type="url" name="instagramUrl" value={formularioPerfil.instagramUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://instagram.com/tu-usuario" />
+                <input type="url" name="instagramUrl" value={formularioPerfil.instagramUrl} onChange={manejarCambioFormulario} maxLength={255} className="softsave-input softsave-profile__input" placeholder="https://instagram.com/tu-usuario" />
                 {erroresFormulario.instagramUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.instagramUrl}</span> : null}
               </label>
               <label className="softsave-profile__field">
                 <span className="softsave-profile__label">Facebook</span>
-                <input type="url" name="facebookUrl" value={formularioPerfil.facebookUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://facebook.com/tu-perfil" />
+                <input type="url" name="facebookUrl" value={formularioPerfil.facebookUrl} onChange={manejarCambioFormulario} maxLength={255} className="softsave-input softsave-profile__input" placeholder="https://facebook.com/tu-perfil" />
                 {erroresFormulario.facebookUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.facebookUrl}</span> : null}
               </label>
               <label className="softsave-profile__field">
                 <span className="softsave-profile__label">GitHub</span>
-                <input type="url" name="githubUrl" value={formularioPerfil.githubUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://github.com/tu-usuario" />
+                <input type="url" name="githubUrl" value={formularioPerfil.githubUrl} onChange={manejarCambioFormulario} maxLength={200} className="softsave-input softsave-profile__input" placeholder="https://github.com/tu-usuario" />
                 {erroresFormulario.githubUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.githubUrl}</span> : null}
               </label>
               <label className="softsave-profile__field">
                 <span className="softsave-profile__label">LinkedIn</span>
-                <input type="url" name="linkedinUrl" value={formularioPerfil.linkedinUrl} onChange={manejarCambioFormulario} className="softsave-input softsave-profile__input" placeholder="https://www.linkedin.com/in/tu-perfil" />
+                <input type="url" name="linkedinUrl" value={formularioPerfil.linkedinUrl} onChange={manejarCambioFormulario} maxLength={200} className="softsave-input softsave-profile__input" placeholder="https://www.linkedin.com/in/tu-perfil" />
                 {erroresFormulario.linkedinUrl ? <span className="error-text softsave-profile__error-text" role="alert">{erroresFormulario.linkedinUrl}</span> : null}
               </label>
               {mensajeGuardadoError ? <span className="error-text softsave-profile__error-text" role="alert">{mensajeGuardadoError}</span> : null}

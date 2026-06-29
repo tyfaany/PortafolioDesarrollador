@@ -42,7 +42,25 @@ class StudyController extends Controller
             'degree'               => 'required|string|max:100',
             'start_date'           => 'required|date',
             'end_date'             => 'nullable|date',
-            'achievements'         => 'nullable|string',
+            'achievements'         => 'nullable|string|max:500',
+        ], [
+            'academic_institution.required' => 'La institución es obligatoria.',
+            'academic_institution.string' => 'La institución debe ser una cadena de texto.',
+            'academic_institution.max' => 'La institución no puede superar :max caracteres.',
+            'degree.required' => 'El título obtenido es obligatorio.',
+            'degree.string' => 'El título obtenido debe ser una cadena de texto.',
+            'degree.max' => 'El título obtenido no puede superar :max caracteres.',
+            'start_date.required' => 'La fecha de inicio es obligatoria.',
+            'start_date.date' => 'La fecha de inicio no es válida.',
+            'end_date.date' => 'La fecha de fin no es válida.',
+            'achievements.string' => 'Los logros deben ser una cadena de texto.',
+            'achievements.max' => 'Los logros no pueden superar :max caracteres.',
+        ], [
+            'academic_institution' => 'institución',
+            'degree' => 'título obtenido',
+            'start_date' => 'fecha de inicio',
+            'end_date' => 'fecha de fin',
+            'achievements' => 'logros',
         ]);
 
         $dateError = PortfolioDateValidator::validateStudyDates(
@@ -82,7 +100,25 @@ class StudyController extends Controller
             'degree'               => 'required|string|max:100',
             'start_date'           => 'required|date',
             'end_date'             => 'nullable|date',
-            'achievements'         => 'nullable|string',
+            'achievements'         => 'nullable|string|max:500',
+        ], [
+            'academic_institution.required' => 'La institución es obligatoria.',
+            'academic_institution.string' => 'La institución debe ser una cadena de texto.',
+            'academic_institution.max' => 'La institución no puede superar :max caracteres.',
+            'degree.required' => 'El título obtenido es obligatorio.',
+            'degree.string' => 'El título obtenido debe ser una cadena de texto.',
+            'degree.max' => 'El título obtenido no puede superar :max caracteres.',
+            'start_date.required' => 'La fecha de inicio es obligatoria.',
+            'start_date.date' => 'La fecha de inicio no es válida.',
+            'end_date.date' => 'La fecha de fin no es válida.',
+            'achievements.string' => 'Los logros deben ser una cadena de texto.',
+            'achievements.max' => 'Los logros no pueden superar :max caracteres.',
+        ], [
+            'academic_institution' => 'institución',
+            'degree' => 'título obtenido',
+            'start_date' => 'fecha de inicio',
+            'end_date' => 'fecha de fin',
+            'achievements' => 'logros',
         ]);
 
         $dateError = PortfolioDateValidator::validateStudyDates(

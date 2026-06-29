@@ -44,9 +44,84 @@ class ProjectController extends Controller
 
         if ($descriptionLength < 20 || $descriptionLength > 500) {
             throw ValidationException::withMessages([
-                'description' => ['La descripcion debe tener entre 20 y 500 caracteres.'],
+                'description' => ['La descripción debe tener entre 20 y 500 caracteres.'],
             ]);
         }
+    }
+
+    private function projectValidationRules(): array
+    {
+        return [
+            'title' => 'required|string|min:5|max:100',
+            'description' => 'required|string',
+            'technologies' => 'required|array|min:1|max:15',
+            'technologies.*' => 'required|integer|exists:project_technologies,id',
+            'image' => 'nullable|image|mimes:jpeg,png|max:10240',
+            'start_date' => 'required|date',
+            'end_date' => 'required_unless:is_in_progress,1|date',
+            'is_in_progress' => 'boolean',
+            'demo_url' => 'nullable|url|max:2048',
+            'repo_url' => 'nullable|url|max:2048',
+            'is_public' => 'boolean',
+        ];
+    }
+
+    private function projectValidationMessages(): array
+    {
+        return [
+            'title.required' => 'El título es obligatorio.',
+            'title.string' => 'El título debe ser una cadena de texto.',
+            'title.min' => 'El título debe tener al menos :min caracteres.',
+            'title.max' => 'El título no puede superar :max caracteres.',
+            'description.required' => 'La descripción es obligatoria.',
+            'description.string' => 'La descripción debe ser una cadena de texto.',
+            'technologies.required' => 'Debes seleccionar al menos una tecnología.',
+            'technologies.array' => 'Las tecnologías deben enviarse como una lista válida.',
+            'technologies.min' => 'Debes seleccionar al menos :min tecnología.',
+            'technologies.max' => 'Puedes seleccionar como máximo :max tecnologías.',
+            'technologies.*.required' => 'Cada tecnología es obligatoria.',
+            'technologies.*.integer' => 'Cada tecnología debe ser un identificador numérico.',
+            'technologies.*.exists' => 'Una o más tecnologías seleccionadas no son válidas.',
+            'image.image' => 'La imagen debe ser un archivo de tipo imagen.',
+            'image.mimes' => 'La imagen debe ser de tipo jpeg o png.',
+            'image.max' => 'La imagen no puede superar :max kilobytes.',
+            'start_date.required' => 'La fecha de inicio es obligatoria.',
+            'start_date.date' => 'La fecha de inicio no es válida.',
+            'end_date.required_unless' => 'La fecha de fin es obligatoria cuando el proyecto no está en progreso.',
+            'end_date.date' => 'La fecha de fin no es válida.',
+            'is_in_progress.boolean' => 'El estado de progreso debe ser verdadero o falso.',
+            'demo_url.url' => 'La URL demo debe ser válida.',
+            'demo_url.max' => 'La URL demo no puede superar :max caracteres.',
+            'repo_url.url' => 'La URL del repositorio debe ser válida.',
+            'repo_url.max' => 'La URL del repositorio no puede superar :max caracteres.',
+            'is_public.boolean' => 'La visibilidad debe ser verdadera o falsa.',
+        ];
+    }
+
+    private function projectValidationAttributes(): array
+    {
+        return [
+            'title' => 'título',
+            'description' => 'descripción',
+            'technologies' => 'tecnologías',
+            'technologies.*' => 'tecnología',
+            'image' => 'imagen',
+            'start_date' => 'fecha de inicio',
+            'end_date' => 'fecha de fin',
+            'is_in_progress' => 'estado en progreso',
+            'demo_url' => 'URL demo',
+            'repo_url' => 'URL del repositorio',
+            'is_public' => 'visibilidad',
+        ];
+    }
+
+    private function validateProject(Request $request): array
+    {
+        return $request->validate(
+            $this->projectValidationRules(),
+            $this->projectValidationMessages(),
+            $this->projectValidationAttributes(),
+        );
     }
 
     public function index(Request $request)
@@ -108,7 +183,7 @@ class ProjectController extends Controller
             abort(404);
         }
 
-        $absolutePath = Storage::disk('public')->path($project->image_path);
+        $absolutePath = storage_path('app/public/' . $project->image_path);
         $mimeType = mime_content_type($absolutePath) ?: 'image/jpeg';
 
         return response()->file($absolutePath, [
@@ -119,20 +194,7 @@ class ProjectController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validaciones estrictas según Criterios de Aceptación (HU-15)
-        $validated = $request->validate([
-            'title' => 'required|string|min:5|max:100', // Mínimo 5, máximo 100 caracteres[cite: 2]
-            'description' => 'required|string', // Validamos el texto visible por separado
-            'technologies' => 'required|array|min:1|max:15', // Selector múltiple, mín 1, máx 15[cite: 2]
-            'technologies.*' => 'required|integer|exists:project_technologies,id', // Solo IDs válidos del catálogo[cite: 2]
-            'image' => 'nullable|image|mimes:jpeg,png|max:10240', // Formato JPEG/PNG, máx 10MB[cite: 2]
-            'start_date' => 'required|date',
-            'end_date' => 'required_unless:is_in_progress,1|date',
-            'is_in_progress' => 'boolean',
-            'demo_url' => 'nullable|url|max:2048', // URLs válidas[cite: 2]
-            'repo_url' => 'nullable|url|max:2048', // URLs válidas[cite: 2]
-            'is_public' => 'boolean'
-        ]);
+        $validated = $this->validateProject($request);
 
         $this->ensureDescriptionLengthIsValid($validated['description']);
 
@@ -214,20 +276,7 @@ class ProjectController extends Controller
             return response()->json(['message' => 'No tienes permiso para editar este proyecto'], 403);
         }
 
-        // Las mismas validaciones de creación se aplican a la edición[cite: 1]
-        $validated = $request->validate([
-            'title' => 'required|string|min:5|max:100',
-            'description' => 'required|string',
-            'technologies' => 'required|array|min:1|max:15',
-            'technologies.*' => 'required|integer|exists:project_technologies,id',
-            'image' => 'nullable|image|mimes:jpeg,png|max:10240',
-            'start_date' => 'required|date',
-            'end_date' => 'required_unless:is_in_progress,1|date',
-            'is_in_progress' => 'boolean',
-            'demo_url' => 'nullable|url|max:2048',
-            'repo_url' => 'nullable|url|max:2048',
-            'is_public' => 'boolean'
-        ]);
+        $validated = $this->validateProject($request);
 
         $this->ensureDescriptionLengthIsValid($validated['description']);
 

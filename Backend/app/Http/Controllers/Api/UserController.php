@@ -68,6 +68,11 @@ class UserController extends Controller
             ],
         ], [
             'name.regex' => 'El nombre solo puede contener letras y espacios.',
+            'profession.regex' => 'La profesión solo puede contener letras, números y separadores simples.',
+            'github_url.regex' => 'El enlace de GitHub debe tener un formato válido.',
+            'linkedin_url.regex' => 'El enlace de LinkedIn debe tener un formato válido.',
+            'github_url.url' => 'El enlace de GitHub debe ser una URL válida.',
+            'linkedin_url.url' => 'El enlace de LinkedIn debe ser una URL válida.',
         ]);
 
         $sanitized = array_map(function ($value) {

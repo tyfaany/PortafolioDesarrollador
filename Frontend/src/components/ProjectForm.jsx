@@ -971,6 +971,7 @@ function ProjectForm({
               type="url"
               className="softsave-input"
               value={formData.demoUrl}
+              maxLength={2048}
               placeholder="https://mi-demo.com/proyecto"
               onChange={(event) => updateField('demoUrl', event.target.value)}
             />
@@ -983,6 +984,7 @@ function ProjectForm({
               type="url"
               className="softsave-input"
               value={formData.repositoryUrl}
+              maxLength={2048}
               placeholder="https://github.com/usuario/repositorio"
               onChange={(event) => updateField('repositoryUrl', event.target.value)}
             />

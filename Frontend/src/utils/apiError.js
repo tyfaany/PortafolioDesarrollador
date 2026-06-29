@@ -23,6 +23,64 @@ function normalizarMensajeValidacion(message) {
     return 'El correo electrónico ya está registrado.';
   }
 
+  if (limpio.startsWith('validation.')) {
+    const regla = limpio.split('.').slice(1).join('.');
+
+    if (regla.startsWith('max.string')) {
+      return 'El texto supera el límite permitido.';
+    }
+
+    if (regla.startsWith('min.string')) {
+      return 'El texto no alcanza el mínimo permitido.';
+    }
+
+    if (regla.startsWith('required')) {
+      return 'Este campo es obligatorio.';
+    }
+
+    if (regla.startsWith('email')) {
+      return 'El correo electrónico no es válido.';
+    }
+
+    if (regla.startsWith('url')) {
+      return 'La URL no es válida.';
+    }
+
+    if (regla.startsWith('date')) {
+      return 'La fecha no es válida.';
+    }
+
+    if (regla.startsWith('integer')) {
+      return 'El valor debe ser un número entero.';
+    }
+
+    if (regla.startsWith('boolean')) {
+      return 'El valor debe ser verdadero o falso.';
+    }
+
+    if (regla.startsWith('array')) {
+      return 'El valor debe ser una lista válida.';
+    }
+
+    if (regla.startsWith('exists')) {
+      return 'El valor seleccionado no es válido.';
+    }
+
+    if (regla.startsWith('confirmed')) {
+      return 'La confirmación no coincide.';
+    }
+
+    if (regla.startsWith('regex')) {
+      return 'El formato del campo no es válido.';
+    }
+
+    if (regla.startsWith('in')) {
+      return 'El valor seleccionado no es válido.';
+    }
+
+    return 'Hay campos con valores inválidos. Revísalos e intenta de nuevo.';
+  }
+
   return limpio;
 }
 
