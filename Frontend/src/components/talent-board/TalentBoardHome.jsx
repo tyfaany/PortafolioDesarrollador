@@ -3,10 +3,8 @@ import Icon from '@mdi/react';
 import { useSearchParams } from 'react-router-dom';
 import { mdiMagnify, mdiRefresh, mdiSortVariant } from '@mdi/js';
 import {
-  obtenerCatalogoSkillsTecnicas,
   obtenerCatalogosPerfilPublico,
   obtenerPerfilesPublicos,
-  obtenerTecnologias,
 } from '../../services/authService';
 import DropdownSelect from '../DropdownSelect';
 import TalentProfileCard from './TalentProfileCard';
@@ -22,6 +20,7 @@ const QUERY_KEYS = {
   selectedSkills: 'skills',
   skillLevelFilters: 'skillLevelFilters',
   selectedTechnologies: 'technologies',
+  selectedSoftSkills: 'softSkills',
   professions: 'professions',
   degrees: 'degrees',
   institutions: 'institutions',
@@ -160,7 +159,56 @@ function buildExperienceFilterValue(experienceRoles) {
 }
 
 function getOptionNameById(options, id) {
-  return options.find((option) => String(option.id) === String(id))?.name || '';
+  if (!Array.isArray(options)) {
+    return '';
+  }
+
+  const normalizedId = String(id || '').trim();
+  const match = options.find((option) => {
+    if (typeof option === 'string' || typeof option === 'number') {
+      return String(option) === normalizedId;
+    }
+
+    return String(option?.id ?? option?.value ?? option?.name ?? '').trim() === normalizedId;
+  });
+
+  if (!match) {
+    return '';
+  }
+
+  if (typeof match === 'string' || typeof match === 'number') {
+    return String(match);
+  }
+
+  return String(match.name ?? match.label ?? match.value ?? '');
+}
+
+function normalizeCatalogItems(items) {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return items
+    .map((item) => {
+      if (typeof item === 'string' || typeof item === 'number') {
+        const value = String(item).trim();
+        return value ? { id: value, name: value } : null;
+      }
+
+      const id = String(item?.id ?? item?.value ?? item?.name ?? '').trim();
+      const name = String(item?.name ?? item?.label ?? item?.value ?? id).trim();
+
+      if (!id || !name) {
+        return null;
+      }
+
+      return {
+        ...item,
+        id,
+        name,
+      };
+    })
+    .filter(Boolean);
 }
 
 function parseListParam(value) {
@@ -177,16 +225,16 @@ function buildSkillLevelFilterValue(skillLevelFilters) {
 
   return skillLevelFilters
     .map((item) => {
-      const skillName = String(item?.skillName || '').trim();
+      const skillId = String(item?.skillId || '').trim();
       const levels = Array.isArray(item?.levels)
         ? item.levels.map((level) => String(level || '').trim()).filter(Boolean)
         : [];
 
-      if (!skillName) {
+      if (!skillId) {
         return '';
       }
 
-      return levels.length > 0 ? [skillName, ...levels].join(',') : skillName;
+      return levels.length > 0 ? [skillId, ...levels].join(',') : skillId;
     })
     .filter(Boolean)
     .join('|');
@@ -205,7 +253,7 @@ function parseSkillLevelFiltersParam(value) {
     .map((item) => {
       const [skillName, ...levels] = item.split(',').map((part) => String(part || '').trim());
       return {
-        skillId: '',
+        skillId: skillName,
         skillName: String(skillName || '').trim(),
         levels: levels.filter(Boolean),
       };
@@ -245,6 +293,7 @@ function normalizeFiltersFromSearchParams(searchParams) {
     selectedSkills: parseListParam(searchParams.get(QUERY_KEYS.selectedSkills)),
     skillLevelFilters: parseSkillLevelFiltersParam(searchParams.get(QUERY_KEYS.skillLevelFilters)),
     selectedTechnologies: parseListParam(searchParams.get(QUERY_KEYS.selectedTechnologies)),
+    selectedSoftSkills: parseListParam(searchParams.get(QUERY_KEYS.selectedSoftSkills)),
     professions: parseListParam(searchParams.get(QUERY_KEYS.professions)),
     degrees: parseListParam(searchParams.get(QUERY_KEYS.degrees)),
     institutions: parseListParam(searchParams.get(QUERY_KEYS.institutions)),
@@ -274,6 +323,10 @@ function serializeFiltersToSearchParams(filters) {
 
   if (filters.selectedTechnologies.length > 0) {
     params.set(QUERY_KEYS.selectedTechnologies, filters.selectedTechnologies.join(','));
+  }
+
+  if (filters.selectedSoftSkills.length > 0) {
+    params.set(QUERY_KEYS.selectedSoftSkills, filters.selectedSoftSkills.join(','));
   }
 
   if (filters.professions.length > 0) {
@@ -310,6 +363,7 @@ function TalentBoardHome() {
   const [selectedSkills, setSelectedSkills] = useState(() => urlFilters.selectedSkills);
   const [skillLevelFilters, setSkillLevelFilters] = useState(() => urlFilters.skillLevelFilters);
   const [selectedTechnologies, setSelectedTechnologies] = useState(() => urlFilters.selectedTechnologies);
+  const [selectedSoftSkills, setSelectedSoftSkills] = useState(() => urlFilters.selectedSoftSkills);
   const [professions, setProfessions] = useState(() => urlFilters.professions);
   const [degrees, setDegrees] = useState(() => urlFilters.degrees);
   const [institutions, setInstitutions] = useState(() => urlFilters.institutions);
@@ -325,6 +379,7 @@ function TalentBoardHome() {
   const [totalResults, setTotalResults] = useState(0);
   const [availableSkills, setAvailableSkills] = useState(null);
   const [availableTechnologies, setAvailableTechnologies] = useState(null);
+  const [availableSoftSkills, setAvailableSoftSkills] = useState(null);
   const [availableProfileCatalogs, setAvailableProfileCatalogs] = useState(null);
   const profileCatalogs = availableProfileCatalogs || {};
   const professionOptions = Array.isArray(profileCatalogs.professions) ? profileCatalogs.professions : [];
@@ -345,6 +400,7 @@ function TalentBoardHome() {
     setSelectedSkills(nextFilters.selectedSkills);
     setSkillLevelFilters(nextFilters.skillLevelFilters);
     setSelectedTechnologies(nextFilters.selectedTechnologies);
+    setSelectedSoftSkills(nextFilters.selectedSoftSkills);
     setProfessions(nextFilters.professions);
     setDegrees(nextFilters.degrees);
     setInstitutions(nextFilters.institutions);
@@ -360,6 +416,7 @@ function TalentBoardHome() {
       selectedSkills,
       skillLevelFilters,
       selectedTechnologies,
+      selectedSoftSkills,
       professions,
       degrees,
       institutions,
@@ -384,6 +441,7 @@ function TalentBoardHome() {
     skillLevelFilters,
     selectedSkills,
     selectedTechnologies,
+    selectedSoftSkills,
     setSearchParams,
     sortValue,
     searchParamsString,
@@ -395,30 +453,23 @@ function TalentBoardHome() {
     const loadCatalogs = async () => {
       setAvailableSkills(null);
       setAvailableTechnologies(null);
+      setAvailableSoftSkills(null);
       setAvailableProfileCatalogs(null);
 
-      const [skillsResult, technologiesResult, profileCatalogsResult] = await Promise.allSettled([
-        obtenerCatalogoSkillsTecnicas(),
-        obtenerTecnologias(),
-        obtenerCatalogosPerfilPublico(),
-      ]);
+      const profileCatalogsResult = await obtenerCatalogosPerfilPublico();
 
       if (!isActive) {
         return;
       }
 
-      const skillCatalog = skillsResult.status === 'fulfilled' && Array.isArray(skillsResult.value?.data)
-        ? skillsResult.value.data
-        : [];
-      const technologyCatalog = technologiesResult.status === 'fulfilled' && Array.isArray(technologiesResult.value?.data)
-        ? technologiesResult.value.data
-        : [];
-      const publicCatalogs = profileCatalogsResult.status === 'fulfilled' && profileCatalogsResult.value?.data
-        ? profileCatalogsResult.value.data
-        : {};
+      const publicCatalogs = profileCatalogsResult?.data || {};
+      const skillCatalog = normalizeCatalogItems(publicCatalogs.skills);
+      const technologyCatalog = normalizeCatalogItems(publicCatalogs.technologies);
+      const softSkillCatalog = normalizeCatalogItems(publicCatalogs.soft_skills);
 
       setAvailableSkills(skillCatalog);
       setAvailableTechnologies(technologyCatalog);
+      setAvailableSoftSkills(softSkillCatalog);
       setAvailableProfileCatalogs(publicCatalogs);
     };
 
@@ -436,6 +487,7 @@ function TalentBoardHome() {
     selectedSkills,
     skillLevelFilters,
     selectedTechnologies,
+    selectedSoftSkills,
     professions,
     degrees,
     institutions,
@@ -486,6 +538,17 @@ function TalentBoardHome() {
 
           if (technologyNames.length > 0) {
             params['filter[technology]'] = technologyNames.join(',');
+          }
+        }
+
+        if (selectedSoftSkills.length > 0) {
+          const catalog = Array.isArray(availableSoftSkills) ? availableSoftSkills : [];
+          const softSkillNames = selectedSoftSkills
+            .map((softSkillId) => getOptionNameById(catalog, softSkillId))
+            .filter(Boolean);
+
+          if (softSkillNames.length > 0) {
+            params['filter[softSkills]'] = softSkillNames.join(',');
           }
         }
 
@@ -546,12 +609,14 @@ function TalentBoardHome() {
   }, [
     availableSkills,
     availableTechnologies,
+    availableSoftSkills,
     currentPage,
     refreshTick,
     searchTerm,
     selectedSkills,
     skillLevelFilters,
     selectedTechnologies,
+    selectedSoftSkills,
     professions,
     degrees,
     institutions,
@@ -565,6 +630,7 @@ function TalentBoardHome() {
     selectedSkillsCount > 0,
     skillLevelFilters.length > 0,
     selectedTechnologies.length > 0,
+    selectedSoftSkills.length > 0,
     professions.length > 0,
     degrees.length > 0,
     institutions.length > 0,
@@ -609,6 +675,16 @@ function TalentBoardHome() {
     setSelectedTechnologies((prev) => prev.filter((t) => t !== techId));
   };
 
+  const addSoftSkill = (softSkillId) => {
+    if (softSkillId && !selectedSoftSkills.includes(softSkillId)) {
+      setSelectedSoftSkills((prev) => [...prev, softSkillId]);
+    }
+  };
+
+  const removeSoftSkill = (softSkillId) => {
+    setSelectedSoftSkills((prev) => prev.filter((item) => item !== softSkillId));
+  };
+
   const addDegree = (degree) => {
     if (degree && !degrees.includes(degree)) {
       setDegrees((prev) => [...prev, degree]);
@@ -634,6 +710,7 @@ function TalentBoardHome() {
     setSelectedSkills([]);
     setSkillLevelFilters([]);
     setSelectedTechnologies([]);
+    setSelectedSoftSkills([]);
     setProfessions([]);
     setDegrees([]);
     setInstitutions([]);
@@ -689,6 +766,7 @@ function TalentBoardHome() {
         <TalentSidebarFilters
           availableSkills={availableSkills}
           availableTechnologies={availableTechnologies}
+          availableSoftSkills={availableSoftSkills}
           professionOptions={professionOptions}
           selectedSkills={selectedSkills}
           onToggleSkill={toggleSkill}
@@ -698,6 +776,9 @@ function TalentBoardHome() {
           selectedTechnologies={selectedTechnologies}
           onAddTechnology={addTechnology}
           onRemoveTechnology={removeTechnology}
+          selectedSoftSkills={selectedSoftSkills}
+          onAddSoftSkill={addSoftSkill}
+          onRemoveSoftSkill={removeSoftSkill}
           roleOptions={roleOptions}
           professions={professions}
           onAddProfession={addProfession}

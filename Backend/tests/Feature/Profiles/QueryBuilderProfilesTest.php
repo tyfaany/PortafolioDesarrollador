@@ -247,6 +247,12 @@ class QueryBuilderProfilesTest extends TestCase
         $skillResponse->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'John React');
+
+        $softSkillResponse = $this->getJson('/api/profiles?filter[softSkills]=Communication');
+
+        $softSkillResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Soft Skill Match');
     }
 
     public function test_it_searches_across_multiple_fields_with_separate_tokens(): void
@@ -1068,6 +1074,12 @@ class QueryBuilderProfilesTest extends TestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Advanced React Dev');
 
+        $idBasedResponse = $this->getJson('/api/profiles?filter[habilidadTecnica_nivel]=' . $react->id . ',Avanzado');
+
+        $idBasedResponse->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Advanced React Dev');
+
         $intermediateResponse = $this->getJson('/api/profiles?filter[habilidadTecnica_nivel]=React,Intermedio');
 
         $intermediateResponse->assertOk()
@@ -1503,5 +1515,59 @@ class QueryBuilderProfilesTest extends TestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Visible Dev')
             ->assertJsonMissing(['name' => 'Hidden Dev']);
+    }
+
+    public function test_it_returns_soft_skills_in_public_profile_catalogs(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Catalog Soft Skill',
+            'profession' => 'QA Engineer',
+            'profile_completed' => true,
+        ]);
+
+        UserVisibility::create([
+            'user_id' => $user->id,
+            ...UserVisibility::defaults(),
+        ]);
+
+        $softSkill = SoftSkill::create([
+            'name' => 'Communication',
+        ]);
+
+        $user->softSkills()->attach($softSkill->id, [
+            'evidence_url' => null,
+        ]);
+
+        $technicalSkill = TechnicalSkill::create([
+            'name' => 'Laravel',
+        ]);
+
+        $user->skills()->attach($technicalSkill->id, [
+            'level' => 'Avanzado',
+            'evidence_url' => null,
+        ]);
+
+        $technology = ProjectTechnology::create([
+            'name' => 'React',
+        ]);
+
+        $project = Project::create([
+            'user_id' => $user->id,
+            'name' => 'Visible Project',
+            'description' => 'Project used for catalog tests',
+            'start_date' => now()->subMonth(),
+            'end_date' => now(),
+            'is_in_progress' => false,
+            'is_public' => true,
+        ]);
+
+        $project->technologies()->attach($technology->id);
+
+        $response = $this->getJson('/api/profiles/catalogs');
+
+        $response->assertOk()
+            ->assertJsonPath('skills.0.name', 'Laravel')
+            ->assertJsonPath('technologies.0.name', 'React')
+            ->assertJsonPath('soft_skills.0.name', 'Communication');
     }
 }

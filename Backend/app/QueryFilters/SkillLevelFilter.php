@@ -3,6 +3,7 @@
 namespace App\QueryFilters;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\Filters\Filter;
 
@@ -23,35 +24,45 @@ class SkillLevelFilter implements Filter
         return $query->where(function (Builder $mainQuery) use ($entries): void {
             $firstEntry = true;
 
-            foreach ($entries as [$skillName, $levels]) {
-                $subQueryCallback = function ($subQuery) use ($skillName, $levels): void {
-                    $subQuery->select('user_skills.user_id')
-                        ->from('user_skills')
-                        ->join('technical_skills', 'technical_skills.id', '=', 'user_skills.technical_skill_id');
-
-                    if ($skillName !== '') {
-                        $subQuery->whereRaw('LOWER(technical_skills.name) LIKE ?', ['%' . mb_strtolower($skillName, 'UTF-8') . '%']);
-                    }
-
-                    if ($levels !== []) {
-                        $subQuery->whereIn(
-                            DB::raw('LOWER(user_skills.level)'),
-                            array_map(
-                                static fn (string $level) => mb_strtolower($level, 'UTF-8'),
-                                $levels
-                            )
-                        );
-                    }
-                };
+            foreach ($entries as [$skillReference, $levels]) {
+                $existsQuery = $this->buildSkillExistsQuery($skillReference, $levels);
 
                 if ($firstEntry) {
-                    $mainQuery->whereIn('id', $subQueryCallback);
+                    $mainQuery->whereExists($existsQuery);
                     $firstEntry = false;
                 } else {
-                    $mainQuery->orWhereIn('id', $subQueryCallback);
+                    $mainQuery->orWhereExists($existsQuery);
                 }
             }
         });
+    }
+
+    private function buildSkillExistsQuery(string $skillReference, array $levels): QueryBuilder
+    {
+        $query = DB::table('user_skills')
+            ->join('technical_skills', 'technical_skills.id', '=', 'user_skills.technical_skill_id')
+            ->whereColumn('user_skills.user_id', 'users.id')
+            ->selectRaw('1');
+
+        if ($skillReference !== '') {
+            if (ctype_digit($skillReference)) {
+                $query->where('technical_skills.id', (int) $skillReference);
+            } else {
+                $query->whereRaw('LOWER(technical_skills.name) LIKE ?', ['%' . mb_strtolower($skillReference, 'UTF-8') . '%']);
+            }
+        }
+
+        if ($levels !== []) {
+            $query->whereIn(
+                DB::raw('LOWER(user_skills.level)'),
+                array_map(
+                    static fn (string $level) => mb_strtolower($level, 'UTF-8'),
+                    $levels
+                )
+            );
+        }
+
+        return $query;
     }
 
     /**
@@ -95,7 +106,31 @@ class SkillLevelFilter implements Filter
             return ['', [], false];
         }
 
-        $skillName = '';
+        if (count($tokens) === 1) {
+            $token = $tokens[0];
+
+            if (ctype_digit($token)) {
+                return [$token, [], false];
+            }
+
+            $level = $this->normalizeLevelLabel($token);
+            if ($level !== null) {
+                return ['', [$level], false];
+            }
+
+            return [$token, [], false];
+        }
+
+        if ($this->allTokensAreNumeric($tokens)) {
+            $levels = array_values(array_filter(array_map(
+                fn (string $token): ?string => $this->normalizeLevelLabel($token),
+                $tokens
+            )));
+
+            return ['', $levels, false];
+        }
+
+        $skillReference = array_shift($tokens);
         $levels = [];
 
         foreach ($tokens as $token) {
@@ -106,15 +141,10 @@ class SkillLevelFilter implements Filter
                 continue;
             }
 
-            if ($skillName === '') {
-                $skillName = $token;
-                continue;
-            }
-
             return ['', [], true];
         }
 
-        return [$skillName, $levels, false];
+        return [$skillReference, $levels, false];
     }
 
     /**
@@ -123,13 +153,10 @@ class SkillLevelFilter implements Filter
     private function tokenizeValue(mixed $value): array
     {
         if (is_array($value)) {
-            $tokens = [];
-
-            foreach ($value as $item) {
-                $tokens = array_merge($tokens, $this->tokenizeString((string) $item));
-            }
-
-            return array_values(array_filter($tokens, static fn (string $item) => $item !== ''));
+            $value = implode(',', array_map(
+                static fn ($item): string => trim((string) $item),
+                $value
+            ));
         }
 
         return array_values(array_filter($this->tokenizeString((string) $value), static fn (string $item) => $item !== ''));
@@ -162,5 +189,32 @@ class SkillLevelFilter implements Filter
             '3', 'avanzado' => 'Avanzado',
             default => null,
         };
+    }
+
+    private static function normalizeLevelToken(string $level): string
+    {
+        $normalized = mb_strtolower(trim($level), 'UTF-8');
+
+        return strtr($normalized, [
+            'á' => 'a',
+            'é' => 'e',
+            'í' => 'i',
+            'ó' => 'o',
+            'ú' => 'u',
+        ]);
+    }
+
+    /**
+     * @param array<int, string> $tokens
+     */
+    private function allTokensAreNumeric(array $tokens): bool
+    {
+        foreach ($tokens as $token) {
+            if (! ctype_digit($token)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

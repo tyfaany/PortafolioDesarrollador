@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserVisibility;
 use App\QueryFilters\JobExperienceFilter;
 use App\QueryFilters\ProfileTechnologyFilter;
+use App\QueryFilters\SoftSkillFilter;
 use App\QueryFilters\SkillFilter;
 use App\QueryFilters\SkillLevelFilter;
 use App\Sorts\ProjectsCountSort;
@@ -513,6 +514,7 @@ class UserController extends Controller
                 AllowedFilter::custom('experiencia_cargo', new JobExperienceFilter()),
                 AllowedFilter::custom('habilidadTecnica_nivel', new SkillLevelFilter()),
                 AllowedFilter::custom('habilidades', new SkillFilter()),
+                AllowedFilter::custom('softSkills', new SoftSkillFilter()),
                 AllowedFilter::custom('technology', new ProfileTechnologyFilter()),
             ])
             ->allowedSorts([
@@ -559,13 +561,49 @@ class UserController extends Controller
                     });
             });
 
+        $skills = DB::table('technical_skills')
+            ->join('user_skills', 'user_skills.technical_skill_id', '=', 'technical_skills.id')
+            ->join('users', 'users.id', '=', 'user_skills.user_id')
+            ->leftJoin('user_visibility', 'user_visibility.user_id', '=', 'users.id')
+            ->where('users.profile_completed', true)
+            ->where(function ($query): void {
+                $query->whereNull('user_visibility.user_id')
+                    ->orWhere('user_visibility.show_in_search', true);
+            })
+            ->whereNotNull('technical_skills.name')
+            ->whereRaw('TRIM(technical_skills.name) <> \'\'')
+            ->select('technical_skills.id', 'technical_skills.name')
+            ->distinct()
+            ->orderByRaw('LOWER(technical_skills.name)')
+            ->get()
+            ->values();
+
+        $technologies = DB::table('project_technologies')
+            ->join('project_technology', 'project_technology.technology_id', '=', 'project_technologies.id')
+            ->join('projects', 'projects.id', '=', 'project_technology.project_id')
+            ->join('users', 'users.id', '=', 'projects.user_id')
+            ->leftJoin('user_visibility', 'user_visibility.user_id', '=', 'users.id')
+            ->where('users.profile_completed', true)
+            ->where(function ($query): void {
+                $query->whereNull('user_visibility.user_id')
+                    ->orWhere('user_visibility.show_in_search', true);
+            })
+            ->where('projects.is_public', true)
+            ->whereNotNull('project_technologies.name')
+            ->whereRaw('TRIM(project_technologies.name) <> \'\'')
+            ->select('project_technologies.id', 'project_technologies.name')
+            ->distinct()
+            ->orderByRaw('LOWER(project_technologies.name)')
+            ->get()
+            ->values();
+
         $professions = (clone $baseQuery)
             ->whereNotNull('profession')
             ->whereRaw('TRIM(profession) <> \'\'')
-            ->select('profession')
+            ->selectRaw('profession as id, profession as name')
             ->distinct()
             ->orderByRaw('LOWER(profession)')
-            ->pluck('profession')
+            ->get()
             ->values();
 
         $degrees = DB::table('studies')
@@ -578,10 +616,27 @@ class UserController extends Controller
             })
             ->whereNotNull('studies.degree')
             ->whereRaw('TRIM(studies.degree) <> \'\'')
-            ->select('studies.degree')
+            ->selectRaw('studies.degree as id, studies.degree as name')
             ->distinct()
             ->orderByRaw('LOWER(studies.degree)')
-            ->pluck('studies.degree')
+            ->get()
+            ->values();
+
+        $softSkills = DB::table('soft_skills')
+            ->join('soft_skill_user', 'soft_skill_user.soft_skill_id', '=', 'soft_skills.id')
+            ->join('users', 'users.id', '=', 'soft_skill_user.user_id')
+            ->leftJoin('user_visibility', 'user_visibility.user_id', '=', 'users.id')
+            ->where('users.profile_completed', true)
+            ->where(function ($query): void {
+                $query->whereNull('user_visibility.user_id')
+                    ->orWhere('user_visibility.show_in_search', true);
+            })
+            ->whereNotNull('soft_skills.name')
+            ->whereRaw('TRIM(soft_skills.name) <> \'\'')
+            ->select('soft_skills.id', 'soft_skills.name')
+            ->distinct()
+            ->orderByRaw('LOWER(soft_skills.name)')
+            ->get()
             ->values();
 
         $institutions = DB::table('studies')
@@ -594,10 +649,10 @@ class UserController extends Controller
             })
             ->whereNotNull('studies.academic_institution')
             ->whereRaw('TRIM(studies.academic_institution) <> \'\'')
-            ->select('studies.academic_institution')
+            ->selectRaw('studies.academic_institution as id, studies.academic_institution as name')
             ->distinct()
             ->orderByRaw('LOWER(studies.academic_institution)')
-            ->pluck('studies.academic_institution')
+            ->get()
             ->values();
 
         $experienceRoles = DB::table('work_experiences')
@@ -610,15 +665,18 @@ class UserController extends Controller
             })
             ->whereNotNull('work_experiences.position')
             ->whereRaw('TRIM(work_experiences.position) <> \'\'')
-            ->select('work_experiences.position')
+            ->selectRaw('work_experiences.position as id, work_experiences.position as name')
             ->distinct()
             ->orderByRaw('LOWER(work_experiences.position)')
-            ->pluck('work_experiences.position')
+            ->get()
             ->values();
 
         return response()->json([
+            'skills' => $skills,
+            'technologies' => $technologies,
             'professions' => $professions,
             'degrees' => $degrees,
+            'soft_skills' => $softSkills,
             'institutions' => $institutions,
             'experience_roles' => $experienceRoles,
         ], 200);

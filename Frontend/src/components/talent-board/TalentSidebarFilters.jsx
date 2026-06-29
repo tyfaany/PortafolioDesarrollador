@@ -1,13 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
 import {
-  mdiBriefcaseOutline,
+  mdiAccountGroupOutline,
   mdiChevronDown,
   mdiDeleteOutline,
   mdiLayersTripleOutline,
   mdiPlus,
-  mdiSchoolOutline,
   mdiTuneVariant,
   mdiCheck,
 } from '@mdi/js';
@@ -153,74 +152,6 @@ SkillTag.propTypes = {
   onToggleLevel: PropTypes.func.isRequired,
 };
 
-function RoleTag({
-  label,
-  onDelete,
-  isOpen,
-  onToggleOpen,
-  minYears,
-  onChangeMinYears,
-  maxYears,
-  onChangeMaxYears,
-}) {
-  return (
-    <article className="talent-board-filters__tag-card">
-      <div className="talent-board-filters__skill-card-head">
-        <span className="talent-board-filters__skill-card-label">{label}</span>
-        <div className="talent-board-filters__skill-card-actions">
-          <ChevronBtn
-            open={isOpen}
-            onToggle={onToggleOpen}
-            ariaLabel={isOpen ? `Contraer ${label}` : `Expandir ${label}`}
-          />
-          <DeleteBtn onDelete={onDelete} ariaLabel={`Quitar ${label}`} />
-        </div>
-      </div>
-
-      {isOpen ? (
-        <div className="talent-board-filters__skill-card-body">
-          <h4>Años de experiencia</h4>
-          <div className="talent-board-filters__range">
-            <div className="talent-board-filters__field">
-              <label htmlFor="talent-board-role-min">Mín.</label>
-              <input
-                id="talent-board-role-min"
-                type="number"
-                min="0"
-                value={minYears}
-                onChange={(event) => onChangeMinYears(event.target.value)}
-                placeholder="0"
-              />
-            </div>
-            <div className="talent-board-filters__field">
-              <label htmlFor="talent-board-role-max">Máx.</label>
-              <input
-                id="talent-board-role-max"
-                type="number"
-                min="0"
-                value={maxYears}
-                onChange={(event) => onChangeMaxYears(event.target.value)}
-                placeholder="20"
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </article>
-  );
-}
-
-RoleTag.propTypes = {
-  label: PropTypes.string.isRequired,
-  onDelete: PropTypes.func.isRequired,
-  isOpen: PropTypes.bool.isRequired,
-  onToggleOpen: PropTypes.func.isRequired,
-  minYears: PropTypes.string.isRequired,
-  onChangeMinYears: PropTypes.func.isRequired,
-  maxYears: PropTypes.string.isRequired,
-  onChangeMaxYears: PropTypes.func.isRequired,
-};
-
 function SimpleTag({ label, onDelete }) {
   return (
     <article className="talent-board-filters__simple-tag">
@@ -235,123 +166,10 @@ SimpleTag.propTypes = {
   onDelete: PropTypes.func.isRequired,
 };
 
-function AcademicPanel({
-  degrees,
-  degreeOptions,
-  onAddDegree,
-  onRemoveDegree,
-  institutions,
-  institutionOptions,
-  onAddInstitution,
-  onRemoveInstitution,
-}) {
-  const [degreeDraft, setDegreeDraft] = useState('');
-  const [institutionDraft, setInstitutionDraft] = useState('');
-
-  const handleAddDegree = () => {
-    if (degreeDraft && !degrees.includes(degreeDraft)) {
-      onAddDegree(degreeDraft);
-      setDegreeDraft('');
-    }
-  };
-
-  const handleAddInstitution = () => {
-    if (institutionDraft && !institutions.includes(institutionDraft)) {
-      onAddInstitution(institutionDraft);
-      setInstitutionDraft('');
-    }
-  };
-
-  return (
-    <div className="talent-board-filters__academic-panel">
-      <div className="talent-board-filters__subsection">
-        <p className="talent-board-filters__subsection-title">Grados</p>
-        <div className="talent-board-filters__add-row">
-          <DropdownSelect
-            value={degreeDraft}
-            onChange={setDegreeDraft}
-            options={[
-              { value: '', label: 'Añadir grado...', disabled: true },
-              ...degreeOptions.map((option) => ({
-                value: option,
-                label: option,
-                disabled: degrees.includes(option),
-              })),
-            ]}
-            ariaLabel="Seleccionar grado"
-          />
-          <AddBtn
-            onClick={handleAddDegree}
-            disabled={!degreeDraft}
-            ariaLabel="Aplicar grado"
-          />
-        </div>
-        <div className="talent-board-filters__stack">
-          {degrees.length > 0 ? (
-            degrees.map((degree) => (
-              <SimpleTag
-                key={degree}
-                label={degree}
-                onDelete={() => onRemoveDegree(degree)}
-              />
-            ))
-          ) : null}
-        </div>
-      </div>
-
-      <div className="talent-board-filters__subsection">
-        <p className="talent-board-filters__subsection-title">Instituciones</p>
-        <div className="talent-board-filters__add-row">
-          <DropdownSelect
-            value={institutionDraft}
-            onChange={setInstitutionDraft}
-            options={[
-              { value: '', label: 'Añadir institución...', disabled: true },
-              ...institutionOptions.map((option) => ({
-                value: option,
-                label: option,
-                disabled: institutions.includes(option),
-              })),
-            ]}
-            ariaLabel="Seleccionar institución"
-          />
-          <AddBtn
-            onClick={handleAddInstitution}
-            disabled={!institutionDraft}
-            ariaLabel="Aplicar institución"
-          />
-        </div>
-        <div className="talent-board-filters__stack">
-          {institutions.length > 0 ? (
-            institutions.map((institution) => (
-              <SimpleTag
-                key={institution}
-                label={institution}
-                onDelete={() => onRemoveInstitution(institution)}
-              />
-            ))
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-AcademicPanel.propTypes = {
-  degrees: PropTypes.arrayOf(PropTypes.string).isRequired,
-  degreeOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  onAddDegree: PropTypes.func.isRequired,
-  onRemoveDegree: PropTypes.func.isRequired,
-  institutions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  institutionOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  onAddInstitution: PropTypes.func.isRequired,
-  onRemoveInstitution: PropTypes.func.isRequired,
-};
-
 function TalentSidebarFilters({
   availableSkills,
   availableTechnologies,
-  professionOptions,
+  availableSoftSkills,
   selectedSkills,
   onToggleSkill,
   onRemoveSkill,
@@ -360,36 +178,19 @@ function TalentSidebarFilters({
   selectedTechnologies,
   onAddTechnology,
   onRemoveTechnology,
-  roleOptions,
-  professions,
-  onAddProfession,
-  onRemoveProfession,
-  degreeOptions,
-  degrees,
-  onAddDegree,
-  onRemoveDegree,
-  institutionOptions,
-  institutions,
-  onAddInstitution,
-  onRemoveInstitution,
-  experienceRoles,
-  onExperienceRolesChange,
+  selectedSoftSkills,
+  onAddSoftSkill,
+  onRemoveSoftSkill,
   onClearFilters,
 }) {
   const [skillToAddId, setSkillToAddId] = useState('');
-  const [professionDraft, setProfessionDraft] = useState('');
   const [technologyDraftId, setTechnologyDraftId] = useState('');
-  const [roleDraft, setRoleDraft] = useState('');
-  const [roleOpen, setRoleOpen] = useState(experienceRoles.length > 0);
+  const [softSkillDraftId, setSoftSkillDraftId] = useState('');
   const [openSkillId, setOpenSkillId] = useState('');
-
-  useEffect(() => {
-    setRoleDraft('');
-    setRoleOpen(experienceRoles.length > 0);
-  }, [experienceRoles]);
 
   const availableSkillOptions = Array.isArray(availableSkills) ? availableSkills : [];
   const availableTechnologyOptions = Array.isArray(availableTechnologies) ? availableTechnologies : [];
+  const availableSoftSkillOptions = Array.isArray(availableSoftSkills) ? availableSoftSkills : [];
 
   const selectedSkillCards = skillLevelFilters
     .map((entry) => {
@@ -485,13 +286,6 @@ function TalentSidebarFilters({
     }));
   };
 
-  const addProfession = () => {
-    if (professionDraft && !professions.includes(professionDraft)) {
-      onAddProfession(professionDraft);
-      setProfessionDraft('');
-    }
-  };
-
   const addTechnology = () => {
     if (technologyDraftId && !selectedTechnologies.includes(technologyDraftId)) {
       onAddTechnology(technologyDraftId);
@@ -499,22 +293,11 @@ function TalentSidebarFilters({
     }
   };
 
-  const addRole = () => {
-    const value = roleDraft.trim();
-
-    if (!value) {
-      return;
+  const addSoftSkill = () => {
+    if (softSkillDraftId && !selectedSoftSkills.includes(softSkillDraftId)) {
+      onAddSoftSkill(softSkillDraftId);
+      setSoftSkillDraftId('');
     }
-
-    if (!experienceRoles.some((item) => item.role === value)) {
-      onExperienceRolesChange([...experienceRoles, {
-        role: value,
-        minYears: '',
-        maxYears: '',
-      }] );
-    }
-
-    setRoleDraft('');
   };
 
   return (
@@ -535,8 +318,8 @@ function TalentSidebarFilters({
             <DropdownSelect
               value={skillToAddId}
               onChange={setSkillToAddId}
+              placeholder="Añadir habilidad..."
               options={[
-                { value: '', label: 'Añadir habilidad...', disabled: true },
                 ...availableSkillOptions.map((skill) => ({
                   value: String(skill.id),
                   label: skill.name,
@@ -576,98 +359,43 @@ function TalentSidebarFilters({
           </div>
         </Section>
 
-        {/*<Section
-          icon={mdiBriefcaseOutline}
-          title="Profesión"
+        <Section
+          icon={mdiAccountGroupOutline}
+          title="Habilidades blandas"
         >
           <div className="talent-board-filters__add-row">
             <DropdownSelect
-              value={professionDraft}
-              onChange={setProfessionDraft}
+              value={softSkillDraftId}
+              onChange={setSoftSkillDraftId}
+              placeholder="Añadir habilidad blanda..."
               options={[
-                { value: '', label: 'Añadir profesión...', disabled: true },
-                ...professionOptions.map((option) => ({
-                  value: option,
-                  label: option,
-                  disabled: professions.includes(option),
+                ...availableSoftSkillOptions.map((softSkill) => ({
+                  value: String(softSkill.id),
+                  label: softSkill.name,
+                  disabled: selectedSoftSkills.includes(String(softSkill.id)),
                 })),
               ]}
-              ariaLabel="Seleccionar profesión"
+              ariaLabel="Seleccionar habilidad blanda"
             />
-            <AddBtn onClick={addProfession} disabled={!professionDraft} ariaLabel="Aplicar profesión" />
+
+            <AddBtn onClick={addSoftSkill} disabled={!softSkillDraftId} ariaLabel="Aplicar habilidad blanda" />
           </div>
+
           <div className="talent-board-filters__stack">
-            {professions.length > 0 ? (
-              professions.map((prof) => (
-                <SimpleTag
-                  key={prof}
-                  label={prof}
-                  onDelete={() => onRemoveProfession(prof)}
-                />
-              ))
+            {selectedSoftSkills.length > 0 ? (
+              selectedSoftSkills.map((softSkillId) => {
+                const softSkill = availableSoftSkillOptions.find((item) => String(item.id) === String(softSkillId));
+                return (
+                  <SimpleTag
+                    key={softSkillId}
+                    label={softSkill?.name || softSkillId}
+                    onDelete={() => onRemoveSoftSkill(softSkillId)}
+                  />
+                );
+              })
             ) : null}
           </div>
         </Section>
-
-        <Section
-          icon={mdiBriefcaseOutline}
-          title="Experiencia por cargo"
-        >
-          <div className="talent-board-filters__add-row">
-            <DropdownSelect
-              value={roleDraft}
-              onChange={setRoleDraft}
-              options={[
-                { value: '', label: 'Añadir cargo...', disabled: true },
-                ...roleOptions.map((option) => ({
-                  value: option,
-                  label: option,
-                })),
-              ]}
-              ariaLabel="Seleccionar cargo"
-            />
-            <AddBtn onClick={addRole} disabled={!roleDraft} ariaLabel="Aplicar cargo" />
-          </div>
-
-          {experienceRoles.length > 0 ? (
-            experienceRoles.map((item) => (
-              <RoleTag
-                key={item.role}
-                label={item.role}
-                isOpen={roleOpen}
-                onToggleOpen={() => setRoleOpen((value) => !value)}
-                onDelete={() => {
-                  const nextRoles = experienceRoles.filter((roleItem) => roleItem.role !== item.role);
-                  onExperienceRolesChange(nextRoles);
-
-                  if (nextRoles.length === 0) {
-                    setRoleOpen(false);
-                  }
-                }}
-                minYears={item.minYears}
-                onChangeMinYears={(value) => {
-                  onExperienceRolesChange(
-                    experienceRoles.map((roleItem) => (
-                      roleItem.role === item.role
-                        ? { ...roleItem, minYears: String(value || '').trim() }
-                        : roleItem
-                    )),
-                  );
-                }}
-                maxYears={item.maxYears}
-                onChangeMaxYears={(value) => {
-                  onExperienceRolesChange(
-                    experienceRoles.map((roleItem) => (
-                      roleItem.role === item.role
-                        ? { ...roleItem, maxYears: String(value || '').trim() }
-                        : roleItem
-                    )),
-                  );
-                }}
-              />
-            ))
-          ) : null}
-        </Section>*/}
 
         <Section
           icon={mdiLayersTripleOutline}
@@ -677,8 +405,8 @@ function TalentSidebarFilters({
             <DropdownSelect
               value={technologyDraftId}
               onChange={setTechnologyDraftId}
+              placeholder="Añadir tecnología..."
               options={[
-                { value: '', label: 'Añadir tecnología...', disabled: true },
                 ...availableTechnologyOptions.map((technology) => ({
                   value: String(technology.id),
                   label: technology.name,
@@ -706,21 +434,6 @@ function TalentSidebarFilters({
           </div>
         </Section>
 
-        {/*<Section
-          icon={mdiSchoolOutline}
-          title="Académico"
-        >
-          <AcademicPanel
-            degrees={degrees}
-            degreeOptions={degreeOptions}
-            onAddDegree={onAddDegree}
-            onRemoveDegree={onRemoveDegree}
-            institutions={institutions}
-            institutionOptions={institutionOptions}
-            onAddInstitution={onAddInstitution}
-            onRemoveInstitution={onRemoveInstitution}
-          />
-        </Section>*/}
       </div>
 
       <button type="button" className="talent-board-filters__clear" onClick={onClearFilters}>
@@ -739,7 +452,10 @@ TalentSidebarFilters.propTypes = {
     id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     name: PropTypes.string,
   })),
-  professionOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
+  availableSoftSkills: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    name: PropTypes.string,
+  })),
   selectedSkills: PropTypes.arrayOf(PropTypes.string).isRequired,
   onToggleSkill: PropTypes.func.isRequired,
   onRemoveSkill: PropTypes.func.isRequired,
@@ -752,30 +468,16 @@ TalentSidebarFilters.propTypes = {
   selectedTechnologies: PropTypes.arrayOf(PropTypes.string).isRequired,
   onAddTechnology: PropTypes.func.isRequired,
   onRemoveTechnology: PropTypes.func.isRequired,
-  roleOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  professions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  onAddProfession: PropTypes.func.isRequired,
-  onRemoveProfession: PropTypes.func.isRequired,
-  degreeOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  degrees: PropTypes.arrayOf(PropTypes.string).isRequired,
-  onAddDegree: PropTypes.func.isRequired,
-  onRemoveDegree: PropTypes.func.isRequired,
-  institutionOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  institutions: PropTypes.arrayOf(PropTypes.string).isRequired,
-  onAddInstitution: PropTypes.func.isRequired,
-  onRemoveInstitution: PropTypes.func.isRequired,
-  experienceRoles: PropTypes.arrayOf(PropTypes.shape({
-    role: PropTypes.string.isRequired,
-    minYears: PropTypes.string.isRequired,
-    maxYears: PropTypes.string.isRequired,
-  })).isRequired,
-  onExperienceRolesChange: PropTypes.func.isRequired,
+  selectedSoftSkills: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onAddSoftSkill: PropTypes.func.isRequired,
+  onRemoveSoftSkill: PropTypes.func.isRequired,
   onClearFilters: PropTypes.func.isRequired,
 };
 
 TalentSidebarFilters.defaultProps = {
   availableSkills: null,
   availableTechnologies: null,
+  availableSoftSkills: null,
 };
 
 export default TalentSidebarFilters;
