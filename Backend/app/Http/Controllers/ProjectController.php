@@ -315,9 +315,14 @@ class ProjectController extends Controller
                 'description' => $validated['description'],
                 'start_date' => $validated['start_date'] ?? $project->start_date,
                 'end_date' => $validated['end_date'] ?? $project->end_date,
-                'demo_url' => $validated['demo_url'] ?? $project->demo_url,
-                'repository_url' => $validated['repo_url'] ?? $project->repository_url,
             ];
+
+            $projectData['demo_url'] = array_key_exists('demo_url', $validated)
+                ? $validated['demo_url']
+                : $project->demo_url;
+            $projectData['repository_url'] = array_key_exists('repo_url', $validated)
+                ? $validated['repo_url']
+                : $project->repository_url;
 
             $projectData['is_in_progress'] = $validated['is_in_progress'] ?? $project->is_in_progress;
             $projectData['is_public'] = $validated['is_public'] ?? $project->is_public;

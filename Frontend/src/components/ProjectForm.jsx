@@ -215,13 +215,8 @@ function buildFormData(formData, imageFile) {
     payload.append('end_date', formData.endDate);
   }
 
-  if (formData.demoUrl) {
-    payload.append('demo_url', formData.demoUrl.trim());
-  }
-
-  if (formData.repositoryUrl) {
-    payload.append('repo_url', formData.repositoryUrl.trim());
-  }
+  payload.append('demo_url', formData.demoUrl.trim());
+  payload.append('repo_url', formData.repositoryUrl.trim());
 
   if (imageFile) {
     payload.append('image', imageFile);
