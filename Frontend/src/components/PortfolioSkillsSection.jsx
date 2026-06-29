@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Icon from '@mdi/react';
 import { mdiClose, mdiContentSaveOutline, mdiDeleteOutline, mdiOpenInNew, mdiPencilOutline, mdiPlus, mdiViewGridOutline } from '@mdi/js';
 import CatalogSearchInput from './CatalogSearchInput';
+import DropdownSelect from './DropdownSelect';
 import CharacterCounter from './CharacterCounter';
 import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
@@ -924,19 +925,13 @@ function PortfolioSkillsSection() {
                     <div className="softsave-portafolio-skills__level-wrap">
                       {isEditing ? (
                         <>
-                          <select
+                          <DropdownSelect
                             value={skill.level}
-                            onChange={(evento) =>
-                              cambiarNivel(skill.id, evento.target.value)
-                            }
-                            className="softsave-input softsave-portafolio-skills__select"
-                          >
-                            {NIVELES_TECNICOS.map((nivel) => (
-                              <option key={nivel} value={nivel}>
-                                {nivel}
-                              </option>
-                            ))}
-                          </select>
+                            onChange={(nivel) => cambiarNivel(skill.id, nivel)}
+                            options={NIVELES_TECNICOS}
+                            ariaLabel={`Nivel de ${skill.name}`}
+                            className="softsave-portafolio-skills__select"
+                          />
                           <button
                             type="button"
                             className="softsave-portafolio-module-card__action softsave-portafolio-module-card__action--secondary softsave-portafolio-skills__tech-remove"
@@ -1018,20 +1013,16 @@ function PortfolioSkillsSection() {
                     <span className="softsave-portafolio-job-form__sub-label">
                       Nivel
                     </span>
-                    <select
+                    <DropdownSelect
                       value={nivelNuevo}
-                      onChange={(evento) => {
-                        setNivelNuevo(evento.target.value);
-                        setMensajeExito("");
+                      onChange={(nivel) => {
+                        setNivelNuevo(nivel);
+                        setMensajeExito('');
                       }}
-                      className="softsave-input softsave-profile__input"
-                    >
-                      {NIVELES_TECNICOS.map((nivel) => (
-                        <option key={nivel} value={nivel}>
-                          {nivel}
-                        </option>
-                      ))}
-                    </select>
+                      options={NIVELES_TECNICOS}
+                      ariaLabel="Nivel de la nueva habilidad"
+                      className="softsave-profile__input"
+                    />
                   </label>
 
                   <label className="softsave-profile__field softsave-portafolio-skills__evidence-field">

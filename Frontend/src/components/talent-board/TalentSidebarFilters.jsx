@@ -11,6 +11,7 @@ import {
   mdiTuneVariant,
   mdiCheck,
 } from '@mdi/js';
+import DropdownSelect from '../DropdownSelect';
 
 const TECH_LEVEL_OPTIONS = ['Basico', 'Intermedio', 'Avanzado'];
 
@@ -266,14 +267,19 @@ function AcademicPanel({
       <div className="talent-board-filters__subsection">
         <p className="talent-board-filters__subsection-title">Grados</p>
         <div className="talent-board-filters__add-row">
-          <select value={degreeDraft} onChange={(event) => setDegreeDraft(event.target.value)}>
-            <option value="">Añadir grado...</option>
-            {degreeOptions.map((option) => (
-              <option key={option} value={option} disabled={degrees.includes(option)}>
-                {option}
-              </option>
-            ))}
-          </select>
+          <DropdownSelect
+            value={degreeDraft}
+            onChange={setDegreeDraft}
+            options={[
+              { value: '', label: 'Añadir grado...', disabled: true },
+              ...degreeOptions.map((option) => ({
+                value: option,
+                label: option,
+                disabled: degrees.includes(option),
+              })),
+            ]}
+            ariaLabel="Seleccionar grado"
+          />
           <AddBtn
             onClick={handleAddDegree}
             disabled={!degreeDraft}
@@ -296,14 +302,19 @@ function AcademicPanel({
       <div className="talent-board-filters__subsection">
         <p className="talent-board-filters__subsection-title">Instituciones</p>
         <div className="talent-board-filters__add-row">
-          <select value={institutionDraft} onChange={(event) => setInstitutionDraft(event.target.value)}>
-            <option value="">Añadir institución...</option>
-            {institutionOptions.map((option) => (
-              <option key={option} value={option} disabled={institutions.includes(option)}>
-                {option}
-              </option>
-            ))}
-          </select>
+          <DropdownSelect
+            value={institutionDraft}
+            onChange={setInstitutionDraft}
+            options={[
+              { value: '', label: 'Añadir institución...', disabled: true },
+              ...institutionOptions.map((option) => ({
+                value: option,
+                label: option,
+                disabled: institutions.includes(option),
+              })),
+            ]}
+            ariaLabel="Seleccionar institución"
+          />
           <AddBtn
             onClick={handleAddInstitution}
             disabled={!institutionDraft}
@@ -521,14 +532,18 @@ function TalentSidebarFilters({
           title="Habilidades técnicas"
         >
           <div className="talent-board-filters__add-row">
-            <select value={skillToAddId} onChange={(event) => setSkillToAddId(event.target.value)}>
-              <option value="">Añadir habilidad...</option>
-              {availableSkillOptions.map((skill) => (
-                <option key={skill.id} value={skill.id}>
-                  {skill.name}
-                </option>
-              ))}
-            </select>
+            <DropdownSelect
+              value={skillToAddId}
+              onChange={setSkillToAddId}
+              options={[
+                { value: '', label: 'Añadir habilidad...', disabled: true },
+                ...availableSkillOptions.map((skill) => ({
+                  value: String(skill.id),
+                  label: skill.name,
+                })),
+              ]}
+              ariaLabel="Seleccionar habilidad técnica"
+            />
 
             <AddBtn onClick={addSkill} disabled={!skillToAddId} ariaLabel="Agregar habilidad" />
           </div>
@@ -566,14 +581,19 @@ function TalentSidebarFilters({
           title="Profesión"
         >
           <div className="talent-board-filters__add-row">
-            <select value={professionDraft} onChange={(event) => setProfessionDraft(event.target.value)}>
-              <option value="">Añadir profesión...</option>
-              {professionOptions.map((option) => (
-                <option key={option} value={option} disabled={professions.includes(option)}>
-                  {option}
-                </option>
-              ))}
-            </select>
+            <DropdownSelect
+              value={professionDraft}
+              onChange={setProfessionDraft}
+              options={[
+                { value: '', label: 'Añadir profesión...', disabled: true },
+                ...professionOptions.map((option) => ({
+                  value: option,
+                  label: option,
+                  disabled: professions.includes(option),
+                })),
+              ]}
+              ariaLabel="Seleccionar profesión"
+            />
             <AddBtn onClick={addProfession} disabled={!professionDraft} ariaLabel="Aplicar profesión" />
           </div>
           <div className="talent-board-filters__stack">
@@ -594,14 +614,18 @@ function TalentSidebarFilters({
           title="Experiencia por cargo"
         >
           <div className="talent-board-filters__add-row">
-            <select value={roleDraft} onChange={(event) => setRoleDraft(event.target.value)}>
-              <option value="">Añadir cargo...</option>
-              {roleOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+            <DropdownSelect
+              value={roleDraft}
+              onChange={setRoleDraft}
+              options={[
+                { value: '', label: 'Añadir cargo...', disabled: true },
+                ...roleOptions.map((option) => ({
+                  value: option,
+                  label: option,
+                })),
+              ]}
+              ariaLabel="Seleccionar cargo"
+            />
             <AddBtn onClick={addRole} disabled={!roleDraft} ariaLabel="Aplicar cargo" />
           </div>
 
@@ -650,14 +674,19 @@ function TalentSidebarFilters({
           title="Tecnología en proyectos"
         >
           <div className="talent-board-filters__add-row">
-            <select value={technologyDraftId} onChange={(event) => setTechnologyDraftId(event.target.value)}>
-              <option value="">Añadir tecnología...</option>
-              {availableTechnologyOptions.map((technology) => (
-                <option key={technology.id} value={technology.id} disabled={selectedTechnologies.includes(String(technology.id))}>
-                  {technology.name}
-                </option>
-              ))}
-            </select>
+            <DropdownSelect
+              value={technologyDraftId}
+              onChange={setTechnologyDraftId}
+              options={[
+                { value: '', label: 'Añadir tecnología...', disabled: true },
+                ...availableTechnologyOptions.map((technology) => ({
+                  value: String(technology.id),
+                  label: technology.name,
+                  disabled: selectedTechnologies.includes(String(technology.id)),
+                })),
+              ]}
+              ariaLabel="Seleccionar tecnología"
+            />
             <AddBtn onClick={addTechnology} disabled={!technologyDraftId} ariaLabel="Aplicar tecnología" />
           </div>
 

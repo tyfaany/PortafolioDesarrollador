@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-import '../styles/CatalogSuggestionDropdown.css';
 
 function CatalogSuggestionDropdown({
   listId,
@@ -13,8 +12,8 @@ function CatalogSuggestionDropdown({
 }) {
   if (showEmpty) {
     return (
-      <div className="softsave-catalog-dropdown__panel">
-        <div className="softsave-catalog-dropdown__empty" role="status" aria-live="polite">
+      <div className="softsave-dropdown__panel">
+        <div className="softsave-dropdown__empty" role="status" aria-live="polite">
           {emptyText}
         </div>
       </div>
@@ -26,23 +25,23 @@ function CatalogSuggestionDropdown({
   }
 
   return (
-    <div className="softsave-catalog-dropdown__panel">
-      <ul className="softsave-catalog-dropdown__list custom-scrollbar" id={listId} role="listbox">
+    <div className="softsave-dropdown__panel">
+      <ul className="softsave-dropdown__list custom-scrollbar" id={listId} role="listbox">
         {options.map((option, index) => (
           <li key={option.key} role="presentation">
             <button
               id={`${listId}-option-${index}`}
               type="button"
-              className={`softsave-catalog-dropdown__option ${index === activeIndex ? 'is-active' : ''}`}
+              className={`softsave-dropdown__item ${index === activeIndex ? 'is-active' : ''}`}
               onMouseEnter={() => onOptionHover?.(index)}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => onSelect(option)}
               role="option"
               aria-selected={index === activeIndex}
             >
-              <span className="softsave-catalog-dropdown__option-label">{option.label}</span>
+              <span className="softsave-dropdown__item-label">{option.label}</span>
               {optionActionText ? (
-                <span className="softsave-catalog-dropdown__option-action">{optionActionText}</span>
+                <span className="softsave-dropdown__item-action">{optionActionText}</span>
               ) : null}
             </button>
           </li>

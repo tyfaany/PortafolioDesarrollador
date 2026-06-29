@@ -65,24 +65,146 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-select.softsave-input {
-  padding-right: 42px;
+select.softsave-input,
+.softsave-input--select {
+  min-height: 54px;
+  padding-right: 3rem;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%232c3e50' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  background-size: 14px;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fffaf7 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23d35400' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat;
+  background-position: left top, right 16px center;
+  background-size: 100% 100%, 14px;
+  box-shadow: 0 10px 22px rgba(var(--color-texto-rgb), 0.05);
 }
 
-select.softsave-input::-ms-expand {
+select.softsave-input:not([multiple]):not([size]),
+.softsave-input--select {
+  padding-right: 3rem;
+}
+
+select.softsave-input:not([multiple]):not([size]):focus,
+.softsave-input--select:focus {
+  box-shadow:
+    0 0 0 4px rgba(var(--color-primario-rgb), 0.14),
+    0 14px 28px rgba(var(--color-texto-rgb), 0.08);
+}
+
+select.softsave-input::-ms-expand,
+.softsave-input--select::-ms-expand {
   display: none;
 }
 
 .softsave-input:focus {
   border-color: var(--color-primario);
   box-shadow: 0 0 0 4px var(--color-sombra-input);
+}
+
+.softsave-dropdown__panel,
+.dropdown-menu.softsave-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  overflow: hidden;
+  border: 1px solid rgba(var(--color-texto-rgb), 0.1);
+  border-radius: 16px;
+  background: var(--color-blanco);
+  box-shadow: 0 18px 38px rgba(var(--color-texto-rgb), 0.12);
+}
+
+.softsave-dropdown__list,
+.softsave-dropdown-menu {
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.softsave-dropdown__item,
+.dropdown-item.softsave-dropdown-item {
+  width: 100%;
+  min-height: 46px;
+  padding: 0.75rem 0.9rem;
+  border: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: transparent;
+  color: var(--color-texto);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.softsave-dropdown__item:hover,
+.softsave-dropdown__item:focus-visible,
+.softsave-dropdown__item.is-active,
+.dropdown-item.softsave-dropdown-item:hover,
+.dropdown-item.softsave-dropdown-item:focus-visible,
+.dropdown-item.softsave-dropdown-item.is-active {
+  background: rgba(var(--color-primario-rgb), 0.08);
+  color: #b94606;
+  outline: none;
+}
+
+.softsave-dropdown__item-label {
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.softsave-dropdown__item-action {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-texto-suave);
+}
+
+.softsave-dropdown__empty {
+  padding: 0.95rem 1rem;
+  color: var(--color-texto-suave);
+  font-size: 0.92rem;
+}
+
+.softsave-dropdown-select {
+  position: relative;
+  width: 100%;
+}
+
+.softsave-dropdown-select__trigger {
+  text-align: left;
+}
+
+.softsave-dropdown-select__value {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.softsave-dropdown__list.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.softsave-dropdown__list.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f4f4f4;
+}
+
+.softsave-dropdown__list.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d0d0d0;
+  border-radius: 999px;
 }
 
 .softsave-input-field__header {
@@ -191,5 +313,12 @@ select.softsave-input::-ms-expand {
     right: 12px;
     bottom: 12px;
     max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .softsave-dropdown__item,
+  .dropdown-item.softsave-dropdown-item {
+    min-height: 44px;
   }
 }

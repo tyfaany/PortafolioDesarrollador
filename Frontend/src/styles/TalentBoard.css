@@ -636,6 +636,25 @@
   gap: 0.35rem;
 }
 
+.talent-board-results__sort .softsave-dropdown-select__trigger {
+  color: var(--color-texto) !important;
+}
+
+.talent-board-results__sort .softsave-dropdown-select__value,
+.talent-board-results__sort .softsave-dropdown__item {
+  color: var(--color-texto) !important;
+}
+
+.talent-board-results__sort .softsave-dropdown__item-label {
+  color: var(--color-texto) !important;
+}
+
+.talent-board-results__sort .softsave-dropdown__item.is-active .softsave-dropdown__item-label,
+.talent-board-results__sort .softsave-dropdown__item:hover .softsave-dropdown__item-label,
+.talent-board-results__sort .softsave-dropdown__item:focus-visible .softsave-dropdown__item-label {
+  color: #b94606 !important;
+}
+
 .talent-board-results__page {
   display: grid;
   justify-items: end;

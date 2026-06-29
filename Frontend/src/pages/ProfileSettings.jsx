@@ -27,6 +27,7 @@ import {
 } from "@mdi/js";
 import useAuth from "../hooks/useAuth";
 import useFeedback from "../hooks/useFeedback";
+import DropdownSelect from "../components/DropdownSelect";
 import PrivacySettingsPanel from "../components/PrivacySettingsPanel";
 import CharacterCounter from "../components/CharacterCounter";
 import {
@@ -1990,24 +1991,21 @@ function ProfileSettings() {
                 />
               </label>
 
-              <select
-                className="softsave-input softsave-profile__input softsave-profile__filter-select"
+              <DropdownSelect
                 value={filtroRepos}
-                onChange={(evento) => setFiltroRepos(evento.target.value)}
-              >
-                <option>Todos</option>
-                <option>Originales</option>
-                <option>Forks</option>
-              </select>
+                onChange={setFiltroRepos}
+                options={['Todos', 'Originales', 'Forks']}
+                ariaLabel="Filtro de repositorios"
+                className="softsave-profile__input softsave-profile__filter-select"
+              />
 
-              <select
-                className="softsave-input softsave-profile__input softsave-profile__filter-select"
+              <DropdownSelect
                 value={ordenRepos}
-                onChange={(evento) => setOrdenRepos(evento.target.value)}
-              >
-                <option>Más recientes</option>
-                <option>Más populares</option>
-              </select>
+                onChange={setOrdenRepos}
+                options={['Más recientes', 'Más populares']}
+                ariaLabel="Orden de repositorios"
+                className="softsave-profile__input softsave-profile__filter-select"
+              />
             </div>
 
             <p className="softsave-profile__github-counter">
