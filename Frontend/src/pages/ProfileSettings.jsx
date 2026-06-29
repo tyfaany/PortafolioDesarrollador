@@ -347,7 +347,7 @@ function ProfileSettings() {
   const [formularioPerfil, setFormularioPerfil] = useState({
     nombreCompleto: user?.name || "",
     profesion: user?.profession || "",
-    biography: user?.biography || "",
+    biografia: user?.biography || "",
     githubUrl: user?.github_url || "",
     linkedinUrl: user?.linkedin_url || "",
     telefono: user?.phone || "",
@@ -363,14 +363,17 @@ function ProfileSettings() {
   });
 
   // Lógica de alerta intuitiva para el Bug ID:015
-  const mostrarAlertaObligatoria = location.state?.forcingProfileUpdate || (!user?.profession || !user?.biography);
+  const perfilRequiereInicializacion = !user?.profile_completed || !user?.profession || !user?.biography;
+  const mostrarAlertaObligatoria = Boolean(location.state?.forcingProfileUpdate || perfilRequiereInicializacion);
 
   const inicialesPerfil = useMemo(
     () => obtenerIniciales(perfilCabecera.nombreCompleto || "Usuario"),
     [perfilCabecera.nombreCompleto],
   );
   const seccionActiva = obtenerSeccionActiva(pathname);
-  const completarPerfil = Boolean(location.state?.completarPerfil);
+  const forzarInicializacionPerfil = Boolean(
+    location.state?.forcingProfileUpdate || location.state?.completarPerfil || perfilRequiereInicializacion,
+  );
   const enlacesProfesionales = useMemo(
     () => normalizarEnlacesProfesionales(user),
     [user],
@@ -477,10 +480,10 @@ function ProfileSettings() {
   }, [mensajeGuardadoExito, showFeedback]);
 
   useEffect(() => {
-    if (completarPerfil) {
+    if (forzarInicializacionPerfil) {
       setEstaModalPerfilAbierto(true);
     }
-  }, [completarPerfil]);
+  }, [forzarInicializacionPerfil]);
 
   useEffect(() => {
     if (user?.profile_photo_url) {
@@ -508,7 +511,19 @@ function ProfileSettings() {
     };
 
     setPerfilCabecera(datosPerfil);
-    setFormularioPerfil(datosPerfil);
+    setFormularioPerfil({
+      nombreCompleto: user.name || "",
+      profesion: user.profession || "",
+      biografia: user.biography || "",
+      githubUrl: user.github_url || "",
+      linkedinUrl: user.linkedin_url || "",
+      telefono: user.phone || "",
+      movil: user.mobile || "",
+      correoContacto: user.contact_email || "",
+      direccion: user.address || "",
+      instagramUrl: user.instagram_url || "",
+      facebookUrl: user.facebook_url || "",
+    });
     setFormularioEnlaces({
       githubUrl: user.github_url || "",
       linkedinUrl: user.linkedin_url || "",
@@ -601,7 +616,7 @@ function ProfileSettings() {
     if (!nombreLimpio) {
       nuevosErrores.nombreCompleto = "El nombre es obligatorio.";
     } else if (nombreLimpio.length > 50) {
-      nuevesErrores.nombreCompleto = "El nombre debe tener máximo 50 caracteres.";
+      nuevosErrores.nombreCompleto = "El nombre debe tener máximo 50 caracteres.";
     } else if (!esNombreValido(nombreLimpio)) {
       nuevosErrores.nombreCompleto = "El nombre solo puede contener letras y espacios individuales.";
     }
@@ -692,7 +707,7 @@ function ProfileSettings() {
       setLinkedinSincronizado(false);
       setMensajeGuardadoExito("Información actualizada correctamente");
 
-      if (location.state?.completarPerfil) {
+      if (forzarInicializacionPerfil) {
         sessionStorage.removeItem("post_register");
         navigate("/perfil/contacto", { replace: true });
       }
@@ -709,7 +724,7 @@ function ProfileSettings() {
     setFormularioPerfil({
       nombreCompleto: perfilCabecera.nombreCompleto,
       profesion: perfilCabecera.profesion,
-      biography: perfilCabecera.biografia,
+      biografia: perfilCabecera.biography,
       githubUrl: user?.github_url || "",
       linkedinUrl: user?.linkedin_url || "",
       telefono: user?.phone || "",
@@ -1225,7 +1240,7 @@ function ProfileSettings() {
                 Inicialización de Perfil Requerida
               </h4>
               <p style={{ margin: '0.25rem 0 0 0', color: '#7f1d1d', fontSize: '0.875rem' }}>
-                Antes de navegar por la plataforma, es obligatorio que configures tu **Profesión** y **Biografía**. Esto permitirá estructurar correctamente tu portafolio público para los evaluadores.
+                Antes de navegar por la plataforma, es obligatorio que configures tu Profesión y Biografía. Esto permitirá estructurar correctamente tu portafolio público para los evaluadores.
               </p>
             </div>
           </div>
@@ -1260,7 +1275,7 @@ function ProfileSettings() {
         </div>
       </div>
 
-      {completarPerfil ? (
+      {forzarInicializacionPerfil ? (
         <div className="softsave-profile__complete-banner">
           <Icon path={mdiAlertCircleOutline} size={0.9} />
           Completa tu información principal para terminar la configuración del perfil.
@@ -1690,12 +1705,12 @@ function ProfileSettings() {
               <div className="softsave-profile__modal-content">
                 <h3 className="softsave-profile__modal-title">Editar información personal</h3>
                 <p className="softsave-profile__modal-text">
-                  {completarPerfil
+                  {forzarInicializacionPerfil
                     ? "Para continuar debes completar tu nombre y profesión."
                     : "Completa los datos personales manteniendo la misma línea visual del sistema."}
                 </p>
               </div>
-              {!completarPerfil ? (
+              {!forzarInicializacionPerfil ? (
                 <button
                   type="button"
                   className="softsave-profile__icon-button"
@@ -1798,7 +1813,7 @@ function ProfileSettings() {
               </label>
               {mensajeGuardadoError ? <span className="error-text softsave-profile__error-text" role="alert">{mensajeGuardadoError}</span> : null}
               <div className="softsave-profile__modal-actions">
-                {!completarPerfil ? (
+                {!forzarInicializacionPerfil ? (
                   <button type="button" className="softsave-profile__secondary-button softsave-profile__secondary-button--modal" onClick={cerrarModalPerfil} disabled={guardandoPerfil}>
                     Cancelar
                   </button>

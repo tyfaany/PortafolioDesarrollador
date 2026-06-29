@@ -37,7 +37,7 @@ function ProtectedRoute({ children }) {
   }
 
   // DETECCIÓN DE PERFIL INCOMPLETO
-  const perfilIncompleto = !user?.profession || !user?.biography;
+  const perfilIncompleto = !user?.profile_completed || !user?.profession || !user?.biography;
   const enRutaDePerfil = location.pathname.startsWith('/perfil');
 
   // Si intenta huir sin guardar sus datos mínimos, lo mandamos avisándole mediante el state
