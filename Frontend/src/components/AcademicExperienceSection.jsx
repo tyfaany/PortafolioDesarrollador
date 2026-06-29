@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '@mdi/react';
 import { mdiClose, mdiContentSaveOutline, mdiDeleteOutline, mdiPencilOutline, mdiPlus, mdiSchoolOutline } from '@mdi/js';
+import CharacterCounter from './CharacterCounter';
 import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import { actualizarEstudio, crearEstudio, eliminarEstudio } from '../services/authService';
@@ -512,7 +513,13 @@ function AcademicExperienceSection({
             <form className="softsave-profile__study-form" onSubmit={guardarEstudio}>
               <div className="softsave-profile__study-grid">
                 <label className="softsave-profile__field">
-                  <span className="softsave-profile__label">Institución</span>
+                  <div className="softsave-input-field__header">
+                    <span className="softsave-profile__label">Institución</span>
+                    <CharacterCounter
+                      value={formularioEstudio.academic_institution}
+                      maxLength={MAX_INSTITUTION_LENGTH}
+                    />
+                  </div>
                   <input
                     type="text"
                     name="academic_institution"
@@ -530,7 +537,13 @@ function AcademicExperienceSection({
                 </label>
 
                 <label className="softsave-profile__field">
-                  <span className="softsave-profile__label">Título Obtenido</span>
+                  <div className="softsave-input-field__header">
+                    <span className="softsave-profile__label">Título Obtenido</span>
+                    <CharacterCounter
+                      value={formularioEstudio.degree}
+                      maxLength={MAX_DEGREE_LENGTH}
+                    />
+                  </div>
                   <input
                     type="text"
                     name="degree"
@@ -604,7 +617,13 @@ function AcademicExperienceSection({
               </div>
 
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Logros y observaciones</span>
+                <div className="softsave-input-field__header">
+                  <span className="softsave-profile__label">Logros y observaciones</span>
+                  <CharacterCounter
+                    value={formularioEstudio.achievements}
+                    maxLength={MAX_ACHIEVEMENTS_LENGTH}
+                  />
+                </div>
                 <textarea
                   name="achievements"
                   value={formularioEstudio.achievements}

@@ -9,6 +9,7 @@ import {
   mdiPencilOutline,
   mdiPlus,
 } from '@mdi/js';
+import CharacterCounter from './CharacterCounter';
 import useAuth from '../hooks/useAuth';
 import useFeedback from '../hooks/useFeedback';
 import { actualizarJob, crearJob, eliminarJob, obtenerJobs } from '../services/authService';
@@ -775,7 +776,13 @@ function PortfolioWorkExperienceSection() {
             <form className="softsave-portafolio-job-form" onSubmit={guardarTrabajo}>
               <div className="softsave-portafolio-job-form__basic-grid">
                 <label className="softsave-profile__field">
-                  <span className="softsave-profile__label">Nombre de la Empresa</span>
+                  <div className="softsave-input-field__header">
+                    <span className="softsave-profile__label">Nombre de la Empresa</span>
+                    <CharacterCounter
+                      value={formulario.company_name}
+                      maxLength={MAX_COMPANY_NAME_LENGTH}
+                    />
+                  </div>
                   <input
                     type="text"
                     name="company_name"
@@ -792,7 +799,13 @@ function PortfolioWorkExperienceSection() {
                 </label>
 
                 <label className="softsave-profile__field">
-                  <span className="softsave-profile__label">Puesto o Cargo</span>
+                  <div className="softsave-input-field__header">
+                    <span className="softsave-profile__label">Puesto o Cargo</span>
+                    <CharacterCounter
+                      value={formulario.position}
+                      maxLength={MAX_POSITION_LENGTH}
+                    />
+                  </div>
                   <input
                     type="text"
                     name="position"
@@ -868,7 +881,10 @@ function PortfolioWorkExperienceSection() {
               </div>
 
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Logros</span>
+                <div className="softsave-input-field__header">
+                  <span className="softsave-profile__label">Logros</span>
+                  <CharacterCounter value={formulario.description} maxLength={MAX_DESCRIPTION_LENGTH} />
+                </div>
                 <textarea
                   name="description"
                   value={formulario.description}
@@ -884,7 +900,13 @@ function PortfolioWorkExperienceSection() {
               </label>
 
               <label className="softsave-profile__field">
-                <span className="softsave-profile__label">Enlace de evidencia (opcional)</span>
+                <div className="softsave-input-field__header">
+                  <span className="softsave-profile__label">Enlace de evidencia (opcional)</span>
+                  <CharacterCounter
+                    value={formulario.evidence_url}
+                    maxLength={MAX_EVIDENCE_URL_LENGTH}
+                  />
+                </div>
                 <input
                   type="url"
                   name="evidence_url"
